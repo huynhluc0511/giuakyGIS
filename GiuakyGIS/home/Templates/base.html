@@ -1,0 +1,31 @@
+ {% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Thức Ăn Nhanh{% endblock %}</title>
+    <link rel="stylesheet" href="{% static '/styles.css' %}">
+</head>
+<body>
+
+<header>
+    <h1>🍔 FastFood Store</h1>
+</header>
+
+<nav>
+    <a href="/">Trang chủ</a>
+    <a href="/menu/">Thực đơn</a>
+    <a href="/lien-he/">Liên hệ</a>
+</nav>
+
+<main>
+    {% block content %}
+    {% endblock %}
+</main>
+
+<footer>
+    © 2026 FastFood Store
+</footer>
+<p class="copyright">&copy; 2026 FastFood Store</p>
+</body>
+</html>
