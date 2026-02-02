@@ -1,22 +1,17 @@
-"""
-URL configuration for GiuakyGIS project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/6.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include # Nhớ import thêm include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    
+    # Trỏ tất cả đường dẫn gốc vào app home
+    path('', include('home.urls')), 
 ]
+import os
+
+# Cấu hình đường dẫn file Tĩnh (CSS/JS)
+STATIC_URL = 'static/'
+
+# Cấu hình đường dẫn file Media (Ảnh món ăn upload lên)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

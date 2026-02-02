@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Bản đồ Cửa hàng</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        /* Bắt buộc phải set chiều cao cho map */
+        #map { 
+            height: 600px; 
+            width: 100%; 
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .back-link {
+            text-decoration: none;
+            color: white;
+            background: #333;
+            padding: 10px 15px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <a href="/" class="back-link">← Quay lại Trang chủ</a>
+    <h1>Hệ thống cửa hàng trên bản đồ</h1>
+    
+    <div id="map"></div>
+
+    {{ data_cua_hang|json_script:"geo-json-data" }}
+
+    <script>
+        // --- 1. Khởi tạo bản đồ ---
+        var hcmCoords = [10.762622, 106.660172]; 
+        var map = L.map('map').setView(hcmCoords, 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(map);
+
+        // --- 2. Lấy dữ liệu an toàn từ thẻ ẩn ---
+        try {
+            // Tìm thẻ script chứa JSON bằng ID
+            var scriptTag = document.getElementById('geo-json-data');
+            
+            // Chuyển đổi text trong thẻ đó thành Object JavaScript
+            var storeData = JSON.parse(scriptTag.textContent);
+
+            // --- 3. Vẽ lên bản đồ ---
+            if (storeData && storeData.features && storeData.features.length > 0) {
+                
+                var storeLayer = L.geoJSON(storeData, {
+                    onEachFeature: function (feature, layer) {
+                        // Lấy thông tin (dùng || để dự phòng nếu thiếu dữ liệu)
+                        var ten = feature.properties.ten_cua_hang || "Cửa hàng FastFood";
+                        var diachi = feature.properties.dia_chi || "Chưa có địa chỉ";
+                        
+                        // Tạo popup
+                        layer.bindPopup(`
+                            <div style='text-align:center'>
+                                <b style='color:#d32f2f'>${ten}</b><br>
+                                <i>${diachi}</i>
+                            </div>
+                        `);
+                    }
+                });
+
+                storeLayer.addTo(map);
+                
+                // Tự động zoom để thấy hết các cửa hàng
+                map.fitBounds(storeLayer.getBounds());
+            
+            } else {
+                console.log("Dữ liệu GeoJSON rỗng hoặc chưa có cửa hàng nào.");
+            }
+
+        } catch (error) {
+            console.error("Lỗi khi xử lý dữ liệu bản đồ:", error);
+        }
+    </script>
+</body>
+</html>
