@@ -57,7 +57,10 @@ DATABASES = {
         # Nếu bạn dùng GIS, thường sẽ dùng 'django.contrib.gis.db.backends.postgis'
         # Nhưng nếu chỉ học tập với SQLite thì dùng engine mặc định:
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': BASE_DIR / 'thucannhanh.db',
+        'USER': 'Root',
+        'PASSWORD': '',
+        'HOST': 'localhost',
     }
 }
 
