@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Tình trạng giao hàng</title>
+
+    <!-- Leaflet CSS -->
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        #map {
+            height: 500px;
+            margin: 20px;
+            border: 2px solid #ccc;
+        }
+
+        .legend {
+            margin: 20px;
+        }
+
+        .legend span {
+            display: inline-block;
+            margin-right: 20px;
+        }
+
+        .done {
+            color: green;
+            font-weight: bold;
+        }
+
+        .pending {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<h2> Tình trạng giao hàng của Shipper</h2>
+
+<div class="legend">
+    <span class="done">● Đã giao hàng</span>
+    <span class="pending">● Chưa giao hàng</span>
+</div>
+
+<div id="map"></div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    // Khởi tạo bản đồ
+    var map = L.map('map').setView([10.75, 106.66], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    // Dữ liệu shipper (demo tĩnh)
+    var shippers = [
+        {
+            name: "Shipper A",
+            lat: 10.755,
+            lng: 106.665,
+            status: "done"
+        },
+        {
+            name: "Shipper B",
+            lat: 10.748,
+            lng: 106.658,
+            status: "pending"
+        }
+    ];
+
+    shippers.forEach(function (s) {
+        var color = s.status === "done" ? "green" : "red";
+
+        var marker = L.circleMarker([s.lat, s.lng], {
+            radius: 8,
+            color: color,
+            fillColor: color,
+            fillOpacity: 0.8
+        }).addTo(map);
+
+        var statusText = s.status === "done"
+            ? "<span style='color:green;'>Đã giao hàng</span>"
+            : "<span style='color:red;'>Chưa giao hàng</span>";
+
+        marker.bindPopup(
+            "<b>" + s.name + "</b><br>" +
+            "Trạng thái: " + statusText
+        );
+    });
+</script>
+</body>
+</html>
