@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thực Đơn Hamburger - FastFood Universe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background-color: #f8f9fa; color: #333; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        
+        /* Nav & Header */
+        nav { background: #ffb703; padding: 15px 0; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        nav .container { display: flex; justify-content: space-between; align-items: center; }
+        .btn-back { color: #333; text-decoration: none; font-weight: 600; }
+        .cart-link { text-decoration: none; color: #333; background: white; padding: 8px 15px; border-radius: 50px; font-weight: 700; }
+
+        header { background: #f57c00; color: white; padding: 40px 0; text-align: center; margin-bottom: 30px; }
+
+        /* Grid */
+        .burger-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+            gap: 25px; 
+            padding-bottom: 50px; 
+        }
+
+        /* Thẻ món ăn */
+        .burger-card { 
+            background: white; border-radius: 20px; padding: 25px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05); text-align: center;
+            transition: 0.3s; border: 1px solid #eee; display: flex; flex-direction: column;
+        }
+        .burger-card:hover { transform: translateY(-10px); }
+
+        .burger-img { font-size: 5rem; margin-bottom: 15px; }
+        .price { color: #2a9d8f; font-weight: 700; font-size: 1.3rem; margin-bottom: 20px; }
+
+        /* Phần Ghi chú ẩn đi ban đầu */
+        .order-details {
+            max-height: 0; overflow: hidden; transition: all 0.4s ease; opacity: 0;
+            text-align: left; background: #fff8e1; border-radius: 10px;
+        }
+
+        .order-details.active {
+            max-height: 400px; opacity: 1; padding: 15px; margin-bottom: 15px; border: 1px dashed #f57c00;
+        }
+
+        .order-details label { font-size: 0.8rem; font-weight: 600; color: #f57c00; display: block; }
+        .order-details select, .order-details input {
+            width: 100%; padding: 8px; margin: 5px 0 12px; border: 1px solid #ddd; border-radius: 5px; font-family: inherit;
+        }
+
+        /* Nút bấm */
+        .btn-main {
+            background: #f57c00; color: white; border: none; padding: 12px 25px;
+            border-radius: 50px; font-weight: 700; cursor: pointer; width: 100%;
+            transition: 0.3s;
+        }
+        .btn-confirm { background: #2a9d8f; color: white; margin-top: 10px; }
+
+        footer { background: #222; color: white; text-align: center; padding: 30px 0; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="container">
+        <a href="index.html" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Quay lại trang chủ</a>
+        <a href="Gio-hang.html" class="cart-link">
+            <i class="fa-solid fa-cart-shopping"></i> Giỏ hàng (<span id="cart-qty">0</span>)
+        </a>
+    </div>
+</nav>
+
+<header>
+    <h1>🍔 Hamburger Custom</h1>
+    <p>Nhấn vào món ăn để tùy chỉnh theo ý bạn</p>
+</header>
+
+<main class="container">
+    <div class="burger-grid">
+        
+        <div class="burger-card" id="b1">
+            <div class="burger-img">🍔</div>
+            <h3>Burger Bò Double</h3>
+            <p class="price">85.000đ</p>
+            <button class="btn-main btn-add" onclick="showOptions('b1')">Thêm vào giỏ</button>
+
+            <div class="order-details">
+                <label>Chọn Size:</label>
+                <select id="option-b1">
+                    <option value="0">Size Vừa (M)</option>
+                    <option value="20000">Size Lớn (L) + 20k</option>
+                </select>
+                <label>Ghi chú:</label>
+                <input type="text" id="note-b1" placeholder="Ví dụ: Không hành, nhiều sốt...">
+                <button class="btn-main btn-confirm" onclick="processAddToCart('b1', 'Burger Bò Double', 85000, '🍔')">Xác nhận thêm</button>
+            </div>
+        </div>
+
+        <div class="burger-card" id="b2">
+            <div class="burger-img">🍗</div>
+            <h3>Burger Gà Cay</h3>
+            <p class="price">65.000đ</p>
+            <button class="btn-main btn-add" onclick="showOptions('b2')">Thêm vào giỏ</button>
+
+            <div class="order-details">
+                <label>Độ cay:</label>
+                <select id="option-b2">
+                    <option value="0">Cay vừa</option>
+                    <option value="0">Siêu cay 🔥</option>
+                </select>
+                <label>Ghi chú:</label>
+                <input type="text" id="note-b2" placeholder="Ví dụ: Lấy thêm tương ớt...">
+                <button class="btn-main btn-confirm" onclick="processAddToCart('b2', 'Burger Gà Cay', 65000, '🍗')">Xác nhận thêm</button>
+            </div>
+        </div>
+
+        <div class="burger-card" id="b3">
+            <div class="burger-img">🍤</div>
+            <h3>Burger Tôm</h3>
+            <p class="price">75.000đ</p>
+            <button class="btn-main btn-add" onclick="showOptions('b3')">Thêm vào giỏ</button>
+
+            <div class="order-details">
+                <label>Lựa chọn:</label>
+                <select id="option-b3">
+                    <option value="0">Nhân tôm truyền thống</option>
+                    <option value="10000">Nhân tôm phô mai (+10k)</option>
+                </select>
+                <label>Ghi chú:</label>
+                <input type="text" id="note-b3" placeholder="Ghi chú của bạn...">
+                <button class="btn-main btn-confirm" onclick="processAddToCart('b3', 'Burger Tôm', 75000, '🍤')">Xác nhận thêm</button>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<footer>
+    <p>&copy; 2026 FastFood Universe</p>
+</footer>
+
+<script>
+    // 1. Hiển thị Form tùy chọn
+    function showOptions(id) {
+        const card = document.getElementById(id);
+        card.querySelector('.order-details').classList.add('active');
+        card.querySelector('.btn-add').style.display = 'none';
+    }
+
+    // 2. Xử lý thêm vào giỏ hàng và đồng bộ LocalStorage
+    function processAddToCart(divId, name, basePrice, img) {
+        let cart = JSON.parse(localStorage.getItem('cart_data')) || [];
+        
+        // Lấy giá trị phụ phí từ select
+        const optionSelect = document.getElementById(`option-${divId}`);
+        const extraPrice = optionSelect ? parseInt(optionSelect.value) : 0;
+        const finalPrice = basePrice + extraPrice;
+        
+        // Tạo ID duy nhất để phân biệt sản phẩm cùng tên nhưng khác giá (khác option)
+        const itemId = `${name}-${finalPrice}`;
+
+        const existingItem = cart.find(item => item.id === itemId);
+
+        if (existingItem) {
+            existingItem.qty += 1;
+        } else {
+            cart.push({
+                id: itemId,
+                name: name,
+                price: finalPrice,
+                qty: 1,
+                img: img
+            });
+        }
+
+        // Lưu vào kho dữ liệu chung cart_data
+        localStorage.setItem('cart_data', JSON.stringify(cart));
+        
+        // Cập nhật số lượng trên giao diện ngay lập tức
+        updateCartQty();
+
+        alert(`Đã thêm ${name} vào giỏ hàng thành công!`);
+        
+        // Reset giao diện thẻ về ban đầu
+        const card = document.getElementById(divId);
+        card.querySelector('.order-details').classList.remove('active');
+        card.querySelector('.btn-add').style.display = 'block';
+    }
+
+    // 3. Hàm cập nhật số lượng hiển thị (Thời gian thực)
+    function updateCartQty() {
+        const cart = JSON.parse(localStorage.getItem('cart_data')) || [];
+        const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
+        document.getElementById('cart-qty').innerText = totalQty;
+    }
+
+    // Đồng bộ nếu người dùng mở nhiều tab cùng lúc
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'cart_data') updateCartQty();
+    });
+
+    // Gọi hàm khi load trang
+    updateCartQty();
+</script>
+
+</body>
+</html>

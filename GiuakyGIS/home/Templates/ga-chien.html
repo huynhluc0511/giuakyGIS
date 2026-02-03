@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thực Đơn Gà Chiên - FastFood Universe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background-color: #fffaf0; color: #333; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        
+        /* Nav & Header */
+        nav { background: #ffb703; padding: 15px 0; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        nav .container { display: flex; justify-content: space-between; align-items: center; }
+        .btn-back { color: #333; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+        .cart-link { text-decoration: none; color: #333; background: white; padding: 8px 15px; border-radius: 50px; font-weight: 700; }
+
+        header { background: #e67e22; color: white; padding: 50px 0; text-align: center; margin-bottom: 30px; }
+        header h1 { font-size: 2.5rem; }
+
+        /* Grid Danh sách */
+        .food-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; margin-bottom: 50px; }
+
+        /* Thẻ Gà Chiên */
+        .food-card { 
+            background: white; border-radius: 25px; padding: 25px; 
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05); border: 1px solid #eee;
+            transition: 0.3s; display: flex; flex-direction: column;
+        }
+        .food-card:hover { transform: translateY(-10px); box-shadow: 0 15px 30px rgba(230, 126, 34, 0.15); }
+
+        .food-img { font-size: 5.5rem; text-align: center; background: #fff4e6; border-radius: 20px; padding: 20px; margin-bottom: 15px; }
+        .food-info h3 { font-size: 1.4rem; color: #222; margin-bottom: 8px; }
+        .food-info p { font-size: 0.9rem; color: #666; margin-bottom: 15px; height: 45px; overflow: hidden; }
+        .price { color: #c0392b; font-weight: 700; font-size: 1.3rem; margin-bottom: 15px; }
+
+        /* Tùy chọn (Ẩn) */
+        .order-custom {
+            max-height: 0; overflow: hidden; transition: all 0.5s ease; opacity: 0;
+            background: #fff8f0; border-radius: 15px;
+        }
+        .order-custom.active { max-height: 450px; opacity: 1; padding: 15px; margin-bottom: 15px; border: 1px dashed #e67e22; }
+
+        .order-custom label { font-size: 0.8rem; font-weight: 700; color: #d35400; display: block; margin-bottom: 5px; }
+        .order-custom select, .order-custom input { width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; }
+
+        .btn { width: 100%; padding: 13px; border: none; border-radius: 50px; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 1rem; }
+        .btn-add { background: #e67e22; color: white; }
+        .btn-confirm { background: #27ae60; color: white; margin-top: 10px; }
+
+        footer { background: #222; color: white; text-align: center; padding: 40px 0; margin-top: 50px; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="container">
+        <a href="index.html" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Quay lại trang chủ</a>
+        <a href="Gio-hang.html" class="cart-link">
+            <i class="fa-solid fa-cart-shopping"></i> Giỏ hàng (<span id="cart-qty">0</span>)
+        </a>
+    </div>
+</nav>
+
+<header>
+    <h1>🍗 Gà Chiên Giòn Rụm</h1>
+    <p>Chọn vị sốt và độ cay theo ý thích của bạn</p>
+</header>
+
+<main class="container">
+    <div class="food-grid">
+        
+        <div class="food-card" id="g1">
+            <div class="food-img">🍗</div>
+            <div class="food-info">
+                <h3>Gà Rán Truyền Thống</h3>
+                <p>Gà tươi chiên giòn tan với lớp bột gia vị độc quyền.</p>
+                <div class="price">39.000đ</div>
+                <button class="btn btn-add" onclick="toggleOrder('g1')">Thêm vào giỏ</button>
+                
+                <div class="order-custom">
+                    <label>Phần ăn:</label>
+                    <select id="option-g1">
+                        <option value="0">1 Miếng</option>
+                        <option value="75000">Combo 3 Miếng (+75k)</option>
+                        <option value="120000">Thùng 5 Miếng (+120k)</option>
+                    </select>
+                    <label>Ghi chú:</label>
+                    <input type="text" id="note-g1" placeholder="Ví dụ: Lấy đùi, không lấy cánh...">
+                    <button class="btn btn-confirm" onclick="processAddToCart('g1', 'Gà Rán Truyền Thống', 39000, '🍗')">Xác nhận vào giỏ</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="food-card" id="g2">
+            <div class="food-img">🍗🔥</div>
+            <div class="food-info">
+                <h3>Gà Sốt Cay Hàn Quốc</h3>
+                <p>Đậm đà sốt Gochujang, cay nồng kích thích vị giác.</p>
+                <div class="price">45.000đ</div>
+                <button class="btn btn-add" onclick="toggleOrder('g2')">Thêm vào giỏ</button>
+                
+                <div class="order-custom">
+                    <label>Độ cay:</label>
+                    <select id="option-g2">
+                        <option value="0">Cay vừa</option>
+                        <option value="0">Siêu cay 🔥</option>
+                    </select>
+                    <button class="btn btn-confirm" onclick="processAddToCart('g2', 'Gà Sốt Cay Hàn Quốc', 45000, '🍗🔥')">Xác nhận vào giỏ</button>
+                </div>
+            </div>
+        </div>
+
+        </div>
+</main>
+
+<footer>
+    <p>&copy; 2026 FastFood Universe - Gà tươi chiên mới mỗi khi khách đặt!</p>
+</footer>
+
+<script>
+    // 1. Hiển thị form tùy chỉnh
+    function toggleOrder(id) {
+        const card = document.getElementById(id);
+        card.querySelector('.order-custom').classList.add('active');
+        card.querySelector('.btn-add').style.display = 'none';
+    }
+
+    // 2. Xử lý logic giỏ hàng (Đồng bộ toàn hệ thống)
+    function processAddToCart(divId, name, basePrice, img) {
+        // Lấy dữ liệu từ localStorage
+        let cart = JSON.parse(localStorage.getItem('cart_data')) || [];
+        
+        // Tính giá phụ phí
+        const optionSelect = document.getElementById(`option-${divId}`);
+        const extraPrice = optionSelect ? parseInt(optionSelect.value) : 0;
+        const finalPrice = basePrice + extraPrice;
+        
+        // Tạo ID duy nhất cho sản phẩm
+        const itemId = `${name}-${finalPrice}`;
+
+        const existingItem = cart.find(item => item.id === itemId);
+
+        if (existingItem) {
+            existingItem.qty += 1;
+        } else {
+            cart.push({
+                id: itemId,
+                name: name,
+                price: finalPrice,
+                qty: 1,
+                img: img
+            });
+        }
+
+        // Lưu ngược lại localStorage
+        localStorage.setItem('cart_data', JSON.stringify(cart));
+        
+        // Cập nhật giao diện
+        updateCartQty();
+        alert(`Đã thêm ${name} vào giỏ hàng thành công!`);
+        
+        // Thu gọn form
+        const card = document.getElementById(divId);
+        card.querySelector('.order-custom').classList.remove('active');
+        card.querySelector('.btn-add').style.display = 'block';
+    }
+
+    // 3. Hàm cập nhật số lượng hiển thị (Real-time)
+    function updateCartQty() {
+        const cart = JSON.parse(localStorage.getItem('cart_data')) || [];
+        const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
+        const qtyElement = document.getElementById('cart-qty');
+        if(qtyElement) qtyElement.innerText = totalQty;
+    }
+
+    // Lắng nghe thay đổi từ các tab khác
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'cart_data') updateCartQty();
+    });
+
+    // Khởi tạo khi load trang
+    updateCartQty();
+</script>
+
+</body>
+</html>

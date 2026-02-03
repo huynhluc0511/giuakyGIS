@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đồ Uống Giải Khát - FastFood Universe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background-color: #f0f7ff; color: #333; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        
+        /* Nav & Header */
+        nav { background: #ffb703; padding: 15px 0; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        nav .container { display: flex; justify-content: space-between; align-items: center; }
+        .btn-back { color: #333; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+        .cart-link { text-decoration: none; color: #333; background: white; padding: 8px 15px; border-radius: 50px; font-weight: 700; }
+
+        header { background: #3498db; color: white; padding: 50px 0; text-align: center; margin-bottom: 30px; }
+        header h1 { font-size: 2.5rem; }
+
+        /* Grid Danh sách */
+        .drink-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-bottom: 50px; }
+
+        /* Thẻ Đồ uống */
+        .drink-card { 
+            background: white; border-radius: 25px; padding: 25px; 
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05); border: 1px solid #e1f0ff;
+            transition: 0.3s; display: flex; flex-direction: column; text-align: center;
+        }
+        .drink-card:hover { transform: translateY(-10px); box-shadow: 0 15px 30px rgba(52, 152, 219, 0.2); }
+
+        .drink-img { font-size: 5rem; background: #eef7ff; border-radius: 50%; width: 150px; height: 150px; line-height: 150px; margin: 0 auto 15px; }
+        .drink-info h3 { font-size: 1.3rem; color: #2c3e50; margin-bottom: 8px; }
+        .price { color: #2980b9; font-weight: 700; font-size: 1.2rem; margin-bottom: 15px; }
+
+        /* Tùy chọn (Ẩn) */
+        .order-custom {
+            max-height: 0; overflow: hidden; transition: all 0.5s ease; opacity: 0;
+            background: #f1f9ff; border-radius: 15px; text-align: left;
+        }
+        .order-custom.active { max-height: 400px; opacity: 1; padding: 15px; margin-bottom: 15px; border: 1px dashed #3498db; }
+
+        .order-custom label { font-size: 0.8rem; font-weight: 700; color: #2980b9; display: block; margin-bottom: 5px; }
+        .order-custom select, .order-custom input { width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid #cde4f5; border-radius: 8px; font-family: inherit; }
+
+        .btn { width: 100%; padding: 13px; border: none; border-radius: 50px; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 1rem; }
+        .btn-add { background: #3498db; color: white; }
+        .btn-confirm { background: #27ae60; color: white; margin-top: 10px; }
+
+        footer { background: #222; color: white; text-align: center; padding: 40px 0; margin-top: 50px; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="container">
+        <a href="index.html" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Quay lại trang chủ</a>
+        <a href="Gio-hang.html" class="cart-link">
+            <i class="fa-solid fa-cart-shopping"></i> Giỏ hàng (<span id="cart-qty">0</span>)
+        </a>
+    </div>
+</nav>
+
+<header>
+    <h1>🥤 Đồ Uống Mát Lạnh</h1>
+    <p>Giải nhiệt tức thì với các loại nước uống sảng khoái</p>
+</header>
+
+<main class="container">
+    <div class="drink-grid">
+        
+        <div class="drink-card" id="d1">
+            <div class="drink-img">🥤</div>
+            <div class="drink-info">
+                <h3>Pepsi / Coca-Cola</h3>
+                <div class="price">15.000đ</div>
+                <button class="btn btn-add" onclick="toggleOrder('d1')">Thêm vào giỏ</button>
+                
+                <div class="order-custom">
+                    <label>Kích cỡ:</label>
+                    <select id="option-d1">
+                        <option value="0">Size Vừa</option>
+                        <option value="7000">Size Lớn (+7k)</option>
+                    </select>
+                    <label>Yêu cầu đá:</label>
+                    <select><option>Đá bình thường</option><option>Ít đá</option><option>Không đá</option></select>
+                    <button class="btn btn-confirm" onclick="processAddToCart('d1', 'Pepsi / Coca-Cola', 15000, '🥤')">Xác nhận vào giỏ</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="drink-card" id="d2">
+            <div class="drink-img">🧋</div>
+            <div class="drink-info">
+                <h3>Trà Sữa Trân Châu</h3>
+                <div class="price">35.000đ</div>
+                <button class="btn btn-add" onclick="toggleOrder('d2')">Thêm vào giỏ</button>
+                
+                <div class="order-custom">
+                    <label>Topping:</label>
+                    <select id="option-d2">
+                        <option value="0">Trân châu đen (Sẵn có)</option>
+                        <option value="5000">Thêm trân châu trắng (+5k)</option>
+                        <option value="7000">Thêm Pudding (+7k)</option>
+                    </select>
+                    <label>Mức đường:</label>
+                    <select><option>100% Đường</option><option>50% Đường</option></select>
+                    <button class="btn btn-confirm" onclick="processAddToCart('d2', 'Trà Sữa Trân Châu', 35000, '🧋')">Xác nhận vào giỏ</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="drink-card" id="d3">
+            <div class="drink-img">🍋</div>
+            <div class="drink-info">
+                <h3>Trà Chanh Tươi</h3>
+                <div class="price">20.000đ</div>
+                <button class="btn btn-add" onclick="toggleOrder('d3')">Thêm vào giỏ</button>
+                
+                <div class="order-custom">
+                    <label>Lựa chọn:</label>
+                    <select id="option-d3">
+                        <option value="0">Trà chanh truyền thống</option>
+                        <option value="5000">Trà chanh mật ong (+5k)</option>
+                    </select>
+                    <button class="btn btn-confirm" onclick="processAddToCart('d3', 'Trà Chanh Tươi', 20000, '🍋')">Xác nhận vào giỏ</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<footer>
+    <p>&copy; 2026 FastFood Universe - Tận hưởng từng ngụm mát lạnh!</p>
+</footer>
+
+<script>
+    // 1. Hiện bảng tùy chỉnh
+    function toggleOrder(id) {
+        const card = document.getElementById(id);
+        card.querySelector('.order-custom').classList.add('active');
+        card.querySelector('.btn-add').style.display = 'none';
+    }
+
+    // 2. Xử lý thêm vào giỏ hàng thực tế
+    function processAddToCart(divId, name, basePrice, img) {
+        let cart = JSON.parse(localStorage.getItem('cart_data')) || [];
+        
+        // Tính giá phụ phí (Size/Topping)
+        const optionSelect = document.getElementById(`option-${divId}`);
+        const extraPrice = optionSelect ? parseInt(optionSelect.value) : 0;
+        const finalPrice = basePrice + extraPrice;
+        
+        // Tạo ID duy nhất (Tên-Giá)
+        const itemId = `${name}-${finalPrice}`;
+
+        const existingItem = cart.find(item => item.id === itemId);
+
+        if (existingItem) {
+            existingItem.qty += 1;
+        } else {
+            cart.push({
+                id: itemId,
+                name: name,
+                price: finalPrice,
+                qty: 1,
+                img: img
+            });
+        }
+
+        // Lưu vào localStorage dùng chung
+        localStorage.setItem('cart_data', JSON.stringify(cart));
+        
+        // Cập nhật số lượng hiển thị
+        updateCartQty();
+
+        alert(`Đã thêm ${name} vào giỏ hàng!`);
+        
+        // Reset trạng thái card
+        const card = document.getElementById(divId);
+        card.querySelector('.order-custom').classList.remove('active');
+        card.querySelector('.btn-add').style.display = 'block';
+    }
+
+    // 3. Cập nhật số lượng icon giỏ hàng
+    function updateCartQty() {
+        const cart = JSON.parse(localStorage.getItem('cart_data')) || [];
+        const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
+        const qtyDisplay = document.getElementById('cart-qty');
+        if(qtyDisplay) qtyDisplay.innerText = totalQty;
+    }
+
+    // Đồng bộ tab
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'cart_data') updateCartQty();
+    });
+
+    // Chạy khi load trang
+    updateCartQty();
+</script>
+
+</body>
+</html>

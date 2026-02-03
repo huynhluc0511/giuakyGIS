@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giỏ Hàng - FastFood Universe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background-color: #f8f9fa; color: #333; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+
+        header { background: #d62828; color: white; padding: 25px 0; text-align: center; margin-bottom: 30px; border-radius: 0 0 20px 20px; }
+        
+        .cart-wrapper { display: grid; grid-template-columns: 1.5fr 1fr; gap: 30px; }
+        @media (max-width: 850px) { .cart-wrapper { grid-template-columns: 1fr; } }
+
+        /* Danh sách món ăn */
+        .cart-items { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); min-height: 300px; }
+        .cart-item { 
+            display: flex; align-items: center; gap: 20px; padding: 20px 0; 
+            border-bottom: 1px solid #eee; position: relative;
+        }
+        .empty-cart { text-align: center; padding: 60px 20px; color: #777; }
+        .empty-cart i { font-size: 4rem; color: #ddd; margin-bottom: 20px; }
+
+        .item-img { font-size: 3rem; background: #fef2f2; padding: 10px; border-radius: 15px; width: 80px; text-align: center; }
+        .item-info { flex: 1; }
+        .item-info h3 { font-size: 1.1rem; margin-bottom: 5px; color: #222; }
+        
+        .quantity-controls { display: flex; align-items: center; gap: 15px; margin-top: 10px; }
+        .btn-qty { 
+            width: 32px; height: 32px; border-radius: 8px; border: 1px solid #ddd; 
+            background: white; cursor: pointer; font-weight: bold; transition: 0.2s;
+        }
+        .btn-qty:hover { background: #ffb703; border-color: #ffb703; color: white; }
+
+        .btn-delete { 
+            color: #d62828; background: #fff1f1; border: none; cursor: pointer; 
+            width: 35px; height: 35px; border-radius: 50%; transition: 0.3s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .btn-delete:hover { background: #d62828; color: white; }
+
+        /* Thanh toán & Thông tin */
+        .cart-summary { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); height: fit-content; position: sticky; top: 20px; }
+        .summary-section { margin-bottom: 20px; }
+        .summary-section h4 { margin-bottom: 15px; border-left: 4px solid #ffb703; padding-left: 10px; color: #444; }
+        
+        input, select, textarea { 
+            width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; 
+            font-family: inherit; margin-bottom: 12px; background: #fafafa; outline: none;
+        }
+        input:focus { border-color: #ffb703; }
+
+        .price-row { display: flex; justify-content: space-between; margin-bottom: 12px; color: #666; }
+        .total-row { 
+            display: flex; justify-content: space-between; font-weight: 700; 
+            font-size: 1.4rem; color: #d62828; border-top: 2px dashed #eee; 
+            padding-top: 15px; margin-top: 15px; 
+        }
+
+        .btn-order { 
+            background: #2a9d8f; color: white; border: none; padding: 18px; 
+            border-radius: 50px; width: 100%; font-weight: 700; font-size: 1.1rem; 
+            cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(42, 157, 143, 0.3);
+        }
+        .btn-order:hover { background: #21867a; transform: translateY(-3px); }
+
+        .voucher-box { display: flex; gap: 10px; margin-bottom: 15px; }
+        .btn-apply { background: #333; color: white; border: none; padding: 0 20px; border-radius: 10px; cursor: pointer; transition: 0.3s; }
+        .btn-apply:hover { background: #000; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="container">
+        <h1><i class="fa-solid fa-cart-shopping"></i> GIỎ HÀNG CỦA BẠN</h1>
+    </div>
+</header>
+
+<main class="container">
+    <div class="cart-wrapper">
+        <section class="cart-items" id="cart-list">
+            </section>
+
+        <aside class="cart-summary">
+            <div class="summary-section">
+                <h4>1. Thông tin giao hàng</h4>
+                <input type="text" id="cus-name" placeholder="Họ và tên khách hàng">
+                <input type="text" id="cus-phone" placeholder="Số điện thoại liên lạc">
+                <textarea id="cus-address" rows="2" placeholder="Địa chỉ giao hàng chi tiết..."></textarea>
+            </div>
+
+            <div class="summary-section">
+                <h4>2. Phương thức nhận hàng</h4>
+                <select id="shipping-method" onchange="calculateTotal()">
+                    <option value="15000">Shipper của quán (15.000đ)</option>
+                    <option value="30000">GrabExpress Nhanh (30.000đ)</option>
+                    <option value="0">Tự đến cửa hàng lấy (0đ)</option>
+                </select>
+            </div>
+
+            <div class="summary-section">
+                <h4>3. Mã giảm giá</h4>
+                <div class="voucher-box">
+                    <input type="text" id="voucher-code" placeholder="Nhập mã FASTFOOD">
+                    <button class="btn-apply" onclick="applyVoucher()">Áp dụng</button>
+                </div>
+            </div>
+
+            <div class="summary-section">
+                <div class="price-row">
+                    <span>Tạm tính món ăn:</span>
+                    <span id="temp-price">0đ</span>
+                </div>
+                <div class="price-row">
+                    <span>Phí vận chuyển:</span>
+                    <span id="ship-price">0đ</span>
+                </div>
+                <div class="price-row" id="discount-row" style="color: #2a9d8f; display: none;">
+                    <span>Giảm giá (Voucher):</span>
+                    <span id="discount-price">-0đ</span>
+                </div>
+                <div class="total-row">
+                    <span>TỔNG THANH TOÁN:</span>
+                    <span id="final-total">0đ</span>
+                </div>
+            </div>
+
+            <button class="btn-order" onclick="submitOrder()">ĐẶT HÀNG NGAY</button>
+            <p style="text-align: center; font-size: 0.8rem; color: #999; margin-top: 15px;">
+                Quý khách sẽ thanh toán tiền mặt khi nhận hàng (COD).
+            </p>
+        </aside>
+    </div>
+</main>
+
+<script>
+    // 1. Lấy dữ liệu thực tế từ LocalStorage (Dùng chung khóa 'cart_data' với các trang menu)
+    let cart = JSON.parse(localStorage.getItem('cart_data')) || [];
+    let discountAmount = 0;
+
+    // 2. Hàm vẽ giao diện giỏ hàng
+    function renderCart() {
+        const cartList = document.getElementById('cart-list');
+        
+        if (cart.length === 0) {
+            cartList.innerHTML = `
+                <div class="empty-cart">
+                    <i class="fa-solid fa-basket-shopping"></i>
+                    <h2>Giỏ hàng đang trống!</h2>
+                    <p>Hãy quay lại Menu và chọn cho mình những món ăn thật ngon nhé.</p>
+                    <br>
+                    <a href="index.html" style="color: #d62828; text-decoration: none; font-weight: 700;">
+                        <i class="fa-solid fa-arrow-left"></i> QUAY LẠI CHỌN MÓN
+                    </a>
+                </div>`;
+            calculateTotal();
+            return;
+        }
+
+        let html = cart.map(item => `
+            <div class="cart-item">
+                <div class="item-img">${item.img}</div>
+                <div class="item-info">
+                    <h3>${item.name}</h3>
+                    <p style="color: #888; font-size: 0.85rem;">Đơn giá: ${item.price.toLocaleString()}đ</p>
+                    <div class="quantity-controls">
+                        <button class="btn-qty" onclick="changeQty('${item.id}', -1)">-</button>
+                        <span>${item.qty}</span>
+                        <button class="btn-qty" onclick="changeQty('${item.id}', 1)">+</button>
+                    </div>
+                </div>
+                <div class="item-total-price">
+                    <strong style="font-size: 1.1rem; color: #d62828;">${(item.price * item.qty).toLocaleString()}đ</strong>
+                </div>
+                <button class="btn-delete" onclick="removeItem('${item.id}')" title="Xóa món này">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            </div>
+        `).join('');
+
+        html += `
+            <div style="margin-top: 25px; display: flex; justify-content: space-between; align-items: center;">
+                <a href="index.html" style="color: #d62828; text-decoration: none; font-weight: 600;">
+                    <i class="fa-solid fa-plus"></i> Chọn thêm món khác
+                </a>
+                <button onclick="clearCart()" style="background: none; border: none; color: #999; cursor: pointer; text-decoration: underline;">
+                    Xóa tất cả giỏ hàng
+                </button>
+            </div>`;
+        
+        cartList.innerHTML = html;
+        calculateTotal();
+        
+        // Cập nhật lại kho dữ liệu để đồng bộ các tab
+        localStorage.setItem('cart_data', JSON.stringify(cart));
+    }
+
+    // 3. Tăng/Giảm số lượng
+    function changeQty(id, delta) {
+        const item = cart.find(i => i.id == id);
+        if (item) {
+            item.qty += delta;
+            if (item.qty < 1) item.qty = 1;
+            renderCart();
+        }
+    }
+
+    // 4. Xóa 1 món
+    function removeItem(id) {
+        if (confirm("Bạn muốn xóa món này khỏi giỏ hàng?")) {
+            cart = cart.filter(i => i.id != id);
+            renderCart();
+        }
+    }
+
+    // 5. Xóa sạch giỏ hàng
+    function clearCart() {
+        if (confirm("Bạn muốn làm trống giỏ hàng?")) {
+            cart = [];
+            renderCart();
+        }
+    }
+
+    // 6. Tính toán tiền tổng quát
+    function calculateTotal() {
+        const temp = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        const ship = parseInt(document.getElementById('shipping-method').value) || 0;
+        const total = temp + ship - discountAmount;
+
+        document.getElementById('temp-price').innerText = temp.toLocaleString() + 'đ';
+        document.getElementById('ship-price').innerText = ship.toLocaleString() + 'đ';
+        document.getElementById('final-total').innerText = (total < 0 ? 0 : total).toLocaleString() + 'đ';
+        
+        if(discountAmount > 0) {
+            document.getElementById('discount-row').style.display = 'flex';
+            document.getElementById('discount-price').innerText = '-' + discountAmount.toLocaleString() + 'đ';
+        } else {
+            document.getElementById('discount-row').style.display = 'none';
+        }
+    }
+
+    // 7. Áp dụng Voucher
+    function applyVoucher() {
+        const code = document.getElementById('voucher-code').value.toUpperCase().trim();
+        if (code === 'FASTFOOD') {
+            discountAmount = 50000;
+            alert("Mã giảm giá 50.000đ đã được áp dụng!");
+        } else {
+            discountAmount = 0;
+            alert("Mã giảm giá không chính xác hoặc đã hết hạn.");
+        }
+        calculateTotal();
+    }
+
+    // 8. Đặt hàng cuối cùng
+    function submitOrder() {
+        if (cart.length === 0) return alert("Giỏ hàng của bạn đang trống!");
+        
+        const name = document.getElementById('cus-name').value.trim();
+        const phone = document.getElementById('cus-phone').value.trim();
+        const address = document.getElementById('cus-address').value.trim();
+        
+        if (!name || !phone || !address) {
+            return alert("Vui lòng điền đầy đủ Thông tin giao hàng!");
+        }
+        
+        const finalPrice = document.getElementById('final-total').innerText;
+        
+        alert(`🎉 ĐẶT HÀNG THÀNH CÔNG!\n\nChào ${name}, đơn hàng của bạn trị giá ${finalPrice} đang được chuẩn bị.\nShipper sẽ sớm liên hệ qua số: ${phone}.`);
+        
+        // Xóa giỏ hàng sau khi đặt xong
+        localStorage.removeItem('cart_data');
+        window.location.href = 'index.html'; // Chuyển về trang chủ
+    }
+
+    // Lắng nghe thay đổi từ các tab menu khác (Real-time sync)
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'cart_data') {
+            cart = JSON.parse(e.newValue) || [];
+            renderCart();
+        }
+    });
+
+    // Chạy render lần đầu khi mở trang
+    renderCart();
+</script>
+
+</body>
+</html>

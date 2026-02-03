@@ -1,18 +1,195 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang Chủ - FastFood Universe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* CSS RESET & GLOBAL */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background-color: #f8f9fa; color: #333; scroll-behavior: smooth; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        a { text-decoration: none; transition: 0.3s; }
+        ul { list-style: none; }
 
-{% block title %}
-Trang chủ | Thức Ăn Nhanh
-{% endblock %}
+        /* HEADER & NAV */
+        header { background: #d62828; color: white; padding: 15px 0; text-align: center; }
+        nav { background: #ffb703; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        nav .container { display: flex; justify-content: space-between; align-items: center; height: 70px; }
 
-{% block content %}
-<h2>Chào mừng đến với cửa hàng thức ăn nhanh</h2>
+        .nav-links { display: flex; gap: 15px; }
+        .nav-links a { color: #333; font-weight: 700; font-size: 0.95rem; }
+        .nav-links a:hover { color: #d62828; }
 
-<p>Chúng tôi chuyên phục vụ:</p>
-<ul>
-    <li>🍔 Burger</li>
-    <li>🍟 Khoai tây chiên</li>
-    <li>🥤 Nước uống</li>
-</ul>
+        /* DROPDOWN */
+        .dropdown { position: relative; }
+        .dropdown-content {
+            display: none; position: absolute; top: 100%; left: 0;
+            background: white; min-width: 200px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15); border-radius: 0 0 10px 10px;
+            border-top: 4px solid #d62828;
+        }
+        .dropdown-content li a { display: block; padding: 12px 20px; border-bottom: 1px solid #eee; }
+        .dropdown:hover .dropdown-content { display: block; }
 
-<p>Đặt hàng nhanh – Giao hàng liền tay!</p>
-{% endblock %}
+        /* NAV RIGHT (CART & LOGIN) */
+        .nav-right { display: flex; align-items: center; gap: 20px; }
+        
+        .cart-icon { position: relative; font-size: 1.5rem; color: #333; }
+        .cart-badge {
+            position: absolute; top: -5px; right: -8px; 
+            background: #d62828; color: white;
+            font-size: 0.75rem; width: 20px; height: 20px; 
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+            border: 2px solid #ffb703; visibility: hidden;
+        }
+
+        /* NÚT ĐĂNG NHẬP / ĐĂNG KÝ */
+        .auth-buttons { display: flex; gap: 10px; }
+        .btn-auth { padding: 8px 20px; border-radius: 50px; font-weight: 700; font-size: 0.9rem; border: 2px solid transparent; }
+        
+        .login { border-color: #d62828; color: #d62828; background: transparent; }
+        .login:hover { background: #d62828; color: white; }
+        
+        .register { background: #d62828; color: white; }
+        .register:hover { background: #b01a1a; box-shadow: 0 4px 10px rgba(214, 40, 40, 0.4); }
+
+        /* HERO SECTION */
+        .hero { 
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1920&q=80');
+            background-size: cover; background-position: center;
+            color: white; text-align: center; padding: 100px 20px; margin-bottom: 50px;
+        }
+        .btn-cta { background: #ffb703; color: #333; padding: 15px 40px; font-weight: 800; border-radius: 50px; }
+
+        /* CATEGORIES */
+        .category-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 30px; margin-bottom: 80px; }
+        .category-card { background: white; border-radius: 20px; overflow: hidden; text-align: center; border: 1px solid #eee; transition: 0.4s; }
+        .category-card:hover { transform: translateY(-10px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
+        .card-image { height: 160px; display: flex; align-items: center; justify-content: center; background: #fff8e1; font-size: 4rem; }
+        .card-body { padding: 20px; }
+        .btn-view { display: inline-block; background: #333; color: white; padding: 10px 25px; border-radius: 50px; }
+        
+        footer { background: #222; color: #bbb; text-align: center; padding: 40px 0; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="container">
+        <h1>🍔 FastFood Universe</h1>
+    </div>
+</header>
+
+<nav>
+    <div class="container">
+        <div class="nav-left">
+            <ul class="nav-links">
+                <li><a href="index.html">Trang chủ</a></li>
+                <li class="dropdown">
+                    <a href="#">Thực đơn ▼</a>
+                    <ul class="dropdown-content">
+                        <li><a href="pizza.html">🍕 Pizza</a></li>
+                        <li><a href="hamburger.html">🍔 Hamburger</a></li>
+                        <li><a href="ga-chien.html">🍗 Gà Chiên</a></li>
+                        <li><a href="khoai-tay.html">🍟 Khoai Tây</a></li>
+                        <li><a href="do-uong.html">🥤 Nước Ngọt</a></li>
+                    </ul>
+                </li>
+                <li><a href="lien-he.html">Liên hệ</a></li>
+            </ul>
+        </div>
+
+        <div class="nav-right">
+            <a href="gio-hang.html" class="cart-icon">
+                <i class="fa-solid fa-cart-shopping"></i>
+                <span class="cart-badge" id="main-cart-badge">0</span> 
+            </a>
+
+            <div class="auth-buttons">
+                <a href="login.html" class="btn-auth login">Đăng nhập</a>
+                <a href="register.html" class="btn-auth register">Đăng ký</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<main>
+    <section class="hero">
+        <div class="container">
+            <h2>Thế Giới Đồ Ăn Nhanh</h2>
+            <p>Hương vị tuyệt hảo, giao hàng thần tốc!</p>
+            <br>
+            <a href="#menu" class="btn-cta">Đặt Món Ngay</a>
+        </div>
+    </section>
+
+    <section class="container" id="menu">
+        <div class="category-grid">
+            <div class="category-card">
+                <div class="card-image">🍕</div>
+                <div class="card-body">
+                    <h3>Pizza</h3>
+                    <a href="pizza.html" class="btn-view">Xem Menu</a>
+                </div>
+            </div>
+            <div class="category-card">
+                <div class="card-image">🍔</div>
+                <div class="card-body">
+                    <h3>Hamburger</h3>
+                    <a href="hamburger.html" class="btn-view">Xem Menu</a>
+                </div>
+            </div>
+            <div class="category-card">
+                <div class="card-image">🍗</div>
+                <div class="card-body">
+                    <h3>Gà Chiên</h3>
+                    <a href="ga-chien.html" class="btn-view">Xem Menu</a>
+                </div>
+            </div>
+            <div class="category-card">
+                <div class="card-image">🍟</div>
+                <div class="card-body">
+                    <h3>Khoai Tây</h3>
+                    <a href="khoai-tay.html" class="btn-view">Xem Menu</a>
+                </div>
+            </div>
+            <div class="category-card">
+                <div class="card-image">🥤</div>
+                <div class="card-body">
+                    <h3>Nước Ngọt</h3>
+                    <a href="do-uong.html" class="btn-view">Xem Menu</a>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer>
+    <p>&copy; 2026 FastFood Universe</p>
+</footer>
+
+<script>
+    // Script cập nhật số lượng giỏ hàng
+    function updateHomeCartBadge() {
+        const cart = JSON.parse(localStorage.getItem('cart_data')) || [];
+        const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
+        const badge = document.getElementById('main-cart-badge');
+        
+        if (totalQty > 0) {
+            badge.innerText = totalQty;
+            badge.style.visibility = 'visible';
+        } else {
+            badge.style.visibility = 'hidden';
+        }
+    }
+    updateHomeCartBadge();
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'cart_data') updateHomeCartBadge();
+    });
+</script>
+
+</body>
+</html>
