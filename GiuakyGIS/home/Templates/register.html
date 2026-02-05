@@ -5,34 +5,125 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng Ký - FastFood Universe</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    {% load static %}
     <style>
-        body { font-family: 'Poppins', sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .auth-card { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
-        h2 { color: #d62828; margin-bottom: 20px; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; outline: none; }
-        button { width: 100%; padding: 12px; background: #d62828; color: white; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        button:hover { background: #b01a1a; }
-        .switch { margin-top: 20px; font-size: 0.9rem; }
+        /* Tối ưu lại CSS để căn chỉnh đẹp hơn */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background: #f0f2f5; 
+            display: flex; 
+            flex-direction: column; /* Cho phép Footer nằm dưới cùng */
+            min-height: 100vh; 
+        }
+        
+        .main-content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .auth-card { 
+            background: white; 
+            padding: 40px; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            width: 100%; 
+            max-width: 420px; 
+            text-align: center;
+            border-top: 5px solid #d62828;
+        }
+
+        h2 { color: #d62828; margin-bottom: 20px; font-weight: 700; }
+        
+        .input-group { text-align: left; margin-bottom: 10px; }
+        .input-group label { font-size: 0.85rem; font-weight: 600; color: #555; margin-left: 5px; }
+
+        input { 
+            width: 100%; 
+            padding: 12px 15px; 
+            margin: 5px 0 15px; 
+            border: 1px solid #ddd; 
+            border-radius: 10px; 
+            outline: none; 
+            font-family: inherit;
+            transition: 0.3s;
+        }
+
+        input:focus { border-color: #d62828; box-shadow: 0 0 0 3px rgba(214, 40, 40, 0.1); }
+
+        button { 
+            width: 100%; 
+            padding: 14px; 
+            background: #d62828; 
+            color: white; 
+            border: none; 
+            border-radius: 50px; 
+            font-weight: bold; 
+            font-size: 1rem;
+            cursor: pointer; 
+            margin-top: 10px; 
+            transition: 0.3s;
+        }
+
+        button:hover { background: #b01a1a; transform: translateY(-2px); }
+
+        .switch { margin-top: 15px; font-size: 0.9rem; color: #666; }
         .switch a { color: #d62828; text-decoration: none; font-weight: bold; }
+        .switch a:hover { text-decoration: underline; }
+
+        footer { background: #222; color: white; text-align: center; padding: 25px 0; line-height: 1.6; }
+        footer p.team-title { font-weight: 600; color: #ffb703; margin-bottom: 5px; }
     </style>
 </head>
 <body>
-    <div class="auth-card">
-        <h2>Đăng Ký Tài Khoản</h2>
-        <form onsubmit="handleRegister(event)">
-            <input type="text" placeholder="Họ và tên" required>
-            <input type="email" placeholder="Email" required>
-            <input type="password" id="pass" placeholder="Mật khẩu" required>
-            <input type="password" id="repass" placeholder="Nhập lại mật khẩu" required>
-            <button type="submit">Đăng Ký Ngay</button>
-        </form>
-        <div class="switch">
-            Đã có tài khoản? <a href="login.html">Đăng nhập</a>
-        </div>
-        <div class="switch">
-            <a href="index.html">← Về trang chủ</a>
+
+    <div class="main-content">
+        <div class="auth-card">
+            <h2>Đăng Ký Tài Khoản</h2>
+            
+            <form onsubmit="handleRegister(event)">
+                <div class="input-group">
+                    <label>Họ và tên</label>
+                    <input type="text" placeholder="Ví dụ: Dương Đan Huy" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Email</label>
+                    <input type="email" placeholder="example@mail.com" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Mật khẩu</label>
+                    <input type="password" id="pass" placeholder="Nhập mật khẩu" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Xác nhận mật khẩu</label>
+                    <input type="password" id="repass" placeholder="Nhập lại mật khẩu" required>
+                </div>
+
+                <button type="submit">Đăng Ký Ngay</button>
+            </form>
+
+            <div class="switch">
+                Đã có tài khoản? <a href="{% url 'login' %}">Đăng nhập</a>
+            </div>
+            <div class="switch" style="border-top: 1px solid #eee; padding-top: 15px;">
+                <a href="{% url 'home' %}" style="color: #666;">← Về trang chủ</a>
+            </div>
         </div>
     </div>
+
+    <footer>
+        <div class="container">
+            <p class="team-title">&copy; FastFood Universe - Nhóm thực hiện:</p>
+            <p>Dương Đan Huy - 1250080068</p>
+            <p>Huỳnh Tấn Lực - 1250080110</p>
+        </div>
+    </footer>
 
     <script>
         function handleRegister(e) {
@@ -40,11 +131,17 @@
             const pass = document.getElementById('pass').value;
             const repass = document.getElementById('repass').value;
             
+            if (pass.length < 6) {
+                alert("❌ Mật khẩu phải có ít nhất 6 ký tự!");
+                return;
+            }
+
             if (pass !== repass) {
                 alert("❌ Mật khẩu nhập lại không khớp!");
             } else {
                 alert("✅ Đăng ký thành công! Vui lòng đăng nhập.");
-                window.location.href = 'login.html';
+                // Chuyển hướng sang trang đăng nhập của Django
+                window.location.href = "{% url 'login' %}";
             }
         }
     </script>

@@ -2,88 +2,122 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Bản đồ Cửa hàng</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bản đồ Cửa hàng - FastFood Universe</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
+    {% load static %}
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        /* Bắt buộc phải set chiều cao cho map */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background-color: #f8f9fa; color: #333; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+        /* Nav Bar đồng bộ */
+        nav { background: #ffb703; padding: 15px 0; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        nav .container { display: flex; justify-content: space-between; align-items: center; }
+        .btn-back { color: #333; text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+
+        header { background: #2a9d8f; color: white; padding: 40px 0; text-align: center; }
+        
+        /* Map Style */
         #map { 
-            height: 600px; 
+            height: 550px; 
             width: 100%; 
-            border: 2px solid #ccc;
-            border-radius: 8px;
-            margin-top: 20px;
+            border: 5px solid white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-top: -30px; /* Tạo hiệu ứng đè lên header nhẹ */
+            z-index: 1;
         }
-        .back-link {
-            text-decoration: none;
-            color: white;
-            background: #333;
-            padding: 10px 15px;
-            border-radius: 5px;
-        }
+
+        .map-section { padding-bottom: 50px; }
+
+        footer { background: #222; color: white; text-align: center; padding: 30px 0; margin-top: 50px; line-height: 1.6; }
+        footer p.team-title { font-weight: 600; color: #ffb703; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
-    <a href="/" class="back-link">← Quay lại Trang chủ</a>
-    <h1>Hệ thống cửa hàng trên bản đồ</h1>
-    
+<nav>
+    <div class="container">
+        <a href="{% url 'home' %}" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Quay lại Trang chủ</a>
+        <span style="font-weight: 700;">FASTFOOD UNIVERSE</span>
+    </div>
+</nav>
+
+<header>
+    <div class="container">
+        <h1><i class="fa-solid fa-map-location-dot"></i> Hệ thống cửa hàng</h1>
+        <p>Tìm chi nhánh gần bạn nhất để thưởng thức món ngon nóng hổi</p>
+    </div>
+</header>
+
+<main class="container map-section">
     <div id="map"></div>
+</main>
 
-    {{ data_cua_hang|json_script:"geo-json-data" }}
+{{ data_cua_hang|json_script:"geo-json-data" }}
 
-    <script>
-        // --- 1. Khởi tạo bản đồ ---
-        var hcmCoords = [10.762622, 106.660172]; 
-        var map = L.map('map').setView(hcmCoords, 13);
+<footer>
+    <div class="container">
+        <p class="team-title">&copy; FastFood Universe - Nhóm thực hiện:</p>
+        <p>Dương Đan Huy - 1250080068</p>
+        <p>Huỳnh Tấn Lực - 1250080110</p>
+    </div>
+</footer>
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors',
-            maxZoom: 19
-        }).addTo(map);
+<script>
+    // --- 1. Khởi tạo bản đồ ---
+    // Mặc định view ở TP.HCM
+    var hcmCoords = [10.762622, 106.660172]; 
+    var map = L.map('map').setView(hcmCoords, 13);
 
-        // --- 2. Lấy dữ liệu an toàn từ thẻ ẩn ---
-        try {
-            // Tìm thẻ script chứa JSON bằng ID
-            var scriptTag = document.getElementById('geo-json-data');
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
+    }).addTo(map);
+
+    // --- 2. Xử lý dữ liệu ---
+    try {
+        var scriptTag = document.getElementById('geo-json-data');
+        var storeData = JSON.parse(scriptTag.textContent);
+
+        if (storeData && storeData.features && storeData.features.length > 0) {
             
-            // Chuyển đổi text trong thẻ đó thành Object JavaScript
-            var storeData = JSON.parse(scriptTag.textContent);
+            var storeLayer = L.geoJSON(storeData, {
+                onEachFeature: function (feature, layer) {
+                    var ten = feature.properties.ten_cua_hang || "Cửa hàng FastFood";
+                    var diachi = feature.properties.dia_chi || "Chưa có địa chỉ";
+                    
+                    // Tạo popup với phong cách đẹp hơn
+                    layer.bindPopup(`
+                        <div style='text-align:center; font-family: "Poppins", sans-serif;'>
+                            <b style='color:#e63946; font-size: 1.1rem;'>${ten}</b><br>
+                            <p style='margin-top:5px; color:#555;'>${diachi}</p>
+                            <hr style='margin: 8px 0; border: 0; border-top: 1px solid #eee;'>
+                            <span style='color: #2a9d8f; font-weight: 600;'>Đang mở cửa</span>
+                        </div>
+                    `);
+                }
+            });
 
-            // --- 3. Vẽ lên bản đồ ---
-            if (storeData && storeData.features && storeData.features.length > 0) {
-                
-                var storeLayer = L.geoJSON(storeData, {
-                    onEachFeature: function (feature, layer) {
-                        // Lấy thông tin (dùng || để dự phòng nếu thiếu dữ liệu)
-                        var ten = feature.properties.ten_cua_hang || "Cửa hàng FastFood";
-                        var diachi = feature.properties.dia_chi || "Chưa có địa chỉ";
-                        
-                        // Tạo popup
-                        layer.bindPopup(`
-                            <div style='text-align:center'>
-                                <b style='color:#d32f2f'>${ten}</b><br>
-                                <i>${diachi}</i>
-                            </div>
-                        `);
-                    }
-                });
-
-                storeLayer.addTo(map);
-                
-                // Tự động zoom để thấy hết các cửa hàng
-                map.fitBounds(storeLayer.getBounds());
+            storeLayer.addTo(map);
             
-            } else {
-                console.log("Dữ liệu GeoJSON rỗng hoặc chưa có cửa hàng nào.");
-            }
-
-        } catch (error) {
-            console.error("Lỗi khi xử lý dữ liệu bản đồ:", error);
+            // Tự động căn chỉnh bản đồ để bao quát hết các marker
+            map.fitBounds(storeLayer.getBounds(), {padding: [50, 50]});
+        
+        } else {
+            console.log("Chưa có dữ liệu cửa hàng.");
         }
-    </script>
+
+    } catch (error) {
+        console.error("Lỗi khi tải dữ liệu bản đồ:", error);
+    }
+</script>
+
 </body>
 </html>

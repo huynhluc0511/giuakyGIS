@@ -6,6 +6,7 @@
     <title>Khoai Tây Chiên - FastFood Universe</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    {% load static %}
     <style>
         /* GIỮ NGUYÊN PHẦN CSS CỦA BẠN */
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -36,8 +37,9 @@
 
 <nav>
     <div class="container">
-        <a href="index.html" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Quay lại trang chủ</a>
-        <a href="Gio-hang.html" class="cart-link">
+        <a href="{% url 'home' %}" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Quay lại trang chủ</a>
+        
+        <a href="{% url 'gio_hang' %}" class="cart-link">
             <i class="fa-solid fa-cart-shopping"></i> Giỏ hàng (<span id="cart-qty">0</span>)
         </a>
     </div>
@@ -114,29 +116,24 @@
     </div>
 </main>
 
-<footer>
-    <p>&copy; 2026 FastFood Universe - Tận hưởng từng khoảnh khắc!</p>
+<footer 
+        <p>Dương Đan Huy - 1250080068</p>
+        <p>Huỳnh Tấn Lực - 1250080110</p>
 </footer>
 
 <script>
-    // 1. Hiển thị form tùy chỉnh
     function toggleOrder(id) {
         const card = document.getElementById(id);
         card.querySelector('.order-custom').classList.add('active');
         card.querySelector('.btn-add').style.display = 'none';
     }
 
-    // 2. Hàm xử lý thêm vào giỏ hàng thực tế
     function processAddToCart(divId, name, basePrice, img) {
-        // Lấy dữ liệu giỏ hàng hiện tại (cart_data dùng chung cho toàn website)
         let cart = JSON.parse(localStorage.getItem('cart_data')) || [];
         
-        // Tính giá dựa trên size
         const sizeSelect = document.getElementById(`size-${divId}`);
         const extraPrice = sizeSelect ? parseInt(sizeSelect.value) : 0;
         const finalPrice = basePrice + extraPrice;
-        
-        // Tạo ID duy nhất (Tên + Giá) để phân biệt các size khác nhau
         const itemId = name + finalPrice;
 
         const existingItem = cart.find(item => item.id === itemId);
@@ -153,33 +150,27 @@
             });
         }
 
-        // Lưu vào localStorage
         localStorage.setItem('cart_data', JSON.stringify(cart));
-        
-        // Cập nhật con số trên icon giỏ hàng
         updateCartQty();
 
         alert(`Đã thêm ${name} vào giỏ hàng!`);
         
-        // Reset thẻ về trạng thái ban đầu
         const card = document.getElementById(divId);
         card.querySelector('.order-custom').classList.remove('active');
         card.querySelector('.btn-add').style.display = 'block';
     }
 
-    // 3. Cập nhật số lượng thời gian thực
     function updateCartQty() {
         const cart = JSON.parse(localStorage.getItem('cart_data')) || [];
         const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
-        document.getElementById('cart-qty').innerText = totalQty;
+        const qtySpan = document.getElementById('cart-qty');
+        if (qtySpan) qtySpan.innerText = totalQty;
     }
 
-    // Lắng nghe thay đổi từ các tab/cửa sổ khác
     window.addEventListener('storage', (e) => {
         if (e.key === 'cart_data') updateCartQty();
     });
 
-    // Chạy khi vừa mở trang
     updateCartQty();
 </script>
 </body>

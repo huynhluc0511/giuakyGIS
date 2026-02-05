@@ -6,61 +6,28 @@
     <title>Thực Đơn Hamburger - FastFood Universe</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    {% load static %}
     <style>
+        /* --- GIỮ NGUYÊN PHẦN CSS ĐẸP MẮT CỦA BẠN --- */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Poppins', sans-serif; background-color: #f8f9fa; color: #333; }
         .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
-        
-        /* Nav & Header */
         nav { background: #ffb703; padding: 15px 0; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         nav .container { display: flex; justify-content: space-between; align-items: center; }
         .btn-back { color: #333; text-decoration: none; font-weight: 600; }
         .cart-link { text-decoration: none; color: #333; background: white; padding: 8px 15px; border-radius: 50px; font-weight: 700; }
-
         header { background: #f57c00; color: white; padding: 40px 0; text-align: center; margin-bottom: 30px; }
-
-        /* Grid */
-        .burger-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
-            gap: 25px; 
-            padding-bottom: 50px; 
-        }
-
-        /* Thẻ món ăn */
-        .burger-card { 
-            background: white; border-radius: 20px; padding: 25px; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05); text-align: center;
-            transition: 0.3s; border: 1px solid #eee; display: flex; flex-direction: column;
-        }
+        .burger-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; padding-bottom: 50px; }
+        .burger-card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); text-align: center; transition: 0.3s; border: 1px solid #eee; display: flex; flex-direction: column; }
         .burger-card:hover { transform: translateY(-10px); }
-
         .burger-img { font-size: 5rem; margin-bottom: 15px; }
         .price { color: #2a9d8f; font-weight: 700; font-size: 1.3rem; margin-bottom: 20px; }
-
-        /* Phần Ghi chú ẩn đi ban đầu */
-        .order-details {
-            max-height: 0; overflow: hidden; transition: all 0.4s ease; opacity: 0;
-            text-align: left; background: #fff8e1; border-radius: 10px;
-        }
-
-        .order-details.active {
-            max-height: 400px; opacity: 1; padding: 15px; margin-bottom: 15px; border: 1px dashed #f57c00;
-        }
-
+        .order-details { max-height: 0; overflow: hidden; transition: all 0.4s ease; opacity: 0; text-align: left; background: #fff8e1; border-radius: 10px; }
+        .order-details.active { max-height: 400px; opacity: 1; padding: 15px; margin-bottom: 15px; border: 1px dashed #f57c00; }
         .order-details label { font-size: 0.8rem; font-weight: 600; color: #f57c00; display: block; }
-        .order-details select, .order-details input {
-            width: 100%; padding: 8px; margin: 5px 0 12px; border: 1px solid #ddd; border-radius: 5px; font-family: inherit;
-        }
-
-        /* Nút bấm */
-        .btn-main {
-            background: #f57c00; color: white; border: none; padding: 12px 25px;
-            border-radius: 50px; font-weight: 700; cursor: pointer; width: 100%;
-            transition: 0.3s;
-        }
+        .order-details select, .order-details input { width: 100%; padding: 8px; margin: 5px 0 12px; border: 1px solid #ddd; border-radius: 5px; font-family: inherit; }
+        .btn-main { background: #f57c00; color: white; border: none; padding: 12px 25px; border-radius: 50px; font-weight: 700; cursor: pointer; width: 100%; transition: 0.3s; }
         .btn-confirm { background: #2a9d8f; color: white; margin-top: 10px; }
-
         footer { background: #222; color: white; text-align: center; padding: 30px 0; }
     </style>
 </head>
@@ -68,8 +35,9 @@
 
 <nav>
     <div class="container">
-        <a href="index.html" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Quay lại trang chủ</a>
-        <a href="Gio-hang.html" class="cart-link">
+        <a href="{% url 'home' %}" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Quay lại trang chủ</a>
+        
+        <a href="{% url 'gio_hang' %}" class="cart-link">
             <i class="fa-solid fa-cart-shopping"></i> Giỏ hàng (<span id="cart-qty">0</span>)
         </a>
     </div>
@@ -140,8 +108,9 @@
     </div>
 </main>
 
-<footer>
-    <p>&copy; 2026 FastFood Universe</p>
+<footer 
+        <p>Dương Đan Huy - 1250080068</p>
+        <p>Huỳnh Tấn Lực - 1250080110</p>
 </footer>
 
 <script>
@@ -152,16 +121,13 @@
         card.querySelector('.btn-add').style.display = 'none';
     }
 
-    // 2. Xử lý thêm vào giỏ hàng và đồng bộ LocalStorage
+    // 2. Xử lý thêm vào giỏ hàng (LocalStorage)
     function processAddToCart(divId, name, basePrice, img) {
         let cart = JSON.parse(localStorage.getItem('cart_data')) || [];
         
-        // Lấy giá trị phụ phí từ select
         const optionSelect = document.getElementById(`option-${divId}`);
         const extraPrice = optionSelect ? parseInt(optionSelect.value) : 0;
         const finalPrice = basePrice + extraPrice;
-        
-        // Tạo ID duy nhất để phân biệt sản phẩm cùng tên nhưng khác giá (khác option)
         const itemId = `${name}-${finalPrice}`;
 
         const existingItem = cart.find(item => item.id === itemId);
@@ -178,33 +144,28 @@
             });
         }
 
-        // Lưu vào kho dữ liệu chung cart_data
         localStorage.setItem('cart_data', JSON.stringify(cart));
-        
-        // Cập nhật số lượng trên giao diện ngay lập tức
         updateCartQty();
 
         alert(`Đã thêm ${name} vào giỏ hàng thành công!`);
         
-        // Reset giao diện thẻ về ban đầu
         const card = document.getElementById(divId);
         card.querySelector('.order-details').classList.remove('active');
         card.querySelector('.btn-add').style.display = 'block';
     }
 
-    // 3. Hàm cập nhật số lượng hiển thị (Thời gian thực)
+    // 3. Cập nhật số lượng hiển thị
     function updateCartQty() {
         const cart = JSON.parse(localStorage.getItem('cart_data')) || [];
         const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
-        document.getElementById('cart-qty').innerText = totalQty;
+        const qtyDisplay = document.getElementById('cart-qty');
+        if (qtyDisplay) qtyDisplay.innerText = totalQty;
     }
 
-    // Đồng bộ nếu người dùng mở nhiều tab cùng lúc
     window.addEventListener('storage', (e) => {
         if (e.key === 'cart_data') updateCartQty();
     });
 
-    // Gọi hàm khi load trang
     updateCartQty();
 </script>
 

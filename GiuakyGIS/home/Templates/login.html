@@ -6,14 +6,14 @@
     <title>Đăng Nhập - FastFood Universe</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    {% load static %}
     <style>
-        /* GIỮ NGUYÊN CSS CƠ BẢN TỪ TRANG REGISTER */
+        /* GIỮ NGUYÊN CSS CỦA BẠN - ĐÃ TỐI ƯU MÀU ĐỎ THƯƠNG HIỆU */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Poppins', sans-serif; background-color: #f0f2f5; color: #333; }
         .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
         a { text-decoration: none; transition: 0.3s; }
 
-        /* Nav Bar */
         nav { background: #ffb703; padding: 15px 0; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         nav .container { display: flex; justify-content: space-between; align-items: center; }
         
@@ -24,30 +24,20 @@
             display: flex; align-items: center; justify-content: center; visibility: hidden;
         }
 
-        /* LOGIN FORM STYLE - Thay đổi màu sắc sang ĐỎ (#e63946) */
-        .auth-wrapper {
-            display: flex; justify-content: center; align-items: center;
-            min-height: 85vh; padding: 40px 20px;
-        }
-
+        .auth-wrapper { display: flex; justify-content: center; align-items: center; min-height: 85vh; padding: 40px 20px; }
         .auth-card {
-            background: white; width: 100%; max-width: 450px; /* Nhỏ hơn trang đăng ký một chút */
-            padding: 40px; border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center;
-            /* Đổi viền trên sang màu đỏ thương hiệu */
-            border-top: 5px solid #e63946; 
+            background: white; width: 100%; max-width: 450px; padding: 40px; border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; border-top: 5px solid #e63946; 
         }
 
         .auth-card h2 { font-size: 2rem; color: #e63946; margin-bottom: 10px; }
         .auth-card p { color: #666; margin-bottom: 25px; }
-
         .input-group { text-align: left; margin-bottom: 15px; }
         .input-group label { display: block; font-weight: 600; margin-bottom: 5px; color: #444; font-size: 0.9rem; }
         .input-group input {
             width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px;
             font-family: inherit; font-size: 1rem; outline: none; transition: 0.3s;
         }
-        /* Focus input màu đỏ */
         .input-group input:focus { border-color: #e63946; box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.2); }
 
         .btn-submit {
@@ -59,25 +49,24 @@
 
         .switch-auth { margin-top: 25px; font-size: 0.95rem; }
         .switch-auth a { color: #e63946; font-weight: 700; text-decoration: underline; }
-
-        /* Thêm link quên mật khẩu */
         .forgot-pass { display: block; text-align: right; margin-bottom: 20px; font-size: 0.85rem; color: #666; }
         .forgot-pass:hover { color: #e63946; }
 
-        footer { background: #222; color: white; text-align: center; padding: 20px 0; }
+        footer { background: #222; color: white; text-align: center; padding: 30px 0; margin-top: 50px; line-height: 1.6; }
+        footer p.team-title { font-weight: 600; color: #ffb703; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
 <nav>
     <div class="container">
-        <a href="index.html" style="font-size: 1.5rem; font-weight: 700; color: #333;">🍔 FastFood</a>
+        <a href="{% url 'home' %}" style="font-size: 1.5rem; font-weight: 700; color: #333;">🍔 FastFood</a>
         <div style="display: flex; align-items: center;">
-            <a href="Gio-hang.html" class="cart-icon">
+            <a href="{% url 'gio_hang' %}" class="cart-icon">
                 <i class="fa-solid fa-cart-shopping"></i>
                 <span class="cart-badge" id="cart-qty">0</span>
             </a>
-            <a href="index.html" style="font-weight: 600; color: #333;">Trang chủ</a>
+            <a href="{% url 'home' %}" style="font-weight: 600; color: #333;">Trang chủ</a>
         </div>
     </div>
 </nav>
@@ -90,7 +79,6 @@
         <form onsubmit="handleLogin(event)">
             <div class="input-group">
                 <label>Email</label>
-                
                 <input type="email" id="login-email" placeholder="Nhập email của bạn" required>
             </div>
             
@@ -105,17 +93,21 @@
         </form>
 
         <div class="switch-auth">
-            Chưa có tài khoản? <a href="register.html">Đăng ký ngay</a>
+            Chưa có tài khoản? <a href="{% url 'register' %}">Đăng ký ngay</a>
         </div>
     </div>
 </main>
 
 <footer>
-    <p>&copy; 2026 FastFood Universe</p>
+    <div class="container">
+        <p class="team-title">&copy; FastFood Universe - Nhóm thực hiện:</p>
+        <p>Dương Đan Huy - 1250080068</p>
+        <p>Huỳnh Tấn Lực - 1250080110</p>
+    </div>
 </footer>
 
 <script>
-    // 1. Cập nhật icon giỏ hàng (Giữ nguyên logic để đồng bộ)
+    // 1. Cập nhật icon giỏ hàng
     function updateCartBadge() {
         const cart = JSON.parse(localStorage.getItem('cart_data')) || [];
         const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
@@ -124,6 +116,8 @@
         if (totalQty > 0) {
             badge.innerText = totalQty;
             badge.style.visibility = 'visible';
+        } else {
+            badge.style.visibility = 'hidden';
         }
     }
     updateCartBadge();
@@ -135,22 +129,21 @@
         const email = document.getElementById('login-email').value;
         const pass = document.getElementById('login-pass').value;
 
-        // Giả lập kiểm tra
         if (email && pass) {
-            // Hiệu ứng Loading giả cho chuyên nghiệp
             const btn = document.querySelector('.btn-submit');
+            const originalText = btn.innerText;
             btn.innerText = "Đang xử lý...";
+            btn.disabled = true;
             btn.style.opacity = "0.7";
 
             setTimeout(() => {
                 alert(`✅ Đăng nhập thành công!\nXin chào ${email}.`);
                 
-                // Lưu trạng thái đăng nhập (Giả lập)
                 localStorage.setItem('user_token', 'logged_in');
                 localStorage.setItem('user_email', email);
 
-                // Chuyển về trang chủ
-                window.location.href = 'index.html';
+                // Chuyển hướng về trang chủ Django
+                window.location.href = "{% url 'home' %}";
             }, 1000); 
         } else {
             alert("❌ Vui lòng nhập đầy đủ thông tin!");
