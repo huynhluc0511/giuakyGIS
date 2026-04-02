@@ -4,33 +4,80 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Khoai Tây Chiên - FastFood Universe</title>
+    
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
     {% load static %}
     <style>
-        /* GIỮ NGUYÊN PHẦN CSS CỦA BẠN */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Poppins', sans-serif; background-color: #fdfdfd; color: #333; }
+        body { font-family: 'Poppins', sans-serif; background-color: #f8f9fa; color: #333; overflow-x: hidden; }
         .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
-        nav { background: #ffb703; padding: 15px 0; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        
+        /* Nav & Header */
+        nav { background: #ffb703; padding: 15px 0; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         nav .container { display: flex; justify-content: space-between; align-items: center; }
-        .btn-back { color: #333; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: 0.3s; }
-        .cart-link { text-decoration: none; color: #333; background: white; padding: 8px 15px; border-radius: 50px; font-weight: 700; transition: 0.3s; }
-        header { background: #e63946; color: white; padding: 50px 0; text-align: center; margin-bottom: 30px; }
-        header h1 { font-size: 2.5rem; }
-        .food-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-bottom: 50px; }
-        .food-card { background: white; border-radius: 25px; padding: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); border: 1px solid #eee; transition: 0.3s; display: flex; flex-direction: column; }
-        .food-card:hover { transform: translateY(-10px); box-shadow: 0 15px 30px rgba(230, 57, 70, 0.15); }
-        .food-img { font-size: 5rem; text-align: center; background: #fff8f8; border-radius: 20px; padding: 20px; margin-bottom: 15px; }
-        .price { color: #2a9d8f; font-weight: 700; font-size: 1.2rem; margin-bottom: 15px; }
-        .order-custom { max-height: 0; overflow: hidden; transition: all 0.5s ease; opacity: 0; background: #fffafa; border-radius: 15px; }
+        .btn-back { color: #333; text-decoration: none; font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; gap: 5px; transition: 0.3s; }
+        .btn-back:hover { color: #e63946; transform: translateX(-5px); }
+        .cart-link { text-decoration: none; color: #333; background: white; padding: 8px 18px; border-radius: 50px; font-weight: 700; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .cart-link:hover { background: #e63946; color: white; transform: scale(1.05); }
+
+        header { background: #e63946; color: white; padding: 60px 0; text-align: center; margin-bottom: 40px; box-shadow: 0 5px 15px rgba(230, 57, 70, 0.3); }
+        header h1 { font-size: 2.8rem; font-weight: 800; margin-bottom: 10px; }
+        header p { font-size: 1.1rem; opacity: 0.9; }
+
+        /* Grid Danh sách */
+        .food-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-bottom: 60px; }
+
+        /* Thẻ Món ăn */
+        .food-card { 
+            background: white; border-radius: 25px; padding: 25px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #eee; 
+            transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            display: flex; flex-direction: column; text-align: center;
+        }
+        .food-card:hover { transform: translateY(-15px); box-shadow: 0 20px 40px rgba(230, 57, 70, 0.15); border-color: transparent; }
+        
+        /* Khung hình ảnh thực tế */
+        .food-img-wrapper { 
+            width: 160px; height: 160px; margin: 0 auto 20px; 
+            border-radius: 50%; overflow: hidden; 
+            border: 6px solid #fff8f8; transition: 0.4s;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+        .food-img-wrapper img {
+            width: 100%; height: 100%; object-fit: cover; transition: 0.5s ease;
+        }
+        .food-card:hover .food-img-wrapper { border-color: #fcd5ce; }
+        .food-card:hover .food-img-wrapper img { transform: scale(1.15) rotate(5deg); }
+        
+        .food-info h3 { font-size: 1.4rem; color: #222; font-weight: 700; margin-bottom: 8px; }
+        .food-info p { color: #666; font-size: 0.95rem; margin-bottom: 15px; min-height: 45px; }
+        .price { color: #e63946; font-weight: 800; font-size: 1.3rem; margin-bottom: 20px; }
+
+        /* Tùy chọn (Ẩn) */
+        .order-custom { 
+            max-height: 0; overflow: hidden; transition: all 0.5s ease; opacity: 0; 
+            background: #fffafa; border-radius: 15px; text-align: left;
+        }
         .order-custom.active { max-height: 400px; opacity: 1; padding: 15px; margin-bottom: 15px; border: 1px dashed #e63946; }
-        .order-custom label { font-size: 0.8rem; font-weight: 700; color: #e63946; display: block; margin-bottom: 5px; }
-        .order-custom select, .order-custom input { width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; }
-        .btn { width: 100%; padding: 13px; border: none; border-radius: 50px; font-weight: 700; cursor: pointer; transition: 0.3s; }
-        .btn-add { background: #e63946; color: white; }
-        .btn-confirm { background: #2a9d8f; color: white; margin-top: 10px; }
-        footer { background: #222; color: white; text-align: center; padding: 40px 0; margin-top: 50px; }
+        
+        .order-custom label { font-size: 0.85rem; font-weight: 700; color: #c1121f; display: block; margin-bottom: 5px; }
+        .order-custom select, .order-custom input { width: 100%; padding: 10px; margin-bottom: 12px; border: 1px solid #fcd5ce; border-radius: 8px; font-family: inherit; font-size: 0.9rem; outline: none; transition: 0.3s;}
+        .order-custom select:focus, .order-custom input:focus { border-color: #e63946; box-shadow: 0 0 0 3px rgba(230,57,70,0.1); }
+
+        .btn { width: 100%; padding: 13px; border: none; border-radius: 50px; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 1rem; }
+        .btn-add { background: #e63946; color: white; box-shadow: 0 5px 15px rgba(230, 57, 70, 0.3); }
+        .btn-add:hover { background: #c1121f; transform: scale(1.05); }
+        .btn-confirm { background: #2a9d8f; color: white; margin-top: 5px; box-shadow: 0 5px 15px rgba(42, 157, 143, 0.3); }
+        .btn-confirm:hover { background: #1e7a6e; transform: scale(1.02); }
+
+        footer { background: #1a1a1a; color: white; text-align: center; padding: 50px 0; margin-top: 50px; border-top: 5px solid #ffb703; }
+        .footer-brand { color: #ffb703; font-weight: 800; letter-spacing: 1px; display: block; margin-top: 10px; font-size: 1.2rem; }
     </style>
 </head>
 <body>
@@ -47,15 +94,18 @@
 
 <header>
     <div class="container">
-        <h1>🍟 Khoai Tây Chiên Giòn</h1>
-        <p>Món ăn kèm hoàn hảo cho bữa tiệc của bạn</p>
+        <h1 class="header-animate">🍟 Khoai Tây Chiên Giòn</h1>
+        <p class="header-animate">Món ăn kèm hoàn hảo cho bữa tiệc của bạn</p>
     </div>
 </header>
 
 <main class="container">
     <div class="food-grid">
-        <div class="food-card" id="k1">
-            <div class="food-img">🍟</div>
+        
+        <div class="food-card" id="k1" data-aos="fade-up" data-aos-delay="100">
+            <div class="food-img-wrapper">
+                <img src="https://images.unsplash.com/photo-1576107232684-1279f390859f?auto=format&fit=crop&w=400&q=80" alt="Khoai Tây Truyền Thống">
+            </div>
             <div class="food-info">
                 <h3>Khoai Tây Truyền Thống</h3>
                 <p>Khoai tây tươi chiên muối cổ điển giòn rụm.</p>
@@ -71,13 +121,15 @@
                     </select>
                     <label>Ghi chú:</label>
                     <input type="text" id="note-k1" placeholder="Ít muối, thêm tương cà...">
-                    <button class="btn btn-confirm" onclick="processAddToCart('k1', 'Khoai Tây Truyền Thống', 25000, '🍟')">Xác nhận vào giỏ</button>
+                    <button class="btn btn-confirm" onclick="processAddToCart('k1', 'Khoai Tây Truyền Thống', 25000, 'https://images.unsplash.com/photo-1576107232684-1279f390859f?auto=format&fit=crop&w=400&q=80')">Xác nhận vào giỏ</button>
                 </div>
             </div>
         </div>
 
-        <div class="food-card" id="k2">
-            <div class="food-img">🧀</div>
+        <div class="food-card" id="k2" data-aos="fade-up" data-aos-delay="200">
+            <div class="food-img-wrapper">
+                <img src="https://images.unsplash.com/photo-1585692135671-55dbbe007d12?auto=format&fit=crop&w=400&q=80" alt="Khoai Lắc Phô Mai">
+            </div>
             <div class="food-info">
                 <h3>Khoai Lắc Phô Mai</h3>
                 <p>Vị phô mai đậm đà bám trên từng miếng khoai.</p>
@@ -90,13 +142,15 @@
                         <option value="0">Size Vừa (M)</option>
                         <option value="10000">Size Lớn (L) + 10k</option>
                     </select>
-                    <button class="btn btn-confirm" onclick="processAddToCart('k2', 'Khoai Lắc Phô Mai', 35000, '🧀')">Xác nhận vào giỏ</button>
+                    <button class="btn btn-confirm" onclick="processAddToCart('k2', 'Khoai Lắc Phô Mai', 35000, 'https://images.unsplash.com/photo-1585692135671-55dbbe007d12?auto=format&fit=crop&w=400&q=80')">Xác nhận vào giỏ</button>
                 </div>
             </div>
         </div>
 
-        <div class="food-card" id="k3">
-            <div class="food-img">🥓</div>
+        <div class="food-card" id="k3" data-aos="fade-up" data-aos-delay="300">
+            <div class="food-img-wrapper">
+                <img src="https://images.unsplash.com/photo-1534080564583-6be75777b70a?auto=format&fit=crop&w=400&q=80" alt="Khoai Tây Phủ Bacon">
+            </div>
             <div class="food-info">
                 <h3>Khoai Tây Phủ Bacon</h3>
                 <p>Khoai tây kèm vụn thịt xông khói và sốt đặc biệt.</p>
@@ -109,19 +163,44 @@
                         <option value="0">Sốt Phô Mai</option>
                         <option value="0">Sốt BBQ</option>
                     </select>
-                    <button class="btn btn-confirm" onclick="processAddToCart('k3', 'Khoai Tây Phủ Bacon', 45000, '🥓')">Xác nhận vào giỏ</button>
+                    <button class="btn btn-confirm" onclick="processAddToCart('k3', 'Khoai Tây Phủ Bacon', 45000, 'https://images.unsplash.com/photo-1534080564583-6be75777b70a?auto=format&fit=crop&w=400&q=80')">Xác nhận vào giỏ</button>
                 </div>
             </div>
         </div>
+        
     </div>
 </main>
 
-<footer 
-        <p>Dương Đan Huy - 1250080068</p>
-        <p>Huỳnh Tấn Lực - 1250080110</p>
+<footer>
+    <div class="container">
+        <p>Phát triển với bởi:</p>
+        <p><strong>Dương Đan Huy</strong> (1250080068) & <strong>Huỳnh Tấn Lực</strong> (1250080110)</p>
+        <span class="footer-brand">FASTFOOD UNIVERSE</span>
+    </div>
 </footer>
 
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+
 <script>
+    // 1. Khởi tạo hiệu ứng AOS
+    AOS.init({
+        duration: 1000,
+        once: true,
+        offset: 50
+    });
+
+    // 2. Hiệu ứng Anime.js cho Tiêu đề Header
+    anime({
+        targets: '.header-animate',
+        translateY: [-50, 0],
+        opacity: [0, 1],
+        easing: 'easeOutBounce',
+        duration: 1500,
+        delay: anime.stagger(200)
+    });
+
+    // --- LOGIC GIỎ HÀNG CHÍNH ---
     function toggleOrder(id) {
         const card = document.getElementById(id);
         card.querySelector('.order-custom').classList.add('active');
@@ -134,7 +213,12 @@
         const sizeSelect = document.getElementById(`size-${divId}`);
         const extraPrice = sizeSelect ? parseInt(sizeSelect.value) : 0;
         const finalPrice = basePrice + extraPrice;
-        const itemId = name + finalPrice;
+        
+        // Cập nhật lấy note nếu có (cho sản phẩm k1)
+        const noteElement = document.getElementById(`note-${divId}`);
+        const note = noteElement ? noteElement.value : '';
+
+        const itemId = name + finalPrice + note;
 
         const existingItem = cart.find(item => item.id === itemId);
 
@@ -146,15 +230,29 @@
                 name: name,
                 price: finalPrice,
                 qty: 1,
-                img: img
+                img: img,
+                note: note // Lưu thêm ghi chú vào giỏ hàng
             });
         }
 
         localStorage.setItem('cart_data', JSON.stringify(cart));
         updateCartQty();
 
+        // Thêm hiệu ứng rung giỏ hàng khi thêm thành công (tùy chọn)
+        const cartIcon = document.querySelector('.cart-link');
+        anime({
+            targets: cartIcon,
+            scale: [1, 1.2, 1],
+            rotate: [0, 10, -10, 0],
+            duration: 400,
+            easing: 'easeInOutSine'
+        });
+
         alert(`Đã thêm ${name} vào giỏ hàng!`);
         
+        // Reset note sau khi thêm
+        if(noteElement) noteElement.value = '';
+
         const card = document.getElementById(divId);
         card.querySelector('.order-custom').classList.remove('active');
         card.querySelector('.btn-add').style.display = 'block';
@@ -171,7 +269,11 @@
         if (e.key === 'cart_data') updateCartQty();
     });
 
+    // Khởi chạy khi load trang
     updateCartQty();
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
 </body>
 </html>

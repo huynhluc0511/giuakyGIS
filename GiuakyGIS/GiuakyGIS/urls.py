@@ -5,4 +5,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     # Kết nối các URL từ app home
     path('', include('home.urls')), 
+    path('dashboard/', include('dashboard.urls')),
+    
 ]

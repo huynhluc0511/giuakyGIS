@@ -4,60 +4,111 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trang Chủ - FastFood Universe</title>
+    
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
     {% load static %}
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+
     <style>
-        /* (Giữ nguyên phần CSS của bạn) */
+        /* Base Reset */
+        :root { --red: #d62828; --yellow: #ffb703; --dark: #333; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Poppins', sans-serif; background-color: #f8f9fa; color: #333; scroll-behavior: smooth; }
+        body { font-family: 'Poppins', sans-serif; background-color: #fcfcfc; color: var(--dark); scroll-behavior: smooth; overflow-x: hidden; }
         .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
         a { text-decoration: none; transition: 0.3s; }
         ul { list-style: none; }
-        header { background: #d62828; color: white; padding: 15px 0; text-align: center; }
-        nav { background: #ffb703; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+
+        /* --- PHẦN 1: NAVBAR CŨ (ĐỎ & VÀNG) --- */
+        header { background: var(--red); color: white; padding: 15px 0; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        nav { background: var(--yellow); position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         nav .container { display: flex; justify-content: space-between; align-items: center; height: 70px; }
-        .nav-links { display: flex; gap: 15px; }
-        .nav-links a { color: #333; font-weight: 700; font-size: 0.95rem; }
-        .nav-links a:hover { color: #d62828; }
+        
+        .nav-links { display: flex; gap: 20px; align-items: center; }
+        .nav-links a { color: #333; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 5px; }
+        .nav-links a:hover { color: var(--red); transform: translateY(-2px); }
+
+        /* Dropdown Menu */
         .dropdown { position: relative; }
         .dropdown-content {
             display: none; position: absolute; top: 100%; left: 0;
-            background: white; min-width: 200px;
+            background: white; min-width: 180px;
             box-shadow: 0 8px 20px rgba(0,0,0,0.15); border-radius: 0 0 10px 10px;
-            border-top: 4px solid #d62828;
+            border-top: 4px solid var(--red); overflow: hidden;
         }
-        .dropdown-content li a { display: block; padding: 12px 20px; border-bottom: 1px solid #eee; }
+        .dropdown-content li a { display: block; padding: 12px 20px; border-bottom: 1px solid #eee; color: #333; }
+        .dropdown-content li a:hover { background: #fff8e1; color: var(--red); }
         .dropdown:hover .dropdown-content { display: block; }
+
+        /* Right Side Nav */
         .nav-right { display: flex; align-items: center; gap: 20px; }
-        .cart-icon { position: relative; font-size: 1.5rem; color: #333; }
+        .cart-icon { position: relative; font-size: 1.6rem; color: #333; transition: 0.3s; }
+        .cart-icon:hover { color: var(--red); }
         .cart-badge {
-            position: absolute; top: -5px; right: -8px; 
-            background: #d62828; color: white;
-            font-size: 0.75rem; width: 20px; height: 20px; 
-            border-radius: 50%; display: flex; align-items: center; justify-content: center; 
-            border: 2px solid #ffb703; visibility: hidden;
+            position: absolute; top: -5px; right: -10px; background: var(--red); color: white;
+            font-size: 0.7rem; width: 22px; height: 22px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; border: 2px solid var(--yellow); visibility: hidden;
         }
-        .auth-buttons { display: flex; gap: 10px; }
-        .btn-auth { padding: 8px 20px; border-radius: 50px; font-weight: 700; font-size: 0.9rem; border: 2px solid transparent; }
-        .login { border-color: #d62828; color: #d62828; background: transparent; }
-        .login:hover { background: #d62828; color: white; }
-        .register { background: #d62828; color: white; }
-        .register:hover { background: #b01a1a; box-shadow: 0 4px 10px rgba(214, 40, 40, 0.4); }
-        .hero { 
-            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1920&q=80');
-            background-size: cover; background-position: center;
-            color: white; text-align: center; padding: 100px 20px; margin-bottom: 50px;
+        .btn-auth { padding: 9px 22px; border-radius: 50px; font-weight: 700; font-size: 0.85rem; border: 2px solid var(--red); cursor: pointer; transition: 0.3s; }
+        .login { color: var(--red); background: transparent; }
+        .login:hover { background: var(--red); color: white; }
+        .register { background: var(--red); color: white; }
+        .user-greeting { font-weight: 700; color: var(--red); font-size: 0.95rem; display: flex; align-items: center; gap: 5px; }
+
+        /* --- PHẦN 2: SWIPER HERO (LƯỚT ẢNH MƯỢT) --- */
+        .hero-swiper { width: 100%; height: 550px; margin-bottom: 60px; }
+        .hero-slide { position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .hero-slide img { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.5); }
+        
+        .hero-content { position: absolute; text-align: center; color: white; z-index: 10; max-width: 800px; }
+        .hero-content h2 { font-size: 3.5rem; font-weight: 800; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 2px; }
+        .hero-content p { font-size: 1.2rem; margin-bottom: 25px; opacity: 0.9; }
+
+        .btn-cta { 
+            display: inline-block; background: var(--yellow); color: #333; 
+            padding: 15px 45px; font-weight: 800; border-radius: 50px; 
+            font-size: 1.1rem; box-shadow: 0 10px 20px rgba(255, 183, 3, 0.3);
+            transition: 0.4s;
         }
-        .btn-cta { background: #ffb703; color: #333; padding: 15px 40px; font-weight: 800; border-radius: 50px; }
-        .category-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 30px; margin-bottom: 80px; }
-        .category-card { background: white; border-radius: 20px; overflow: hidden; text-align: center; border: 1px solid #eee; transition: 0.4s; }
-        .category-card:hover { transform: translateY(-10px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
-        .card-image { height: 160px; display: flex; align-items: center; justify-content: center; background: #fff8e1; font-size: 4rem; }
-        .card-body { padding: 20px; }
-        .btn-view { display: inline-block; background: #333; color: white; padding: 10px 25px; border-radius: 50px; }
-        footer { background: #222; color: #bbb; text-align: center; padding: 40px 0; }
+        .btn-cta:hover { transform: scale(1.1); background: #fff; color: var(--red); }
+
+        /* Màu nút bấm Swiper */
+        .swiper-button-next, .swiper-button-prev { color: var(--yellow) !important; }
+        .swiper-pagination-bullet-active { background: var(--yellow) !important; }
+
+        /* Menu Categories */
+        .section-title { text-align: center; font-size: 2.2rem; font-weight: 700; color: var(--red); margin-bottom: 40px; position: relative; }
+        .section-title::after { content: ''; width: 60px; height: 4px; background: var(--yellow); position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); }
+
+        .category-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 30px; margin-bottom: 100px; }
+        .category-card { 
+            background: white; border-radius: 25px; overflow: hidden; text-align: center; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05); transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        }
+        .category-card:hover { transform: translateY(-15px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        
+        /* CẬP NHẬT CSS HÌNH ẢNH MÓN ĂN THỰC TẾ */
+        .card-image { height: 200px; overflow: hidden; }
+        .card-image img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            transition: transform 0.5s ease; /* Hiệu ứng mượt khi phóng to */
+        }
+        /* Phóng to ảnh nhẹ nhàng khi rê chuột vào Card */
+        .category-card:hover .card-image img { transform: scale(1.1); }
+
+        .card-body { padding: 25px; }
+        .btn-view { display: inline-block; background: var(--dark); color: white; padding: 10px 25px; border-radius: 50px; font-size: 0.9rem; font-weight: 600; }
+        .btn-view:hover { background: var(--red); padding: 10px 35px; }
+
+        /* Footer */
+        footer { background: #1a1a1a; color: #fff; text-align: center; padding: 60px 0; border-top: 5px solid var(--yellow); }
+        .footer-brand { font-weight: 800; color: var(--yellow); font-size: 1.5rem; margin-top: 15px; display: block; letter-spacing: 1px; }
     </style>
 </head>
 <body>
@@ -72,9 +123,9 @@
     <div class="container">
         <div class="nav-left">
             <ul class="nav-links">
-                <li><a href="{% url 'home' %}">Trang chủ</a></li>
+                <li><a href="{% url 'home' %}"><i class="fa-solid fa-house"></i> Trang chủ</a></li>
                 <li class="dropdown">
-                    <a href="#">Thực đơn ▼</a>
+                    <a href="#"><i class="fa-solid fa-utensils"></i> Thực đơn ▼</a>
                     <ul class="dropdown-content">
                         <li><a href="{% url 'pizza' %}">🍕 Pizza</a></li>
                         <li><a href="{% url 'hamburger' %}">🍔 Hamburger</a></li>
@@ -83,8 +134,9 @@
                         <li><a href="{% url 'do_uong' %}">🥤 Nước Ngọt</a></li>
                     </ul>
                 </li>
-                <li><a href="{% url 'map' %}">Liên hệ</a></li>
-                <li><a href="{% url 'tinh_trang' %}">Tình trạng giao hàng</a></li>
+                <li><a href="{% url 'lien_he' %}"><i class="fa-solid fa-address-book"></i> Liên hệ</a></li>
+                <li><a href="{% url 'tim_duong' %}"><i class="fa-solid fa-map-location-dot"></i> Tìm đường</a></li>
+                <li><a href="{% url 'tinh_trang' %}"><i class="fa-solid fa-truck-fast"></i> Tình trạng</a></li>
             </ul>
         </div>
 
@@ -93,57 +145,92 @@
                 <i class="fa-solid fa-cart-shopping"></i>
                 <span class="cart-badge" id="main-cart-badge">0</span> 
             </a>
-
-            <div class="auth-buttons">
-                <a href="{% url 'login' %}" class="btn-auth login">Đăng nhập</a>
-                <a href="{% url 'register' %}" class="btn-auth register">Đăng ký</a>
-            </div>
+            <div class="auth-buttons" id="auth-container"></div>
         </div>
     </div>
 </nav>
 
 <main>
-    <section class="hero">
-        <div class="container">
-            <h2>Thế Giới Đồ Ăn Nhanh</h2>
-            <p>Hương vị tuyệt hảo, giao hàng thần tốc!</p>
-            <br>
-            <a href="#menu" class="btn-cta">Đặt Món Ngay</a>
+    <section class="swiper hero-swiper">
+        <div class="swiper-wrapper">
+            <div class="swiper-slide hero-slide">
+                <img src="https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1920&q=80">
+                <div class="hero-content">
+                    <h2 class="ml11">Thế Giới Đồ Ăn Nhanh</h2>
+                    <p>Hương vị tuyệt hảo, giao hàng thần tốc trong 15 phút!</p>
+                    <a href="#menu" class="btn-cta">Đặt Món Ngay</a>
+                </div>
+            </div>
+            <div class="swiper-slide hero-slide">
+                <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=1920&q=80">
+                <div class="hero-content">
+                    <h2>Pizza Chuẩn Ý</h2>
+                    <p>Phô mai tan chảy cùng đế bánh giòn rụm nóng hổi.</p>
+                    <a href="{% url 'pizza' %}" class="btn-cta">Xem Menu Pizza</a>
+                </div>
+            </div>
+            <div class="swiper-slide hero-slide">
+                <img src="https://images.unsplash.com/photo-1561758033-d89a9ad46330?auto=format&fit=crop&w=1920&q=80">
+                <div class="hero-content">
+                    <h2>Combo Tiết Kiệm</h2>
+                    <p>Thưởng thức bữa ăn trọn vẹn với mức giá cực hời.</p>
+                    <a href="#menu" class="btn-cta">Săn Deal Ngay</a>
+                </div>
+            </div>
         </div>
+        <div class="swiper-button-next"></div>
+        <div class="swiper-button-prev"></div>
+        <div class="swiper-pagination"></div>
     </section>
 
     <section class="container" id="menu">
+        <h2 class="section-title" data-aos="fade-up">Khám Phá Thực Đơn</h2>
+        
         <div class="category-grid">
-            <div class="category-card">
-                <div class="card-image">🍕</div>
+            <div class="category-card" data-aos="fade-up" data-aos-delay="100">
+                <div class="card-image">
+                    <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80" alt="Pizza">
+                </div>
                 <div class="card-body">
                     <h3>Pizza</h3>
                     <a href="{% url 'pizza' %}" class="btn-view">Xem Menu</a>
                 </div>
             </div>
-            <div class="category-card">
-                <div class="card-image">🍔</div>
+
+            <div class="category-card" data-aos="fade-up" data-aos-delay="200">
+                <div class="card-image">
+                    <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=80" alt="Hamburger">
+                </div>
                 <div class="card-body">
                     <h3>Hamburger</h3>
                     <a href="{% url 'hamburger' %}" class="btn-view">Xem Menu</a>
                 </div>
             </div>
-            <div class="category-card">
-                <div class="card-image">🍗</div>
+
+            <div class="category-card" data-aos="fade-up" data-aos-delay="300">
+                <div class="card-image">
+                    <img src="https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=600&q=80" alt="Gà Chiên">
+                </div>
                 <div class="card-body">
                     <h3>Gà Chiên</h3>
                     <a href="{% url 'ga_chien' %}" class="btn-view">Xem Menu</a>
                 </div>
             </div>
-            <div class="category-card">
-                <div class="card-image">🍟</div>
+
+            <div class="category-card" data-aos="fade-up" data-aos-delay="400">
+                <div class="card-image">
+                    <img src="https://images.unsplash.com/photo-1576107232684-1279f390859f?auto=format&fit=crop&w=600&q=80" alt="Khoai Tây">
+                </div>
                 <div class="card-body">
                     <h3>Khoai Tây</h3>
                     <a href="{% url 'khoai_tay' %}" class="btn-view">Xem Menu</a>
                 </div>
             </div>
-            <div class="category-card">
-                <div class="card-image">🥤</div>
+
+            <div class="category-card" data-aos="fade-up" data-aos-delay="500">
+                <div class="card-image">
+                    <img src="https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=600&q=80" alt="Nước Ngọt">
+                </div>
                 <div class="card-body">
                     <h3>Nước Ngọt</h3>
                     <a href="{% url 'do_uong' %}" class="btn-view">Xem Menu</a>
@@ -153,18 +240,72 @@
     </section>
 </main>
 
-<footer 
-        <p>Dương Đan Huy - 1250080068</p>
-        <p>Huỳnh Tấn Lực - 1250080110</p>
-        <p>FASTFOOD UNIVERSE</p>
+<footer>
+    <div class="container">
+        <p>Phát triển với bởi:</p>
+        <p><strong>Dương Đan Huy</strong> (1250080068) & <strong>Huỳnh Tấn Lực</strong> (1250080110)</p>
+        <span class="footer-brand">FASTFOOD UNIVERSE</span>
+    </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+
 <script>
+    // 1. Khởi tạo AOS (Cuộn trang)
+    AOS.init({ duration: 1000, once: true, offset: 100 });
+
+    // 2. Khởi tạo Swiper (Lướt ảnh thủ công + Nút bấm)
+    const swiper = new Swiper('.hero-swiper', {
+        loop: true,
+        grabCursor: true, 
+        autoplay: { delay: 4000, disableOnInteraction: false },
+        navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+        },
+        pagination: { el: '.swiper-pagination', clickable: true },
+    });
+
+    // 3. Anime.js (Hiệu ứng chữ Hero)
+    anime({
+        targets: '.hero-content h2',
+        translateY: [50, 0],
+        opacity: [0, 1],
+        easing: 'easeOutExpo',
+        duration: 2000,
+        delay: 500
+    });
+
+    // --- LOGIC AUTH & CART ---
+    function checkLoginStatus() {
+        const userName = localStorage.getItem('user_name');
+        const authContainer = document.getElementById('auth-container');
+        if (userName) {
+            authContainer.innerHTML = `
+                <span class="user-greeting"><i class="fa-solid fa-circle-user"></i> Xin chào, ${userName}</span>
+                <button onclick="logout()" class="btn-auth login" style="margin-left:10px;">Đăng xuất</button>`;
+        } else {
+            authContainer.innerHTML = `
+                <a href="{% url 'login' %}" class="btn-auth login">Đăng nhập</a>
+                <a href="{% url 'register' %}" class="btn-auth register" style="margin-left:5px;">Đăng ký</a>`;
+        }
+    }
+
+    function logout() {
+        if(confirm("Bạn có chắc chắn muốn đăng xuất?")) {
+            localStorage.removeItem('user_name');
+            localStorage.removeItem('user_email');
+            checkLoginStatus(); 
+            alert("Đăng xuất thành công!");
+        }
+    }
+
     function updateHomeCartBadge() {
         const cart = JSON.parse(localStorage.getItem('cart_data')) || [];
         const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
         const badge = document.getElementById('main-cart-badge');
-        
         if (totalQty > 0) {
             badge.innerText = totalQty;
             badge.style.visibility = 'visible';
@@ -172,10 +313,10 @@
             badge.style.visibility = 'hidden';
         }
     }
+
+    checkLoginStatus();
     updateHomeCartBadge();
-    window.addEventListener('storage', (e) => {
-        if (e.key === 'cart_data') updateHomeCartBadge();
-    });
+    window.addEventListener('storage', () => { updateHomeCartBadge(); checkLoginStatus(); });
 </script>
 
 </body>

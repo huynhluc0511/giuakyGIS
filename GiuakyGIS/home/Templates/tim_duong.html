@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tìm đường đến quán - FastFood Universe</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+    
+    <style>
+        /* --- GIỮ NGUYÊN CSS CỦA BẠN --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background-color: #f8f9fa; display: flex; flex-direction: column; min-height: 100vh; }
+        a { text-decoration: none; transition: 0.3s; }
+        ul { list-style: none; margin: 0; padding: 0; }
+
+        .top-bar { background-color: #d32f2f; height: 15px; width: 100%; }
+        nav { background-color: #ffb703; padding: 0 40px; display: flex; justify-content: space-between; align-items: center; height: 70px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1050; }
+        .nav-left { display: flex; gap: 25px; align-items: center; }
+        .nav-left > li > a { color: #333; font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+        .nav-left > li > a:hover { color: #d32f2f; }
+        .nav-right { display: flex; gap: 15px; align-items: center; }
+        .cart-icon { font-size: 22px; color: #333; margin-right: 15px; cursor: pointer; transition: 0.3s; }
+        .cart-icon:hover { color: #d32f2f; }
+        
+        .main-content { flex: 1; padding-bottom: 40px; }
+        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; opacity: 0; }
+        
+        .info-panel { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; margin-bottom: 20px; border-top: 5px solid #d32f2f; }
+        .info-panel h2 { color: #d32f2f; margin-bottom: 20px; font-weight: 800; font-size: 1.8rem; }
+        
+        .search-box { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; max-width: 600px; margin-left: auto; margin-right: auto; }
+        .search-box input { flex: 1; padding: 12px 20px; border: 2px solid #eee; border-radius: 10px; font-size: 1rem; outline: none; transition: 0.3s; }
+        .search-box input:focus { border-color: #ffb703; box-shadow: 0 0 0 3px rgba(255, 183, 3, 0.2); }
+        .btn-search { padding: 12px 25px; background: #ffb703; color: #333; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.3s; }
+        .btn-search:hover { background: #e0a000; transform: translateY(-2px); }
+
+        .btn-actions { display: flex; justify-content: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+        .btn-location { padding: 10px 20px; background: #28a745; color: white; border: none; cursor: pointer; border-radius: 8px; font-weight: 600; transition: 0.3s; }
+        .btn-location:hover { background: #218838; transform: translateY(-2px); }
+        .btn-clear { padding: 10px 20px; background: #6c757d; color: white; border: none; cursor: pointer; border-radius: 8px; font-weight: 600; transition: 0.3s; display: none; }
+        .btn-clear:hover { background: #5a6268; }
+        
+        #route-info { display: none; background: #fff3cd; color: #856404; padding: 15px; border-radius: 10px; border: 1px solid #ffeeba; margin: 15px auto 0; max-width: 500px; font-weight: 600; font-size: 1.1rem; }
+        #route-info span { color: #d32f2f; font-weight: 800; }
+        
+        #map { height: 550px; width: 100%; border-radius: 15px; box-shadow: 0 5px 25px rgba(0,0,0,0.1); z-index: 1; border: 3px solid #fff; background: #e0e0e0; }
+        .leaflet-routing-container { display: none !important; }
+
+        .toast-notification { position: fixed; top: 90px; right: -400px; padding: 15px 25px; border-radius: 10px; font-weight: 600; color: white; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: right 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55); z-index: 1100; display: flex; align-items: center; gap: 10px; }
+        .toast-notification.show { right: 30px; }
+        .toast-success { background: #28a745; }
+        .toast-error { background: #d32f2f; }
+        .toast-info { background: #17a2b8; }
+
+        footer { background: #1a1a1a; color: #aaa; text-align: center; padding: 30px 0; margin-top: auto; border-top: 5px solid #ffb703; }
+        footer strong { color: #ffb703; }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar"></div>
+
+    <nav>
+        <ul class="nav-left">
+            <li><a href="/"><i class="fa-solid fa-house"></i> Trang chủ</a></li>
+            <li><a href="#"><i class="fa-solid fa-address-book"></i> Liên hệ</a></li>
+            <li><a href="#" style="color: #d32f2f;"><i class="fa-solid fa-map-location-dot"></i> Tìm đường</a></li>
+            <li><a href="#"><i class="fa-solid fa-truck-fast"></i> Tình trạng</a></li>
+        </ul>
+        <div class="nav-right">
+            <i class="fa-solid fa-cart-shopping cart-icon" title="Giỏ hàng"></i>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <main class="container" id="main-container">
+            <div class="info-panel">
+                <h2>📍 Chỉ đường đến FastFood Universe</h2>
+                
+                <div class="search-box">
+                    <input type="text" id="address-input" placeholder="Nhập địa chỉ của bạn...">
+                    <button class="btn-search" onclick="searchAddress()"><i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm</button>
+                </div>
+
+                <div class="btn-actions">
+                    <button class="btn-location" onclick="getLocation()"><i class="fa-solid fa-location-crosshairs"></i> Vị trí của tôi</button>
+                    <button class="btn-clear" id="btn-clear" onclick="clearRoute()"><i class="fa-solid fa-eraser"></i> Xóa tuyến đường</button>
+                </div>
+                
+                <div id="route-info">
+                    🚗 Quãng đường: <span id="route-distance">0</span> km | ⏱️ Dự kiến: <span id="route-time">0</span> phút
+                </div>
+            </div>
+
+            <div id="map"></div>
+        </main>
+    </div>
+
+    <div id="toast" class="toast-notification">
+        <i id="toast-icon" class="fa-solid"></i> <span id="toast-msg">Thông báo</span>
+    </div>
+
+    <footer>
+        <div class="container" style="opacity: 1;">
+            <p><strong>FastFood Universe</strong></p>
+            <p>Dương Đan Huy - Huỳnh Tấn Lực</p>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
+    <script>
+        // 1. Hiệu ứng Load
+        document.addEventListener("DOMContentLoaded", function() {
+            anime({ targets: '#main-container', translateY: [30, 0], opacity: [0, 1], easing: 'easeOutCubic', duration: 800 });
+        });
+
+        // 2. Thông báo Toast
+        function showToast(msg, type = 'info') {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            document.getElementById('toast-msg').innerText = msg;
+            toast.className = 'toast-notification show';
+            if(type === 'success') { toast.classList.add('toast-success'); icon.className = 'fa-solid fa-check-circle'; }
+            else if(type === 'error') { toast.classList.add('toast-error'); icon.className = 'fa-solid fa-triangle-exclamation'; }
+            else { toast.classList.add('toast-info'); icon.className = 'fa-solid fa-circle-info'; }
+            setTimeout(() => { toast.classList.remove('show'); }, 3500);
+        }
+
+        // 3. KHỞI TẠO BẢN ĐỒ (ĐÃ SỬA LỖI 403)
+        const shopLocation = [10.7634, 106.6821]; // 227 Nguyễn Văn Cừ
+        let map = L.map('map').setView(shopLocation, 15);
+
+        // Sử dụng TileLayer của CartoDB (Voyager) - Ổn định và sạch đẹp hơn
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 20
+        }).addTo(map);
+
+        // Custom Icon cho Quán
+        let shopMarker = L.marker(shopLocation).addTo(map)
+            .bindPopup('<b style="color:#d32f2f;">🍔 FastFood Universe</b><br>227 Nguyễn Văn Cừ, Quận 5').openPopup();
+
+        let routingControl = null;
+
+        // 4. Xóa tuyến đường
+        function clearRoute() {
+            if (routingControl) { map.removeControl(routingControl); routingControl = null; }
+            map.setView(shopLocation, 15);
+            shopMarker.openPopup();
+            document.getElementById('btn-clear').style.display = 'none';
+            document.getElementById('route-info').style.display = 'none';
+            document.getElementById('address-input').value = '';
+            showToast("Đã xóa tuyến đường", "info");
+        }
+
+        // 5. Vẽ đường đi (Sử dụng Routing Machine)
+        function drawRoute(userLat, userLon, popupText = '📍 Vị trí của bạn') {
+            if (routingControl) { map.removeControl(routingControl); }
+
+            routingControl = L.Routing.control({
+                waypoints: [ L.latLng(userLat, userLon), L.latLng(shopLocation[0], shopLocation[1]) ],
+                routeWhileDragging: true,
+                show: false,
+                createMarker: function(i, wp, nWps) {
+                    if (i === 0) return L.marker(wp.latLng, {draggable: true}).bindPopup(popupText).openPopup();
+                    return L.marker(wp.latLng, {draggable: false}).bindPopup('🍔 FastFood Universe');
+                },
+                lineOptions: { styles: [{color: '#d32f2f', opacity: 0.8, weight: 6}] }
+            }).addTo(map);
+
+            routingControl.on('routesfound', function(e) {
+                let summary = e.routes[0].summary;
+                document.getElementById('route-distance').innerText = (summary.totalDistance / 1000).toFixed(1);
+                document.getElementById('route-time').innerText = Math.round(summary.totalTime / 60);
+                document.getElementById('route-info').style.display = 'block';
+                document.getElementById('btn-clear').style.display = 'inline-block';
+            });
+        }
+
+        // 6. Tìm kiếm địa chỉ (Geocoding)
+        async function searchAddress() {
+            let address = document.getElementById('address-input').value.trim();
+            if (!address) return showToast("Vui lòng nhập địa chỉ!", "error");
+            
+            showToast("Đang tìm kiếm...", "info");
+            try {
+                // Sử dụng API Nominatim (OpenStreetMap)
+                let res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&countrycodes=vn`);
+                let data = await res.json();
+                if (data && data.length > 0) {
+                    drawRoute(parseFloat(data[0].lat), parseFloat(data[0].lon), '📍 ' + address);
+                    showToast("Đã tìm thấy địa chỉ!", "success");
+                } else {
+                    showToast("Không tìm thấy địa chỉ này!", "error");
+                }
+            } catch (err) {
+                showToast("Lỗi kết nối máy chủ định vị!", "error");
+            }
+        }
+
+        // 7. GPS
+        function getLocation() {
+            if (navigator.geolocation) {
+                showToast("Đang lấy tọa độ GPS...", "info");
+                navigator.geolocation.getCurrentPosition(
+                    p => {
+                        drawRoute(p.coords.latitude, p.coords.longitude, '📍 Vị trí GPS của bạn');
+                        showToast("Vẽ tuyến đường thành công!", "success");
+                    },
+                    e => showToast("Vui lòng cho phép quyền truy cập vị trí!", "error")
+                );
+            }
+        }
+
+        // 8. Click trên Map
+        map.on('click', e => {
+            drawRoute(e.latlng.lat, e.latlng.lng, '📍 Điểm đã chọn');
+        });
+    </script>
+</body>
+</html>

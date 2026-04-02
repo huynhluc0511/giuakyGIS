@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Đơn hàng lạc lối - FastFood Universe</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f9fa;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .error-wrapper {
+            text-align: center;
+            background: white;
+            padding: 50px;
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+            max-width: 600px;
+            width: 90%;
+        }
+
+        .error-code {
+            font-size: 120px;
+            font-weight: 800;
+            color: #d62828;
+            line-height: 1;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .error-code i {
+            font-size: 100px;
+            color: #ffb703;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(10deg); }
+        }
+
+        h1 {
+            font-weight: 700;
+            color: #222;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        p {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+
+        .btn-group-custom {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-back {
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-home {
+            background-color: #d62828;
+            color: white;
+            border: 2px solid #d62828;
+        }
+
+        .btn-home:hover {
+            background-color: #ba1f1f;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(214, 40, 40, 0.2);
+            color: white;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            color: #2a9d8f;
+            border: 2px solid #2a9d8f;
+        }
+
+        .btn-outline:hover {
+            background-color: #2a9d8f;
+            color: white;
+            transform: translateY(-3px);
+        }
+
+        /* Trang trí thêm hạt rơi rơi cho đẹp */
+        .decor {
+            position: absolute;
+            color: rgba(0,0,0,0.03);
+            font-size: 2rem;
+            z-index: -1;
+        }
+    </style>
+</head>
+<body>
+
+    <i class="fa-solid fa-pizza-slice decor" style="top: 10%; left: 10%; transform: rotate(15deg);"></i>
+    <i class="fa-solid fa-hotdog decor" style="bottom: 15%; left: 15%; transform: rotate(-20deg);"></i>
+    <i class="fa-solid fa-ice-cream decor" style="top: 20%; right: 10%; transform: rotate(10deg);"></i>
+    <i class="fa-solid fa-drumstick-bite decor" style="bottom: 20%; right: 15%; transform: rotate(30deg);"></i>
+
+    <div class="error-wrapper" data-aos="zoom-in" data-aos-duration="1000">
+        <div class="error-code">
+            4<i class="fa-solid fa-burger"></i>4
+        </div>
+        
+        <h1>Ối! Bạn đói quá nên đi lạc à?</h1>
+        
+        <p>Trang bạn đang tìm kiếm đã bị "nuốt chửng" hoặc đơn giản là chưa bao giờ tồn tại trong thực đơn của chúng tôi.</p>
+        
+        <div class="btn-group-custom">
+            <a href="{% url 'home' %}" class="btn-back btn-home">
+                <i class="fa-solid fa-house"></i> VỀ TRANG CHỦ
+            </a>
+            <a href="{% url 'home' %}#menu" class="btn-back btn-outline">
+                <i class="fa-solid fa-utensils"></i> XEM THỰC ĐƠN
+            </a>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init();
+    </script>
+</body>
+</html>

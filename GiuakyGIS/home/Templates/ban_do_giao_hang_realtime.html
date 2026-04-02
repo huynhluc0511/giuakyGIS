@@ -1,0 +1,84 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Bản đồ Lộ Trình Giao Hàng</title>
+        <meta charset="utf-8" />
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background: #f4f4f4; margin: 0; padding: 20px; }
+            #map { height: 65vh; width: 95%; margin: 0 auto; border: 2px solid #ccc; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+
+            .container { display: flex; flex-direction: column; align-items: center; gap: 15px; margin-bottom: 20px; }
+
+            .info-box { background: white; width: 95%; padding: 15px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; }
+
+            .countdown-box { background: #fff5f5; border: 2px solid #e74c3c; padding: 10px 25px; border-radius: 50px; color: #e74c3c; }
+            .timer { font-size: 24px; font-weight: bold; }
+
+            h2 { margin: 0; color: #e74c3c; font-size: 20px; }
+            .detail-text { color: #555; margin: 5px 0; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="info-box">
+                <div style="text-align: left;">
+                    <h2>🛵 Lộ trình giao hàng FastFood</h2>
+                    <p class="detail-text">Đến: <b>123 le van sy</b></p>
+                    <p class="detail-text">Khoảng cách: <b>5.08 km</b></p>
+                </div>
+
+                <div class="countdown-box">
+                    <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Thời gian còn lại</div>
+                    <div id="countdown" class="timer">10:00</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="map"></div>
+
+        <script>
+            // 1. Khởi tạo bản đồ
+            var map = L.map('map').setView([10.7634, 106.6821], 14);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+            var shopIcon = L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/3448/3448650.png', iconSize: [40, 40] });
+            var homeIcon = L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/1177/1177577.png', iconSize: [40, 40] });
+
+            L.marker([10.7634, 106.6821], {icon: shopIcon}).addTo(map).bindPopup("<b>Cửa hàng FastFood</b>");
+            L.marker([10.7927846, 106.6703164], {icon: homeIcon}).addTo(map).bindPopup("<b>Khách hàng</b>");
+
+            var routeCoords = [[10.763466, 106.68227], [10.763452, 106.682276], [10.763475, 106.682344], [10.763524, 106.682491], [10.764075, 106.68227], [10.764125, 106.682251], [10.764228, 106.68221], [10.764754, 106.681986], [10.76507, 106.681861], [10.765207, 106.681829], [10.765247, 106.681872], [10.765283, 106.681899], [10.765323, 106.68192], [10.765367, 106.681934], [10.76543, 106.68194], [10.765492, 106.68193], [10.765593, 106.681875], [10.765629, 106.68191], [10.76606, 106.682342], [10.766178, 106.682459], [10.766206, 106.682484], [10.768073, 106.68431], [10.76815, 106.684388], [10.768303, 106.684533], [10.768403, 106.684625], [10.76978, 106.685888], [10.769961, 106.686057], [10.770034, 106.686122], [10.770135, 106.686211], [10.770384, 106.68643], [10.770429, 106.686473], [10.770469, 106.686512], [10.770773, 106.686804], [10.771198, 106.687191], [10.771241, 106.687229], [10.771285, 106.687272], [10.771573, 106.687545], [10.772403, 106.688332], [10.772511, 106.688434], [10.772626, 106.688544], [10.772701, 106.688614], [10.773391, 106.689269], [10.773475, 106.689361], [10.773538, 106.689444], [10.77362, 106.689521], [10.773698, 106.689565], [10.773919, 106.689771], [10.774083, 106.689926], [10.774707, 106.69053], [10.774731, 106.690554], [10.77479, 106.690611], [10.774884, 106.690681], [10.775791, 106.691538], [10.775847, 106.691529], [10.775881, 106.691558], [10.775983, 106.691659], [10.776068, 106.691572], [10.776467, 106.691135], [10.776789, 106.690783], [10.776938, 106.690619], [10.777371, 106.690145], [10.777434, 106.690076], [10.77754, 106.689961], [10.77779, 106.689687], [10.777909, 106.689557], [10.778099, 106.689348], [10.778256, 106.689176], [10.778356, 106.689066], [10.778664, 106.68873], [10.779011, 106.688347], [10.779409, 106.687913], [10.779512, 106.687801], [10.779917, 106.687357], [10.780058, 106.687206], [10.780655, 106.687835], [10.780999, 106.688198], [10.781247, 106.688459], [10.781634, 106.688031], [10.781773, 106.687881], [10.78198, 106.687649], [10.782724, 106.686842], [10.782897, 106.686641], [10.782913, 106.686622], [10.783197, 106.686308], [10.78349, 106.685973], [10.783752, 106.685699], [10.783903, 106.685528], [10.784005, 106.685375], [10.784128, 106.685151], [10.784398, 106.684503], [10.78472, 106.683572], [10.784785, 106.683425], [10.784962, 106.683024], [10.785009, 106.683008], [10.785132, 106.682778], [10.785208, 106.682645], [10.785319, 106.682449], [10.785419, 106.682281], [10.785696, 106.681778], [10.785793, 106.681607], [10.785845, 106.681514], [10.786078, 106.681102], [10.786134, 106.681006], [10.786266, 106.680772], [10.786502, 106.680351], [10.786542, 106.68028], [10.786803, 106.67984], [10.787099, 106.679315], [10.787421, 106.678749], [10.787554, 106.678518], [10.787631, 106.678379], [10.787632, 106.678288], [10.787789, 106.677984], [10.787829, 106.677901], [10.78794, 106.6777], [10.788032, 106.677535], [10.788083, 106.67744], [10.78817, 106.677269], [10.788354, 106.676946], [10.788511, 106.676667], [10.788654, 106.676432], [10.788858, 106.676064], [10.788967, 106.675853], [10.788988, 106.675818], [10.789195, 106.675419], [10.789349, 106.675132], [10.789394, 106.675062], [10.78957, 106.674747], [10.789703, 106.674506], [10.789882, 106.674242], [10.789968, 106.674115], [10.790091, 106.673933], [10.790456, 106.673449], [10.790704, 106.673113], [10.790811, 106.672961], [10.790865, 106.672887], [10.790929, 106.672809], [10.791206, 106.672444], [10.791346, 106.672251], [10.791483, 106.67206], [10.791511, 106.672028], [10.79153, 106.672005], [10.791787, 106.67167], [10.791831, 106.671614], [10.791898, 106.671521], [10.792483, 106.670707], [10.792498, 106.670688], [10.792608, 106.670555], [10.792779, 106.670323], [10.792785, 106.670316]];
+            var polyline = L.polyline(routeCoords, { color: '#3498db', weight: 6, opacity: 0.8 }).addTo(map);
+            map.fitBounds(polyline.getBounds(), {padding: [50, 50]});
+
+            // 2. Logic Đếm ngược (Countdown)
+            let timeInSeconds = 402; 
+            const timerElement = document.getElementById('countdown');
+
+            function updateTimer() {
+                const minutes = Math.floor(timeInSeconds / 60);
+                const seconds = timeInSeconds % 60;
+
+                // Định dạng hiển thị MM:SS
+                timerElement.innerHTML = `${minutes}p ${seconds < 10 ? '0' : ''}${seconds}s`;
+
+                if (timeInSeconds <= 0) {
+                    clearInterval(countdownInterval);
+                    timerElement.innerHTML = "Đã đến nơi! 🍔";
+                    timerElement.parentElement.style.backgroundColor = "#ebfbee";
+                    timerElement.parentElement.style.borderColor = "#40c057";
+                    timerElement.parentElement.style.color = "#40c057";
+                } else {
+                    timeInSeconds--;
+                }
+            }
+
+            const countdownInterval = setInterval(updateTimer, 1000);
+            updateTimer(); // Chạy ngay lập tức lần đầu
+        </script>
+    </body>
+    </html>
+    
