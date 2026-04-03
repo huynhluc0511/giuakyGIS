@@ -1,0 +1,15 @@
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Django local settings/db
+db.sqlite3
+.env
+.venv/
+env/
+venv/
+
+# VS Code
+.vscode/
