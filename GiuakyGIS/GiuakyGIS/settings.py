@@ -126,5 +126,5 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-DEBUG = False # Chuyển thành False để test trang 404
+DEBUG = True# Chuyển thành False để test trang 404
 ALLOWED_HOSTS = ['*'] # Cho phép mọi host để chạy local

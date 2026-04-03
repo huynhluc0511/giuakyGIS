@@ -78,3 +78,37 @@ def tim_duong(request):
     return render(request, 'tim_duong.html')
 def custom_404(request, exception):
     return render(request, '404.html', status=404)
+from django.shortcuts import render, redirect
+from django.contrib.auth.models import User
+from django.contrib import messages
+from django.contrib.auth import authenticate, login as django_login
+
+def login_view(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        matkhau = request.POST.get('matkhau')
+        
+        # Tìm user theo email
+        try:
+            user = User.objects.get(email=email)
+            username = user.username
+        except User.DoesNotExist:
+            messages.error(request, '❌ Email không tồn tại!')
+            return redirect('login')
+        
+        # Xác thực mật khẩu
+        user = authenticate(request, username=username, password=matkhau)
+        
+        if user is not None:
+            django_login(request, user)
+            messages.success(request, f'✅ Chào mừng {user.username}!')
+            
+            # Chuyển hướng theo loại user
+            if user.is_staff or user.is_superuser:
+                return redirect('dashboard:index')
+            return redirect('home')
+        else:
+            messages.error(request, '❌ Mật khẩu không chính xác!')
+            return redirect('login')
+    
+    return render(request, 'login.html')

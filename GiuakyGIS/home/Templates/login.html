@@ -7,8 +7,7 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
     {% load static %}
     <style>
@@ -30,7 +29,7 @@
         
         h2 { color: #d62828; margin-bottom: 25px; font-weight: 800; font-size: 2rem; }
         
-        .input-group { text-align: left; margin-bottom: 20px; }
+        .input-group { text-align: left; margin-bottom: 20px; display: block !important; }
         .input-group label { display: block; font-weight: 700; margin-bottom: 8px; font-size: 0.95rem; color: #444; }
         .input-group input {
             width: 100%; padding: 14px 15px; border: 2px solid #eee; border-radius: 12px; 
@@ -49,6 +48,12 @@
         .switch-auth { margin-top: 25px; font-size: 0.95rem; color: #666; }
         .switch-auth a { color: #d62828; font-weight: 700; text-decoration: none; transition: 0.3s; }
         .switch-auth a:hover { color: #ffb703; text-decoration: underline; }
+
+        /* Style cho thông báo lỗi từ Django */
+        .error-message {
+            background: #fff5f5; color: #e53e3e; padding: 12px; border-radius: 10px;
+            margin-bottom: 20px; border: 1px solid #feb2b2; font-size: 0.9rem;
+        }
     </style>
 </head>
 <body>
@@ -62,36 +67,48 @@
 <main class="auth-wrapper">
     <div class="auth-card" id="loginCard">
         <h2>Đăng Nhập</h2>
-        <form onsubmit="handleLogin(event)">
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="error-message">
+                    <i class="fa-solid fa-circle-exclamation"></i> {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST" id="loginForm">
+            {% csrf_token %}
             <div class="input-group">
                 <label>Email</label>
-                <input type="email" id="login-email" placeholder="email@gmail.com" required>
+                <input type="email" name="email" placeholder="email@gmail.com" required>
             </div>
             <div class="input-group">
                 <label>Mật khẩu</label>
-                <input type="password" id="login-pass" placeholder="••••••••" required>
+                <input type="password" name="matkhau" placeholder="••••••••" required>
             </div>
             <button type="submit" id="btn-login" class="btn-submit">
                 <span id="btn-text">Đăng Nhập</span>
                 <i class="fa-solid fa-spinner fa-spin" id="btn-spinner" style="display: none;"></i>
             </button>
         </form>
+
         <div class="switch-auth">
             Chưa có tài khoản? <a href="{% url 'register' %}">Đăng ký ngay</a>
         </div>
     </div>
 </main>
+
 <footer>
-    <div class="container">
-        <p>Phát triển với bởi:</p>
-        <p><strong>Dương Đan Huy</strong> (1250080068) & <strong>Huỳnh Tấn Lực</strong> (1250080110)</p>
-        <span class="footer-brand">FASTFOOD UNIVERSE</span>
+    <div class="container text-center py-4">
+        <p>Phát triển bởi:</p>
+        <p><strong>Dương Đan Huy</strong> & <strong>Huỳnh Tấn Lực</strong></p>
+        <span class="footer-brand" style="font-weight: 800; color: #ffb703;">FASTFOOD UNIVERSE</span>
     </div>
 </footer>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
 <script>
-    // Hiệu ứng load trang: Card từ dưới trượt lên và rõ dần
+    // 1. Hiệu ứng load trang: Card trượt lên
     document.addEventListener("DOMContentLoaded", function() {
         anime({
             targets: '#loginCard',
@@ -100,9 +117,14 @@
             easing: 'easeOutElastic(1, .8)',
             duration: 1200
         });
+
+        // 2. Nếu có thông báo lỗi từ Server (Django messages), tự động rung card
+        {% if messages %}
+            shakeCard();
+        {% endif %}
     });
 
-    // Hàm rung card khi lỗi
+    // Hàm rung card khi có lỗi
     function shakeCard() {
         anime({
             targets: '#loginCard',
@@ -112,58 +134,21 @@
         });
     }
 
-    function handleLogin(e) {
-        e.preventDefault();
-        
-        const inputEmail = document.getElementById('login-email').value.trim();
-        const inputPass = document.getElementById('login-pass').value;
-        const btn = document.getElementById('btn-login');
-        const btnText = document.getElementById('btn-text');
-        const btnSpinner = document.getElementById('btn-spinner');
+    // 3. Xử lý hiệu ứng Loading khi bấm nút Submit
+    const loginForm = document.getElementById('loginForm');
+    const btnLogin = document.getElementById('btn-login');
+    const btnText = document.getElementById('btn-text');
+    const btnSpinner = document.getElementById('btn-spinner');
 
-        const storedEmail = localStorage.getItem('stored_email');
-        const storedPass = localStorage.getItem('stored_pass');
-        const storedName = localStorage.getItem('stored_name');
-
-        // Hiệu ứng Loading
+    loginForm.addEventListener('submit', function() {
+        // Vô hiệu hóa nút để tránh gửi nhiều lần
+        btnLogin.disabled = true;
         btnText.innerText = "Đang xác thực...";
         btnSpinner.style.display = "inline-block";
-        btn.disabled = true;
-
-        setTimeout(() => {
-            if (inputEmail === storedEmail && inputPass === storedPass) {
-                // ĐĂNG NHẬP THÀNH CÔNG
-                localStorage.setItem('user_name', storedName);
-                localStorage.setItem('user_email', inputEmail);
-
-                // Đổi nút thành màu xanh báo thành công
-                btn.style.background = "#2a9d8f";
-                btnText.innerText = "Thành công!";
-                btnSpinner.className = "fa-solid fa-check";
-                
-                setTimeout(() => {
-                    alert("✅ Đăng nhập thành công! Chào mừng " + storedName + " quay trở lại.");
-                    window.location.href = "{% url 'home' %}";
-                }, 500);
-                
-            } else {
-                // ĐĂNG NHẬP THẤT BẠI
-                shakeCard(); // Gọi hiệu ứng rung
-                
-                // Trả lại trạng thái nút
-                btnText.innerText = "Đăng Nhập";
-                btnSpinner.style.display = "none";
-                btn.disabled = false;
-                
-                setTimeout(() => {
-                    alert("❌ Email hoặc mật khẩu không chính xác! Vui lòng thử lại.");
-                }, 100);
-            }
-        }, 1200); // Giả lập thời gian server phản hồi 1.2s
-    }
+    });
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>
