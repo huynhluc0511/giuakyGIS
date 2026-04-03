@@ -1,7 +1,11 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.contrib import messages
+<<<<<<< HEAD
 from django.contrib.auth import authenticate, login as django_login, logout
+=======
+from django.contrib.auth import login
+>>>>>>> 6ddf276aa60bccfd71a95befb231e9ddf56adaeb
 
 # --- Trang chủ ---
 def home_view(request):
@@ -30,6 +34,7 @@ def gio_hang_view(request):
 def lien_he_view(request):
     return render(request, 'lien_he.html')
 
+<<<<<<< HEAD
 def tinh_trang_view(request):
     return render(request, 'Tinhtrang.html')
 
@@ -40,6 +45,8 @@ def custom_404(request, exception):
     return render(request, '404.html', status=404)
 
 # --- Xử lý Đăng ký ---
+=======
+>>>>>>> 6ddf276aa60bccfd71a95befb231e9ddf56adaeb
 def register_view(request):
     if request.method == 'POST':
         hoten = request.POST.get('hoten')
@@ -62,8 +69,13 @@ def register_view(request):
         user.first_name = hoten # Lưu họ tên vào trường first_name
         user.save()
 
+<<<<<<< HEAD
         django_login(request, user)
         messages.success(request, f'Đăng ký thành công! Chào mừng {hoten}.')
+=======
+        # Đăng nhập luôn cho khách hàng sau khi đăng ký thành công
+        login(request, user)
+>>>>>>> 6ddf276aa60bccfd71a95befb231e9ddf56adaeb
         return redirect('home')
 
     return render(request, 'register.html')
@@ -105,7 +117,19 @@ def login_view(request):
     
     return render(request, 'login.html')
 
+<<<<<<< HEAD
 def logout_view(request):
     logout(request)
     messages.success(request, '✅ Đã đăng xuất thành công!')
     return redirect('home')
+=======
+def tinh_trang_view(request):
+    # File của bạn là 'Tinhtrang.html'
+    return render(request, 'Tinhtrang.html')
+
+def tim_duong_view(request):
+    return render(request, 'tim_duong.html')
+
+def custom_404(request, exception):
+    return render(request, '404.html', status=404)
+>>>>>>> 6ddf276aa60bccfd71a95befb231e9ddf56adaeb
