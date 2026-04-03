@@ -1,0 +1,44 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}{{ product.name }}{% endblock %}
+{% block content %}
+<div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;">
+    <a href="{% url 'dashboard:products_list' %}" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left"></i> Quay lại</a>
+    <div style="margin-left:auto;display:flex;gap:0.5rem;">
+        <a href="{% url 'dashboard:products_edit' product.pk %}" class="btn btn-primary btn-sm"><i class="fas fa-edit"></i> Chỉnh sửa</a>
+        <form method="post" action="{% url 'dashboard:products_delete' product.pk %}" style="display:inline;" onsubmit="return confirm('Xóa món này?')">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Xóa</button>
+        </form>
+    </div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 2fr;gap:1.5rem;">
+    <div class="card">
+        {% if product.image %}
+        <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width:100%;border-radius:1rem 1rem 0 0;object-fit:cover;max-height:260px;">
+        {% else %}
+        <div style="height:200px;background:linear-gradient(135deg,#f6d365,#fda085);border-radius:1rem 1rem 0 0;display:flex;align-items:center;justify-content:center;">
+            <i class="fas fa-bowl-food" style="font-size:4rem;color:rgba(255,255,255,0.7);"></i>
+        </div>
+        {% endif %}
+        <div class="card-body" style="text-align:center;">
+            {% if product.is_available %}
+            <span class="badge badge-available" style="font-size:0.85rem;padding:0.4em 1.2em;">✓ Còn Hàng</span>
+            {% else %}
+            <span class="badge badge-unavailable" style="font-size:0.85rem;padding:0.4em 1.2em;">✗ Hết Hàng</span>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header"><span><i class="fas fa-info-circle" style="color:#667eea;margin-right:8px;"></i>Thông Tin Món Ăn</span></div>
+        <div class="card-body">
+            <h2 style="font-size:1.5rem;font-weight:700;color:#32325d;margin:0 0 0.5rem;">{{ product.name }}</h2>
+            <span class="badge badge-category" style="font-size:0.82rem;margin-bottom:1.2rem;display:inline-block;">{{ product.category.name }}</span>
+            <div style="font-size:2rem;font-weight:700;color:#667eea;margin:0.5rem 0 1.2rem;">{{ product.price|floatformat:0 }}đ</div>
+            <div style="margin-bottom:1rem;">
+                <div style="font-size:0.72rem;font-weight:700;color:#8898aa;text-transform:uppercase;margin-bottom:0.5rem;">Mô Tả</div>
+                <p style="color:#525f7f;line-height:1.7;font-size:0.9rem;">{{ product.description|default:'Chưa có mô tả.' }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -80,8 +80,12 @@ WSGI_APPLICATION = 'GiuakyGIS.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'thucannhanh.db',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'thucannhanh',
+        'USER': 'myuser',
+        'PASSWORD': '123456',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 

@@ -1,0 +1,37 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}Cập Nhật Đơn #{{ order.id }}{% endblock %}
+{% block content %}
+<div style="margin-bottom:1.5rem;">
+    <a href="{% url 'dashboard:orders_detail' order.pk %}" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left"></i> Quay lại</a>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+    <div class="card">
+        <div class="card-header"><span><i class="fas fa-edit" style="color:#667eea;margin-right:8px;"></i>Cập Nhật Đơn Hàng #{{ order.id }}</span></div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                {% for field in form %}
+                <div style="margin-bottom:1.2rem;">
+                    <label class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}<div style="color:#f5365c;font-size:0.78rem;margin-top:4px;">{{ field.errors.0 }}</div>{% endif %}
+                </div>
+                {% endfor %}
+                <div style="display:flex;gap:0.75rem;margin-top:1.5rem;">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Lưu Thay Đổi</button>
+                    <a href="{% url 'dashboard:orders_detail' order.pk %}" class="btn btn-secondary">Hủy</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header"><span><i class="fas fa-info-circle" style="color:#adb5bd;margin-right:8px;"></i>Thông Tin Hiện Tại</span></div>
+        <div class="card-body" style="font-size:0.875rem;">
+            <div style="margin-bottom:0.75rem;"><span style="color:#8898aa;font-weight:700;font-size:0.72rem;text-transform:uppercase;">Khách hàng</span><div style="color:#32325d;font-weight:600;margin-top:3px;">{{ order.full_name }}</div></div>
+            <div style="margin-bottom:0.75rem;"><span style="color:#8898aa;font-weight:700;font-size:0.72rem;text-transform:uppercase;">Điện thoại</span><div style="color:#32325d;margin-top:3px;">{{ order.phone }}</div></div>
+            <div style="margin-bottom:0.75rem;"><span style="color:#8898aa;font-weight:700;font-size:0.72rem;text-transform:uppercase;">Tổng tiền</span><div style="font-weight:700;color:#667eea;font-size:1.1rem;margin-top:3px;">{{ order.total_price|floatformat:0 }}đ</div></div>
+            <div><span style="color:#8898aa;font-weight:700;font-size:0.72rem;text-transform:uppercase;">Trạng thái hiện tại</span><div style="margin-top:6px;"><span class="badge badge-{% if order.status == 'Pending' %}pending{% elif order.status == 'Processing' %}processing{% elif order.status == 'Shipped' %}shipped{% elif order.status == 'Delivered' %}delivered{% else %}cancelled{% endif %}">{{ order.get_status_display }}</span></div></div>
+        </div>
+    </div>
+</div>
+{% endblock %}

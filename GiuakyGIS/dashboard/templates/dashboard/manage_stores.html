@@ -1,295 +1,427 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý Cửa hàng & Thực đơn - Admin GIS</title>
-    
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
-        :root {
-            --sidebar-width: 250px;
-            --bg-body: #f8f9fe;
-            --primary-color: #5e72e4;
-        }
+{% extends 'dashboard/base.html' %}
+{% block title %}Quản Lý Cửa Hàng & Thực Đơn{% endblock %}
+{% block extra_css %}
+<style>
+    .ql-card { background:white; border-radius:1rem; box-shadow:0 0 1.5rem rgba(136,152,170,.12); margin-bottom:1.5rem; }
+    .ql-card-header { padding:1rem 1.5rem; border-bottom:1px solid #f0f2f5; font-weight:600; color:#32325d; font-size:0.9rem; display:flex; align-items:center; justify-content:space-between; }
+    .ql-card-body { padding:1.25rem 1.5rem; }
+    .ql-table { width:100%; border-collapse:collapse; font-size:0.85rem; }
+    .ql-table thead th { background:#f8f9fe; color:#8898aa; font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; padding:0.7rem 1rem; border-bottom:1px solid #e9ecef; text-align:left; }
+    .ql-table tbody td { padding:0.85rem 1rem; border-bottom:1px solid #f0f2f5; vertical-align:middle; }
+    .ql-table tbody tr:last-child td { border-bottom:none; }
+    .ql-table tbody tr:hover { background:#f8f9ff; }
+    .price-badge { background:#e8edff; color:#5e37d6; padding:0.3em 0.8em; border-radius:20px; font-size:0.78rem; font-weight:700; }
+    .stat-mini { background:white; border-radius:1rem; padding:1.1rem 1.25rem; display:flex; align-items:center; gap:0.9rem; box-shadow:0 0 1.5rem rgba(136,152,170,.1); }
+    .stat-mini .icon { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; color:white; font-size:1.1rem; flex-shrink:0; }
+    .stat-mini .num { font-size:1.4rem; font-weight:700; color:#32325d; }
+    .stat-mini .lbl { font-size:0.72rem; color:#8898aa; font-weight:700; text-transform:uppercase; }
+    .ql-input { width:100%; padding:0.5rem 0.85rem; border:1px solid #dee2e6; border-radius:8px; font-size:0.85rem; color:#32325d; transition:border-color 0.2s; }
+    .ql-input:focus { outline:none; border-color:#667eea; box-shadow:0 0 0 3px rgba(102,126,234,.12); }
+    .ql-label { font-size:0.7rem; font-weight:700; color:#8898aa; text-transform:uppercase; letter-spacing:.04em; margin-bottom:5px; display:block; }
+    .ql-btn { display:inline-flex; align-items:center; gap:6px; padding:0.5rem 1rem; border-radius:8px; font-size:0.82rem; font-weight:600; border:none; cursor:pointer; transition:all 0.2s; width:100%; justify-content:center; }
+    .ql-btn-primary { background:#667eea; color:white; }
+    .ql-btn-primary:hover { background:#5a6fd8; }
+    .ql-btn-success { background:#2dce89; color:white; }
+    .ql-btn-success:hover { background:#26b578; }
+    .ql-btn-danger { background:none; border:none; color:#f5365c; cursor:pointer; padding:4px 8px; border-radius:6px; transition:background 0.2s; }
+    .ql-btn-danger:hover { background:#fff0f0; }
+    .spinner { display:none; width:14px; height:14px; border:2px solid rgba(255,255,255,0.4); border-top-color:white; border-radius:50%; animation:spin 0.7s linear infinite; margin-left:4px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .empty-msg { text-align:center; padding:2.5rem; color:#adb5bd; }
+    .empty-msg i { font-size:2rem; display:block; margin-bottom:0.75rem; opacity:0.35; }
+    #mapPicker { height:240px; border-radius:0 0 12px 12px; overflow:hidden; }
+</style>
+{% endblock %}
 
-        body { background-color: var(--bg-body); font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; }
+{% block content %}
 
-        /* Sidebar Styling */
-        .sidebar {
-            width: var(--sidebar-width);
-            height: 100vh;
-            position: fixed;
-            left: 0; top: 0;
-            background: white;
-            border-right: 1px solid #e9ecef;
-            padding: 1.5rem;
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-        }
-        .sidebar-brand { font-size: 1.25rem; font-weight: bold; color: #32325d; margin-bottom: 2.5rem; display: block; text-decoration: none; }
-        .sidebar-brand i { color: var(--primary-color); }
-        
-        .nav-section-title { font-size: 0.7rem; font-weight: 700; color: #adb5bd; text-transform: uppercase; letter-spacing: .04em; margin: 1.5rem 0 0.75rem; }
-        .nav-link { color: #525f7f; padding: 0.65rem 1rem; border-radius: 0.375rem; margin-bottom: 0.25rem; transition: all 0.2s; font-size: 0.9rem; display: flex; align-items: center; text-decoration: none; }
-        .nav-link:hover { background: #f6f9fc; color: var(--primary-color); }
-        .nav-link.active { background: var(--primary-color); color: white !important; box-shadow: 0 4px 6px rgba(50, 50, 93, .11); }
-        .nav-link i { width: 20px; margin-right: 15px; font-size: 1rem; }
-
-        /* Main Content */
-        .main-content { margin-left: var(--sidebar-width); padding: 2rem; min-height: 100vh; }
-        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem; }
-        
-        /* Stat Cards */
-        .stat-card { border: none; border-radius: 1rem; color: white; padding: 1.5rem; position: relative; overflow: hidden; height: 100%; transition: transform 0.3s; }
-        .stat-card:hover { transform: translateY(-5px); }
-        .stat-card .icon-bg { position: absolute; right: 10px; top: 10px; font-size: 3rem; opacity: 0.25; }
-        .stat-card .value { font-size: 1.8rem; font-weight: 700; margin-bottom: 0; position: relative; z-index: 1; }
-        .stat-card .label { font-size: 0.85rem; font-weight: 600; opacity: 0.9; margin-bottom: 5px; position: relative; z-index: 1; }
-
-        .bg-gradient-purple { background: linear-gradient(87deg, #233329 0, #63d471 100%); }
-        .bg-gradient-green { background: linear-gradient(87deg, #11998e 0, #38ef7d 100%); }
-        .bg-gradient-orange { background: linear-gradient(87deg, #ee0979 0, #ff6a00 100%); }
-        .bg-gradient-blue { background: linear-gradient(87deg, #0052D4 0, #6FB1FC 100%); }
-
-        .card-custom { background: white; border: none; border-radius: 1rem; box-shadow: 0 0 2rem 0 rgba(136, 152, 170, .15); margin-bottom: 2rem; }
-        .card-custom .card-header { background: transparent; border-bottom: 1px solid #f0f2f5; padding: 1.25rem 1.5rem; font-weight: 600; color: #32325d; display: flex; justify-content: space-between; align-items: center; }
-        
-        .form-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.025em; color: #8898aa; font-weight: 700; }
-        .badge-price { background-color: #f0f7ff; color: #5e72e4; font-weight: 600; padding: 0.5em 0.8em; border-radius: 0.5rem; }
-        #loadingSpinner, #productSpinner { display: none; }
-    </style>
-</head>
-<body>
-
-    <div class="sidebar">
-        <a href="#" class="sidebar-brand"><i class="fa-solid fa-gear me-2"></i>Admin <span class="fw-light">Panel</span></a>
-        
-        <div class="nav-section-title">QUẢN LÝ</div>
-        <nav class="nav flex-column mb-4">
-            <a class="nav-link active" href="#"><i class="fa-solid fa-chart-pie"></i> Bảng Điều Khiển</a>
-        </nav>
-
-        <div class="mt-auto">
-            <a class="nav-link" href="#"><i class="fa-solid fa-house"></i> Về Trang Chủ</a>
-            <a class="nav-link text-danger" href="#"><i class="fa-solid fa-right-from-bracket"></i> Đăng Xuất</a>
-        </div>
+<!-- ===== STAT CARDS ===== -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1.1rem;margin-bottom:1.75rem;">
+    <div class="stat-mini">
+        <div class="icon" style="background:linear-gradient(135deg,#667eea,#764ba2);"><i class="fas fa-store"></i></div>
+        <div><div class="num" id="statStore">--</div><div class="lbl">Cửa Hàng</div></div>
     </div>
+    <div class="stat-mini">
+        <div class="icon" style="background:linear-gradient(135deg,#11998e,#38ef7d);"><i class="fas fa-bowl-food"></i></div>
+        <div><div class="num" id="statProduct">--</div><div class="lbl">Món Ăn</div></div>
+    </div>
+    <div class="stat-mini">
+        <div class="icon" style="background:linear-gradient(135deg,#ee0979,#ff6a00);"><i class="fas fa-tags"></i></div>
+        <div><div class="num" id="statCat">--</div><div class="lbl">Danh Mục</div></div>
+    </div>
+    <div class="stat-mini">
+        <div class="icon" style="background:linear-gradient(135deg,#0052D4,#6FB1FC);"><i class="fas fa-receipt"></i></div>
+        <div><div class="num" id="statOrder">--</div><div class="lbl">Đơn Hàng</div></div>
+    </div>
+</div>
 
-    <div class="main-content">
-        <div class="header-top">
-            <h2 class="h4 mb-0 fw-bold text-dark">Bảng điều khiển</h2>
-            <div class="d-flex align-items-center">
-                <span class="me-3 small text-muted fw-bold">admin</span>
-                <img src="https://ui-avatars.com/api/?name=Admin&background=5e72e4&color=fff" class="rounded-circle shadow-sm" width="38" alt="avatar">
+<!-- ===== MAIN GRID ===== -->
+<div style="display:grid;grid-template-columns:340px 1fr;gap:1.5rem;">
+
+    <!-- LEFT: FORMS -->
+    <div>
+        <!-- Add Store -->
+        <div class="ql-card">
+            <div class="ql-card-header">
+                <span><i class="fas fa-store" style="color:#667eea;margin-right:8px;"></i>Thêm Cửa Hàng</span>
+            </div>
+            <div class="ql-card-body">
+                <div style="margin-bottom:0.85rem;">
+                    <label class="ql-label">Tên cửa hàng <span style="color:#f5365c;">*</span></label>
+                    <input type="text" id="storeName" class="ql-input" placeholder="VD: Chi nhánh Q.1">
+                </div>
+                <div style="margin-bottom:0.85rem;">
+                    <label class="ql-label">Địa chỉ <span style="color:#f5365c;">*</span></label>
+                    <textarea id="storeAddress" class="ql-input" rows="2" placeholder="Địa chỉ chi tiết..."></textarea>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.7rem;margin-bottom:0.85rem;">
+                    <div>
+                        <label class="ql-label">Vĩ độ</label>
+                        <input type="number" id="storeLat" class="ql-input" placeholder="10.7769" step="0.000001">
+                    </div>
+                    <div>
+                        <label class="ql-label">Kinh độ</label>
+                        <input type="number" id="storeLng" class="ql-input" placeholder="106.7009" step="0.000001">
+                    </div>
+                </div>
+                <div style="margin-bottom:0.85rem;">
+                    <label class="ql-label">📍 Click bản đồ để chọn tọa độ</label>
+                    <div id="mapPicker"></div>
+                </div>
+                <button onclick="addStore()" class="ql-btn ql-btn-primary">
+                    <i class="fas fa-plus"></i> Lưu Cửa Hàng
+                    <div class="spinner" id="storeSpinner"></div>
+                </button>
             </div>
         </div>
 
-        <div class="row g-4 mb-4">
-            <div class="col-md-3">
-                <div class="stat-card bg-gradient-purple">
-                    <div class="label">Tổng Cửa Hàng</div>
-                    <div class="value" id="countStore">--</div>
-                    <i class="fa-solid fa-shop icon-bg"></i>
-                </div>
+        <!-- Add Product -->
+        <div class="ql-card">
+            <div class="ql-card-header">
+                <span><i class="fas fa-bowl-food" style="color:#2dce89;margin-right:8px;"></i>Thêm Món Ăn</span>
             </div>
-            <div class="col-md-3">
-                <div class="stat-card bg-gradient-green">
-                    <div class="label">Tổng Món Ăn</div>
-                    <div class="value" id="countProduct">--</div>
-                    <i class="fa-solid fa-bowl-food icon-bg"></i>
+            <div class="ql-card-body">
+                <div style="margin-bottom:0.85rem;">
+                    <label class="ql-label">Danh mục <span style="color:#f5365c;">*</span></label>
+                    <select id="productCatId" class="ql-input">
+                        <option value="">-- Chọn danh mục --</option>
+                    </select>
                 </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-card bg-gradient-orange">
-                    <div class="label">Đơn Chờ Duyệt</div>
-                    <div class="value">0</div>
-                    <i class="fa-solid fa-file-circle-exclamation icon-bg"></i>
+                <div style="margin-bottom:0.85rem;">
+                    <label class="ql-label">Tên món ăn <span style="color:#f5365c;">*</span></label>
+                    <input type="text" id="productName" class="ql-input" placeholder="VD: Burger Bò Phô Mai">
                 </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-card bg-gradient-blue">
-                    <div class="label">Tổng Người Dùng</div>
-                    <div class="value" id="countUser">0</div> 
-                    <i class="fa-solid fa-users icon-bg"></i>
+                <div style="margin-bottom:0.85rem;">
+                    <label class="ql-label">Mô tả</label>
+                    <textarea id="productDesc" class="ql-input" rows="2" placeholder="Mô tả ngắn..."></textarea>
                 </div>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-lg-4">
-                <div class="card-custom">
-                    <div class="card-header text-primary"><span><i class="fa-solid fa-plus me-2"></i>Thêm cửa hàng</span></div>
-                    <div class="card-body p-4">
-                        <div class="mb-3">
-                            <label class="form-label">Tên cửa hàng</label>
-                            <input type="text" class="form-control" id="storeName" placeholder="Tên chi nhánh...">
-                        </div>
-                        <div class="mb-4">
-                            <label class="form-label">Địa chỉ</label>
-                            <textarea class="form-control" id="storeAddress" rows="2" placeholder="Địa chỉ chi tiết..."></textarea>
-                        </div>
-                        <button onclick="addStore()" class="btn btn-primary w-100 py-2 fw-bold">
-                            Lưu cửa hàng <span id="loadingSpinner" class="spinner-border spinner-border-sm ms-1"></span>
-                        </button>
-                    </div>
+                <div style="margin-bottom:0.85rem;">
+                    <label class="ql-label">Giá tiền (VNĐ) <span style="color:#f5365c;">*</span></label>
+                    <input type="number" id="productPrice" class="ql-input" placeholder="VD: 45000">
                 </div>
-
-                <div class="card-custom">
-                    <div class="card-header text-success"><span><i class="fa-solid fa-utensils me-2"></i>Thêm món ăn</span></div>
-                    <div class="card-body p-4">
-                        <div class="mb-3">
-                            <label class="form-label">Chọn Cửa Hàng</label>
-                            <select class="form-select" id="productStoreId"></select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Tên món</label>
-                            <input type="text" class="form-control" id="productName">
-                        </div>
-                        <div class="mb-4">
-                            <label class="form-label">Giá tiền (VNĐ)</label>
-                            <input type="number" class="form-control" id="productPrice">
-                        </div>
-                        <button onclick="addProduct()" class="btn btn-success w-100 py-2 fw-bold">
-                            Thêm vào Menu <span id="productSpinner" class="spinner-border spinner-border-sm ms-1"></span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-8">
-                <div class="card-custom">
-                    <div class="card-header">
-                        <span>Danh sách cửa hàng</span>
-                        <button class="btn btn-sm btn-link text-muted" onclick="loadStores()"><i class="fa-solid fa-sync"></i></button>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive" style="max-height: 280px;">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th class="ps-4 border-0" style="font-size: 0.7rem;">TÊN CỬA HÀNG</th>
-                                        <th class="border-0" style="font-size: 0.7rem;">ĐỊA CHỈ</th>
-                                        <th class="text-center border-0" style="font-size: 0.7rem;">XÓA</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="storeTableBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card-custom">
-                    <div class="card-header">
-                        <span>Danh sách món ăn</span>
-                        <button class="btn btn-sm btn-link text-muted" onclick="loadProducts()"><i class="fa-solid fa-sync"></i></button>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th class="ps-4 border-0" style="font-size: 0.7rem;">MÓN ĂN</th>
-                                        <th class="border-0" style="font-size: 0.7rem;">CỬA HÀNG</th>
-                                        <th class="border-0" style="font-size: 0.7rem;">GIÁ</th>
-                                        <th class="text-center border-0" style="font-size: 0.7rem;">XÓA</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="productTableBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+                <button onclick="addProduct()" class="ql-btn ql-btn-success">
+                    <i class="fas fa-plus"></i> Thêm vào Menu
+                    <div class="spinner" id="productSpinner"></div>
+                </button>
             </div>
         </div>
     </div>
 
-    <script>
-        // Giữ nguyên phần Script của bạn
-        const API_STORE_URL = '/dashboard/api/stores/';
-        const API_PRODUCT_URL = '/dashboard/api/products/';
-        const CSRF_TOKEN = '{{ csrf_token }}'; 
+    <!-- RIGHT: TABLES -->
+    <div>
+        <!-- Stores table -->
+        <div class="ql-card">
+            <div class="ql-card-header">
+                <span>Danh Sách Cửa Hàng</span>
+                <button onclick="loadAll()" style="background:none;border:none;color:#8898aa;cursor:pointer;font-size:0.85rem;" title="Làm mới">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+            <div style="overflow-x:auto;max-height:280px;">
+                <table class="ql-table">
+                    <thead>
+                        <tr>
+                            <th>Tên Cửa Hàng</th>
+                            <th>Địa Chỉ</th>
+                            <th>Tọa Độ</th>
+                            <th style="text-align:center;">Xóa</th>
+                        </tr>
+                    </thead>
+                    <tbody id="storeBody">
+                        <tr><td colspan="4" class="empty-msg"><i class="fas fa-spinner fa-spin"></i>Đang tải...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-        function loadStores() {
-            fetch(API_STORE_URL).then(res => res.json()).then(data => {
-                document.getElementById('countStore').innerText = data.length;
-                let tableHtml = '';
-                let selectHtml = '<option value="">-- Chọn cửa hàng --</option>';
-                data.forEach(store => {
-                    tableHtml += `<tr>
-                        <td class="ps-4 fw-bold text-dark">${store.name}</td>
-                        <td><small class="text-muted">${store.address || 'N/A'}</small></td>
-                        <td class="text-center">
-                            <button class="btn btn-link text-danger" onclick="deleteStore(${store.id})"><i class="fa-solid fa-trash-can"></i></button>
-                        </td>
-                    </tr>`;
-                    selectHtml += `<option value="${store.id}">${store.name}</option>`;
-                });
-                document.getElementById('storeTableBody').innerHTML = tableHtml || '<tr><td colspan="3" class="text-center p-4">Trống</td></tr>';
-                document.getElementById('productStoreId').innerHTML = selectHtml;
-            });
+        <!-- Products table -->
+        <div class="ql-card">
+            <div class="ql-card-header">
+                <span>Danh Sách Món Ăn</span>
+                <div style="display:flex;align-items:center;gap:0.5rem;">
+                    <input type="text" id="productSearch" class="ql-input" style="width:160px;padding:0.3rem 0.7rem;" placeholder="Tìm món..." oninput="filterProducts()">
+                </div>
+            </div>
+            <div style="overflow-x:auto;max-height:320px;">
+                <table class="ql-table">
+                    <thead>
+                        <tr>
+                            <th>Tên Món</th>
+                            <th>Danh Mục</th>
+                            <th>Giá</th>
+                            <th>Tình Trạng</th>
+                            <th style="text-align:center;">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productBody">
+                        <tr><td colspan="5" class="empty-msg"><i class="fas fa-spinner fa-spin"></i>Đang tải...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Map overview -->
+        <div class="ql-card">
+            <div class="ql-card-header">
+                <span><i class="fas fa-map-location-dot" style="color:#0052D4;margin-right:8px;"></i>Bản Đồ Các Cửa Hàng</span>
+            </div>
+            <div id="overviewMap" style="height:300px;border-radius:0 0 1rem 1rem;"></div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const CSRF = '{{ csrf_token }}';
+const API_STORES   = '/dashboard/api/stores/';
+const API_PRODUCTS = '/dashboard/api/products/';
+const API_CATS     = '/dashboard/api/categories/';
+const API_ORDERS   = '/dashboard/api/orders/';
+
+let allProducts = [];
+let overviewMap, pickMap, pickMarker;
+
+// ===== MAPS =====
+function initMaps() {
+    // Overview map
+    overviewMap = L.map('overviewMap').setView([10.7769, 106.7009], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OSM'}).addTo(overviewMap);
+
+    // Picker map
+    pickMap = L.map('mapPicker').setView([10.7769, 106.7009], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OSM'}).addTo(pickMap);
+    pickMarker = L.marker([10.7769, 106.7009], {draggable:true}).addTo(pickMap);
+    pickMap.on('click', function(e) { pickMarker.setLatLng(e.latlng); setPickCoords(e.latlng.lat, e.latlng.lng); });
+    pickMarker.on('dragend', function(e) { var p = e.target.getLatLng(); setPickCoords(p.lat, p.lng); });
+}
+function setPickCoords(lat, lng) {
+    document.getElementById('storeLat').value = lat.toFixed(6);
+    document.getElementById('storeLng').value = lng.toFixed(6);
+}
+
+// ===== LOAD DATA =====
+async function loadAll() { await Promise.all([loadStores(), loadProducts(), loadCategories(), loadStats()]); }
+
+async function loadStats() {
+    try {
+        const [sR, pR, cR, oR] = await Promise.all([
+            fetch(API_STORES), fetch(API_PRODUCTS), fetch(API_CATS), fetch(API_ORDERS)
+        ]);
+        const [s, p, c, o] = await Promise.all([sR.json(), pR.json(), cR.json(), oR.json()]);
+        document.getElementById('statStore').textContent   = Array.isArray(s) ? s.length : (s.count || '--');
+        document.getElementById('statProduct').textContent = Array.isArray(p) ? p.length : (p.count || '--');
+        document.getElementById('statCat').textContent     = Array.isArray(c) ? c.length : (c.count || '--');
+        document.getElementById('statOrder').textContent   = Array.isArray(o) ? o.length : (o.count || '--');
+    } catch(e) { console.warn('Stats error', e); }
+}
+
+async function loadCategories() {
+    try {
+        const res = await fetch(API_CATS);
+        const data = await res.json();
+        const cats = Array.isArray(data) ? data : (data.results || []);
+        let opts = '<option value="">-- Chọn danh mục --</option>';
+        cats.forEach(c => { opts += `<option value="${c.id}">${c.name}</option>`; });
+        document.getElementById('productCatId').innerHTML = opts;
+    } catch(e) {}
+}
+
+async function loadStores() {
+    try {
+        const res = await fetch(API_STORES);
+        const data = await res.json();
+        const stores = Array.isArray(data) ? data : (data.results || []);
+        // Clear overview map markers
+        overviewMap.eachLayer(l => { if (l instanceof L.Marker) overviewMap.removeLayer(l); });
+
+        let html = '';
+        stores.forEach(s => {
+            html += `<tr>
+                <td style="font-weight:600;color:#32325d;">${s.name}</td>
+                <td style="color:#8898aa;font-size:0.8rem;">${s.address || '—'}</td>
+                <td style="font-family:monospace;font-size:0.75rem;color:#adb5bd;">${parseFloat(s.latitude||0).toFixed(4)}, ${parseFloat(s.longitude||0).toFixed(4)}</td>
+                <td style="text-align:center;">
+                    <button onclick="deleteStore(${s.id})" class="ql-btn-danger" title="Xóa"><i class="fas fa-trash-can"></i></button>
+                </td>
+            </tr>`;
+            // Add marker to overview map
+            if (s.latitude && s.longitude) {
+                L.marker([s.latitude, s.longitude])
+                 .addTo(overviewMap)
+                 .bindPopup(`<b>${s.name}</b><br><small>${s.address}</small>`);
+            }
+        });
+        document.getElementById('storeBody').innerHTML = html || '<tr><td colspan="4" class="empty-msg"><i class="fas fa-store"></i>Chưa có cửa hàng</td></tr>';
+    } catch(e) { document.getElementById('storeBody').innerHTML = '<tr><td colspan="4" class="empty-msg">Lỗi tải dữ liệu</td></tr>'; }
+}
+
+async function loadProducts() {
+    try {
+        const res = await fetch(API_PRODUCTS);
+        const data = await res.json();
+        allProducts = Array.isArray(data) ? data : (data.results || []);
+        renderProducts(allProducts);
+    } catch(e) {}
+}
+
+function renderProducts(products) {
+    let html = '';
+    products.forEach(p => {
+        const price = Number(p.price).toLocaleString('vi-VN');
+        const avail = p.is_available
+            ? '<span style="background:#d1e7dd;color:#0a3622;padding:2px 8px;border-radius:20px;font-size:0.72rem;font-weight:700;">Còn hàng</span>'
+            : '<span style="background:#f8d7da;color:#842029;padding:2px 8px;border-radius:20px;font-size:0.72rem;font-weight:700;">Hết hàng</span>';
+        const catName = p.category_name || '—';
+        html += `<tr>
+            <td style="font-weight:600;color:#32325d;">${p.name}</td>
+            <td><span style="background:#e8edff;color:#5e37d6;padding:2px 8px;border-radius:20px;font-size:0.72rem;font-weight:700;">${catName}</span></td>
+            <td><span class="price-badge">${price}đ</span></td>
+            <td>${avail}</td>
+            <td style="text-align:center;">
+                <button onclick="deleteProduct(${p.id})" class="ql-btn-danger" title="Xóa"><i class="fas fa-trash-can"></i></button>
+            </td>
+        </tr>`;
+    });
+    document.getElementById('productBody').innerHTML = html || '<tr><td colspan="5" class="empty-msg"><i class="fas fa-bowl-food"></i>Chưa có món ăn</td></tr>';
+}
+
+function filterProducts() {
+    const q = document.getElementById('productSearch').value.toLowerCase();
+    renderProducts(allProducts.filter(p => p.name.toLowerCase().includes(q) || (p.category_name||'').toLowerCase().includes(q)));
+}
+
+// ===== ADD STORE =====
+async function addStore() {
+    const name = document.getElementById('storeName').value.trim();
+    const address = document.getElementById('storeAddress').value.trim();
+    let lat = document.getElementById('storeLat').value;
+    let lng = document.getElementById('storeLng').value;
+    if (!name || !address) return showMsg('Vui lòng nhập tên và địa chỉ!', 'error');
+    const sp = document.getElementById('storeSpinner');
+    sp.style.display = 'block';
+    try {
+        if (!lat || !lng) {
+            // Geocode
+            const g = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address+', Vietnam')}&limit=1`);
+            const gd = await g.json();
+            if (gd.length) { lat = gd[0].lat; lng = gd[0].lon; }
         }
-
-        function loadProducts() {
-            fetch(API_PRODUCT_URL).then(res => res.json()).then(data => {
-                document.getElementById('countProduct').innerText = data.length;
-                let html = '';
-                data.forEach(item => {
-                    html += `<tr>
-                        <td class="ps-4 fw-bold text-dark">${item.name}</td>
-                        <td><span class="badge bg-light text-muted border">${item.store_name || 'N/A'}</span></td>
-                        <td><span class="badge badge-price">${Number(item.price).toLocaleString()}đ</span></td>
-                        <td class="text-center">
-                            <button class="btn btn-link text-danger" onclick="deleteProduct(${item.id})"><i class="fa-solid fa-trash-can"></i></button>
-                        </td>
-                    </tr>`;
-                });
-                document.getElementById('productTableBody').innerHTML = html || '<tr><td colspan="4" class="text-center p-4 text-muted">Chưa có món nào.</td></tr>';
-            });
+        const res = await fetch(API_STORES, {
+            method: 'POST',
+            headers: {'Content-Type':'application/json', 'X-CSRFToken': CSRF},
+            body: JSON.stringify({name, address, latitude: lat||10.7769, longitude: lng||106.7009})
+        });
+        if (res.ok) {
+            showMsg('Cửa hàng đã được thêm!', 'success');
+            document.getElementById('storeName').value = '';
+            document.getElementById('storeAddress').value = '';
+            document.getElementById('storeLat').value = '';
+            document.getElementById('storeLng').value = '';
+            loadStores(); loadStats();
+        } else {
+            const err = await res.json();
+            showMsg('Lỗi: ' + JSON.stringify(err), 'error');
         }
+    } catch(e) { showMsg('Lỗi kết nối!', 'error'); }
+    sp.style.display = 'none';
+}
 
-        async function addStore() {
-            const name = document.getElementById('storeName').value;
-            const address = document.getElementById('storeAddress').value;
-            if(!name || !address) return alert("Nhập đủ thông tin!");
-            document.getElementById('loadingSpinner').style.display = "inline-block";
-            try {
-                const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`);
-                const geoData = await geoRes.json();
-                const res = await fetch(API_STORE_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
-                    body: JSON.stringify({ name, address, latitude: geoData[0]?.lat || 0, longitude: geoData[0]?.lon || 0 })
-                });
-                if(res.ok) { document.getElementById('storeName').value = ''; document.getElementById('storeAddress').value = ''; loadStores(); }
-            } catch (err) { console.error(err); }
-            finally { document.getElementById('loadingSpinner').style.display = "none"; }
+// ===== ADD PRODUCT =====
+async function addProduct() {
+    const cat = document.getElementById('productCatId').value;
+    const name = document.getElementById('productName').value.trim();
+    const desc = document.getElementById('productDesc').value.trim();
+    const price = document.getElementById('productPrice').value;
+    if (!cat || !name || !price) return showMsg('Vui lòng điền đủ thông tin!', 'error');
+    const sp = document.getElementById('productSpinner');
+    sp.style.display = 'block';
+    try {
+        const res = await fetch(API_PRODUCTS, {
+            method: 'POST',
+            headers: {'Content-Type':'application/json', 'X-CSRFToken': CSRF},
+            body: JSON.stringify({category: cat, name, description: desc, price, is_available: true})
+        });
+        if (res.ok) {
+            showMsg('Món ăn đã được thêm!', 'success');
+            document.getElementById('productName').value = '';
+            document.getElementById('productDesc').value = '';
+            document.getElementById('productPrice').value = '';
+            loadProducts(); loadStats();
+        } else {
+            const err = await res.json();
+            showMsg('Lỗi: ' + JSON.stringify(err), 'error');
         }
+    } catch(e) { showMsg('Lỗi kết nối!', 'error'); }
+    sp.style.display = 'none';
+}
 
-        async function addProduct() {
-            const storeId = document.getElementById('productStoreId').value;
-            const name = document.getElementById('productName').value;
-            const price = document.getElementById('productPrice').value;
-            if(!storeId || !name || !price) return alert("Điền đủ thông tin!");
-            document.getElementById('productSpinner').style.display = "inline-block";
-            try {
-                const res = await fetch(API_PRODUCT_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
-                    body: JSON.stringify({ store: storeId, name: name, price: price })
-                });
-                if(res.ok) { document.getElementById('productName').value = ''; document.getElementById('productPrice').value = ''; loadProducts(); }
-            } catch (e) { console.error(e); }
-            finally { document.getElementById('productSpinner').style.display = "none"; }
-        }
+// ===== DELETE =====
+async function deleteStore(id) {
+    if (!confirm('Xóa cửa hàng này?')) return;
+    await fetch(`${API_STORES}${id}/`, {method:'DELETE', headers:{'X-CSRFToken':CSRF}});
+    showMsg('Đã xóa cửa hàng!', 'success'); loadStores(); loadStats();
+}
+async function deleteProduct(id) {
+    if (!confirm('Xóa món ăn này?')) return;
+    await fetch(`${API_PRODUCTS}${id}/`, {method:'DELETE', headers:{'X-CSRFToken':CSRF}});
+    showMsg('Đã xóa món ăn!', 'success'); loadProducts(); loadStats();
+}
 
-        function deleteStore(id) { if(confirm('Xóa?')) fetch(`${API_STORE_URL}${id}/`, { method: 'DELETE', headers: {'X-CSRFToken': CSRF_TOKEN} }).then(loadStores); }
-        function deleteProduct(id) { if(confirm('Xóa?')) fetch(`${API_PRODUCT_URL}${id}/`, { method: 'DELETE', headers: {'X-CSRFToken': CSRF_TOKEN} }).then(loadProducts); }
+// ===== TOAST =====
+function showMsg(msg, type) {
+    const d = document.createElement('div');
+    d.style.cssText = `position:fixed;top:1.5rem;right:1.5rem;z-index:9999;
+        padding:0.9rem 1.5rem;border-radius:12px;font-size:0.875rem;font-weight:600;
+        box-shadow:0 8px 25px rgba(0,0,0,0.12);display:flex;align-items:center;gap:10px;
+        ${type==='success' ? 'background:#d1e7dd;color:#0a3622;border:1px solid #badbcc;' : 'background:#f8d7da;color:#842029;border:1px solid #f5c2c7;'}`;
+    d.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i> ${msg}`;
+    document.body.appendChild(d);
+    setTimeout(() => d.remove(), 3500);
+}
 
-        document.addEventListener("DOMContentLoaded", () => { loadStores(); loadProducts(); });
-    </script>
-</body>
-</html>
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', () => {
+    initMaps();
+    loadAll();
+    // Auto-geocode when address loses focus
+    document.getElementById('storeAddress').addEventListener('blur', async function() {
+        const addr = this.value.trim();
+        if (!addr || document.getElementById('storeLat').value) return;
+        try {
+            const g = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addr+', Vietnam')}&limit=1`);
+            const gd = await g.json();
+            if (gd.length) {
+                const lt = parseFloat(gd[0].lat), ln = parseFloat(gd[0].lon);
+                document.getElementById('storeLat').value = lt.toFixed(6);
+                document.getElementById('storeLng').value = ln.toFixed(6);
+                pickMarker.setLatLng([lt, ln]); pickMap.setView([lt, ln], 15);
+            }
+        } catch(e) {}
+    });
+});
+</script>
+{% endblock %}

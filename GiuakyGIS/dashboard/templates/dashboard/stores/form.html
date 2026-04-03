@@ -1,0 +1,83 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}{% if is_create %}Thêm{% else %}Chỉnh sửa{% endif %} Cửa Hàng{% endblock %}
+{% block content %}
+<div style="margin-bottom:1.5rem;">
+    <a href="{% url 'dashboard:stores_list' %}" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left"></i> Quay lại danh sách</a>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+    <div class="card">
+        <div class="card-header">
+            <span><i class="fas fa-{% if is_create %}plus{% else %}edit{% endif %}" style="color:#667eea;margin-right:8px;"></i>
+            {% if is_create %}Thêm Cửa Hàng Mới{% else %}Chỉnh Sửa: {{ store.name }}{% endif %}</span>
+        </div>
+        <div class="card-body">
+            <form method="post" id="storeForm">
+                {% csrf_token %}
+                {% for field in form %}
+                <div style="margin-bottom:1.2rem;">
+                    <label class="form-label">{{ field.label }}{% if field.field.required %} <span style="color:#f5365c;">*</span>{% endif %}</label>
+                    <input type="{{ field.field.widget.input_type|default:'text' }}"
+                           name="{{ field.html_name }}"
+                           id="id_{{ field.html_name }}"
+                           value="{{ field.value|default:'' }}"
+                           class="form-control"
+                           placeholder="{{ field.field.widget.attrs.placeholder|default:field.label }}"
+                           {% if field.field.required %}required{% endif %}>
+                    {% if field.errors %}<div style="color:#f5365c;font-size:0.78rem;margin-top:4px;">{{ field.errors.0 }}</div>{% endif %}
+                </div>
+                {% endfor %}
+                <!-- Geocode helper -->
+                <div style="margin-bottom:1.2rem;">
+                    <button type="button" onclick="geocodeAddress()" class="btn btn-outline" style="width:100%;">
+                        <i class="fas fa-map-marker-alt"></i> Tự động lấy tọa độ từ địa chỉ
+                    </button>
+                </div>
+                <div style="display:flex;gap:0.75rem;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> {% if is_create %}Tạo Cửa Hàng{% else %}Lưu Thay Đổi{% endif %}
+                    </button>
+                    <a href="{% url 'dashboard:stores_list' %}" class="btn btn-secondary">Hủy</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header"><span><i class="fas fa-map" style="color:#0052D4;margin-right:8px;"></i>Chọn Vị Trí Trên Bản Đồ</span></div>
+        <div class="card-body" style="padding:0;">
+            <div id="pickMap" style="height:380px;border-radius:0 0 1rem 1rem;"></div>
+        </div>
+        <div class="card-body" style="border-top:1px solid #f0f2f5;">
+            <p style="font-size:0.8rem;color:#8898aa;margin:0;"><i class="fas fa-info-circle"></i> Click vào bản đồ để chọn tọa độ tự động.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+var lat = parseFloat(document.getElementById('id_latitude')?.value) || 10.7769;
+var lng = parseFloat(document.getElementById('id_longitude')?.value) || 106.7009;
+var map = L.map('pickMap').setView([lat, lng], 13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OSM'}).addTo(map);
+var marker = L.marker([lat, lng], {draggable: true}).addTo(map);
+
+function setCoords(lat, lng) {
+    document.getElementById('id_latitude').value = lat.toFixed(6);
+    document.getElementById('id_longitude').value = lng.toFixed(6);
+}
+marker.on('dragend', function(e) { var p = e.target.getLatLng(); setCoords(p.lat, p.lng); });
+map.on('click', function(e) { marker.setLatLng(e.latlng); setCoords(e.latlng.lat, e.latlng.lng); });
+
+async function geocodeAddress() {
+    var addr = document.getElementById('id_address').value;
+    if (!addr) return alert('Nhập địa chỉ trước!');
+    var res = await fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(addr) + ',Vietnam&limit=1');
+    var data = await res.json();
+    if (data.length) {
+        var lt = parseFloat(data[0].lat), ln = parseFloat(data[0].lon);
+        setCoords(lt, ln); marker.setLatLng([lt, ln]); map.setView([lt, ln], 15);
+    } else { alert('Không tìm thấy địa chỉ!'); }
+}
+</script>
+{% endblock %}

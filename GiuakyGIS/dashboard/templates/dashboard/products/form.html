@@ -1,0 +1,41 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}{% if is_create %}Thêm{% else %}Chỉnh sửa{% endif %} Món Ăn{% endblock %}
+{% block content %}
+<div style="margin-bottom:1.5rem;">
+    <a href="{% url 'dashboard:products_list' %}" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left"></i> Quay lại</a>
+</div>
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:1.5rem;">
+    <div class="card">
+        <div class="card-header">
+            <span><i class="fas fa-bowl-food" style="color:#2dce89;margin-right:8px;"></i>{% if is_create %}Thêm Món Ăn Mới{% else %}Chỉnh Sửa: {{ product.name }}{% endif %}</span>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                    {% for field in form %}
+                    <div style="{% if field.html_name == 'description' or field.html_name == 'image' or field.html_name == 'is_available' %}grid-column:span 2;{% endif %}margin-bottom:0.5rem;">
+                        <label class="form-label">{{ field.label }}{% if field.field.required %} <span style="color:#f5365c;">*</span>{% endif %}</label>
+                        {{ field }}
+                        {% if field.errors %}<div style="color:#f5365c;font-size:0.78rem;margin-top:4px;">{{ field.errors.0 }}</div>{% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                <div style="display:flex;gap:0.75rem;margin-top:1.5rem;">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> {% if is_create %}Thêm Món Ăn{% else %}Lưu Thay Đổi{% endif %}</button>
+                    <a href="{% url 'dashboard:products_list' %}" class="btn btn-secondary">Hủy</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header"><span><i class="fas fa-lightbulb" style="color:#fda085;margin-right:8px;"></i>Hướng Dẫn</span></div>
+        <div class="card-body" style="font-size:0.85rem;color:#525f7f;line-height:1.7;">
+            <p><i class="fas fa-check" style="color:#2dce89;margin-right:6px;"></i>Chọn <b>danh mục</b> phù hợp cho món ăn.</p>
+            <p><i class="fas fa-check" style="color:#2dce89;margin-right:6px;"></i>Giá nhập bằng <b>VNĐ</b> (ví dụ: 35000).</p>
+            <p><i class="fas fa-check" style="color:#2dce89;margin-right:6px;"></i>Ảnh nên dùng tỉ lệ <b>1:1</b> hoặc <b>4:3</b>.</p>
+            <p><i class="fas fa-check" style="color:#2dce89;margin-right:6px;"></i>Bỏ tick <b>Còn hàng</b> nếu tạm ngừng bán.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}Chỉnh sửa {{ user_obj.username }}{% endblock %}
+{% block content %}
+<div style="margin-bottom:1.5rem;">
+    <a href="{% url 'dashboard:users_detail' user_obj.pk %}" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left"></i> Quay lại</a>
+</div>
+<div class="card" style="max-width:700px;">
+    <div class="card-header">
+        <div style="display:flex;align-items:center;gap:12px;">
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed={{ user_obj.username }}" style="width:36px;height:36px;border-radius:50%;" alt="{{ user_obj.username }}">
+            <span><i class="fas fa-user-edit" style="color:#667eea;margin-right:8px;"></i>Chỉnh Sửa: {{ user_obj.get_full_name|default:user_obj.username }}</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;">
+                {% for field in form %}
+                <div style="{% if field.field.widget.input_type == 'checkbox' or field.html_name == 'password' %}grid-column:span 2;{% endif %}">
+                    <label class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}<div style="color:#f5365c;font-size:0.78rem;margin-top:4px;">{{ field.errors.0 }}</div>{% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            <div style="display:flex;gap:0.75rem;margin-top:1.5rem;">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Lưu Thay Đổi</button>
+                <a href="{% url 'dashboard:users_detail' user_obj.pk %}" class="btn btn-secondary">Hủy</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
