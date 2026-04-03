@@ -14,6 +14,7 @@ urlpatterns = [
     path('pizza/', views.pizza_view, name='pizza'),
     path('gio-hang/', views.gio_hang_view, name='gio_hang'),
     path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
     path('register/', views.register_view, name='register'),
     path('lien-he/', views.lien_he_view, name='lien_he'),
     path('tinh-trang/', views.tinh_trang_view, name='tinh_trang'),

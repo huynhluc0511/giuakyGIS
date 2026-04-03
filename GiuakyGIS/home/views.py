@@ -1,4 +1,7 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.contrib.auth.models import User
+from django.contrib import messages
+from django.contrib.auth import authenticate, login as django_login, logout
 
 # --- Trang chủ ---
 def home_view(request):
@@ -22,93 +25,87 @@ def pizza_view(request):
 
 # --- Nhóm chức năng & Tiện ích ---
 def gio_hang_view(request):
-    # Django phân biệt hoa thường, file của bạn là 'Gio-hang.html'
     return render(request, 'Gio-hang.html')
 
-def login_view(request):
-    return render(request, 'login.html')
+def lien_he_view(request):
+    return render(request, 'lien_he.html')
 
-def register_view(request):
-    return render(request, 'register.html')
-# Thêm các dòng import này lên TRÊN CÙNG của views.py
-from django.shortcuts import render, redirect
-from django.contrib.auth.models import User
-from django.contrib import messages
-from django.contrib.auth import login
+def tinh_trang_view(request):
+    return render(request, 'Tinhtrang.html')
 
-# ... (các hàm hiện tại của bạn như home_view, tim_duong_view cứ giữ nguyên) ...
+def tim_duong(request):
+    return render(request, 'tim_duong.html')
 
-# Thêm hàm này vào CUỐI file views.py
+def custom_404(request, exception):
+    return render(request, '404.html', status=404)
+
+# --- Xử lý Đăng ký ---
 def register_view(request):
     if request.method == 'POST':
         hoten = request.POST.get('hoten')
         email = request.POST.get('email')
         matkhau = request.POST.get('matkhau')
         xacnhan_matkhau = request.POST.get('xacnhan_matkhau')
-        # loai_tk = request.POST.get('loai_tk') # Có thể dùng sau nếu bạn có Model riêng
 
-        # Kiểm tra mật khẩu khớp nhau
+        # 1. Kiểm tra mật khẩu khớp
         if matkhau != xacnhan_matkhau:
             messages.error(request, 'Mật khẩu xác nhận không khớp!')
             return redirect('register')
 
-        # Kiểm tra xem tên đăng nhập (họ tên) đã tồn tại chưa
-        if User.objects.filter(username=hoten).exists():
-            messages.error(request, 'Tên người dùng này đã được sử dụng!')
+        # 2. Kiểm tra trùng lặp (Dùng Email làm Username để tránh lỗi xác thực)
+        if User.objects.filter(username=email).exists():
+            messages.error(request, 'Email này đã được sử dụng để đăng ký!')
             return redirect('register')
 
-        # Tạo tài khoản và lưu vào database
-        user = User.objects.create_user(username=hoten, email=email, password=matkhau)
+        # 3. Tạo tài khoản (Gán email vào cả username và email)
+        user = User.objects.create_user(username=email, email=email, password=matkhau)
+        user.first_name = hoten # Lưu họ tên vào trường first_name
         user.save()
 
-        # Đăng nhập luôn cho khách hàng sau khi đăng ký thành công
-        login(request, user)
-        return redirect('home') # Chuyển hướng về trang chủ
+        django_login(request, user)
+        messages.success(request, f'Đăng ký thành công! Chào mừng {hoten}.')
+        return redirect('home')
 
     return render(request, 'register.html')
 
-def lien_he_view(request):
-    return render(request, 'lien_he.html')
-
-def tinh_trang_view(request):
-    # File của bạn là 'Tinhtrang.html'
-    return render(request, 'Tinhtrang.html')
-
-def tim_duong(request):
-    return render(request, 'tim_duong.html')
-def custom_404(request, exception):
-    return render(request, '404.html', status=404)
-from django.shortcuts import render, redirect
-from django.contrib.auth.models import User
-from django.contrib import messages
-from django.contrib.auth import authenticate, login as django_login
-
+# --- Xử lý Đăng nhập ---
 def login_view(request):
     if request.method == 'POST':
-        email = request.POST.get('email')
-        matkhau = request.POST.get('matkhau')
+        email_input = request.POST.get('email')
+        matkhau_input = request.POST.get('matkhau')
         
-        # Tìm user theo email
+        # 1. Tìm user theo email trong database
         try:
-            user = User.objects.get(email=email)
-            username = user.username
+            # Django mặc định authenticate qua trường username. 
+            # Ta tìm user có email đó để lấy username thực sự của họ.
+            user_found = User.objects.get(email=email_input)
+            actual_username = user_found.username
         except User.DoesNotExist:
-            messages.error(request, '❌ Email không tồn tại!')
+            messages.error(request, '❌ Email không tồn tại trong hệ thống!')
             return redirect('login')
         
-        # Xác thực mật khẩu
-        user = authenticate(request, username=username, password=matkhau)
+        # 2. Xác thực bằng username và mật khẩu
+        user = authenticate(request, username=actual_username, password=matkhau_input)
         
         if user is not None:
             django_login(request, user)
-            messages.success(request, f'✅ Chào mừng {user.username}!')
+            messages.success(request, f'✅ Chào mừng trở lại!')
             
-            # Chuyển hướng theo loại user
+            # Phân quyền chuyển hướng
             if user.is_staff or user.is_superuser:
-                return redirect('dashboard:index')
+                # Hãy đảm bảo bạn đã định nghĩa namespace 'dashboard' trong urls.py
+                try:
+                    return redirect('dashboard:index')
+                except:
+                    return redirect('home')
             return redirect('home')
         else:
             messages.error(request, '❌ Mật khẩu không chính xác!')
             return redirect('login')
     
     return render(request, 'login.html')
+
+def logout_view(request):
+    logout(request)
+    messages.success(request, '✅ Đã đăng xuất thành công!')
+    return redirect('home')
