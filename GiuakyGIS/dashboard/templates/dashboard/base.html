@@ -7,14 +7,28 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f8f9fe; }
+
+        /* ===== WRAPPER ===== */
+        #app-wrapper { display: flex; width: 100%; height: 100vh; }
 
         /* ===== SIDEBAR ===== */
         .sidebar {
-            width: 260px; height: 100vh; position: fixed; left: 0; top: 0;
+            width: 260px; height: 100%; position: relative; flex-shrink: 0;
             background: white; border-right: 1px solid #e9ecef;
             display: flex; flex-direction: column; z-index: 100;
+            transition: width 0.3s ease, transform 0.3s ease;
+            overflow-y: auto;
         }
+        .sidebar.hidden { 
+            width: 0; 
+            transform: translateX(-260px);
+            border-right: none;
+            overflow: hidden;
+        }
+
         .sidebar-brand {
             display: flex; align-items: center; gap: 10px;
             padding: 1.5rem 1.25rem 1rem; border-bottom: 1px solid #f0f2f5;
@@ -57,16 +71,30 @@
         .sidebar-footer {
             margin-top: auto; border-top: 1px solid #f0f2f5; padding: 0.75rem;
         }
-
-        /* ===== MAIN ===== */
-        .main-content { margin-left: 260px; min-height: 100vh; display: flex; flex-direction: column; }
+        .main-content { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            height: 100%;
+            transition: width 0.3s ease;
+            width: calc(100% - 260px);
+            overflow: hidden;
+        }
+        .main-content.expanded { 
+            width: 100%;
+        }
         .topbar {
             background: white; border-bottom: 1px solid #e9ecef;
             padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between;
             position: sticky; top: 0; z-index: 50;
         }
         .topbar-title { font-size: 1.4rem; font-weight: 700; color: #32325d; }
-        .page-body { flex: 1; padding: 2rem; }
+        .page-body { 
+            flex: 1; 
+            padding: 2rem; 
+            overflow-y: auto;
+            width: 100%;
+        }
 
         /* ===== STAT CARDS ===== */
         .stat-card {
@@ -164,7 +192,7 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-<div style="display:flex;">
+<div id="app-wrapper">
     <!-- ===== SIDEBAR ===== -->
     <nav class="sidebar">
         <div class="sidebar-brand">
@@ -213,7 +241,12 @@
     <!-- ===== MAIN ===== -->
     <div class="main-content">
         <div class="topbar">
-            <span class="topbar-title">{{ page_title|default:'Admin Panel' }}</span>
+            <div style="display:flex;align-items:center;gap:15px;">
+                <button id="sidebarToggle" class="btn-icon" style="background:#e9ecef;color:#667eea;border:none;font-size:1.2rem;cursor:pointer;" title="Toggle Sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <span class="topbar-title">{{ page_title|default:'Admin Panel' }}</span>
+            </div>
             <div style="display:flex;align-items:center;gap:12px;">
                 <span style="font-size:0.85rem;color:#8898aa;font-weight:600;">
                     {{ request.user.get_full_name|default:request.user.username }}
@@ -236,6 +269,18 @@
         </div>
     </div>
 </div>
+
+<script>
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebar = document.querySelector('.sidebar');
+    const mainContent = document.querySelector('.main-content');
+
+    sidebarToggle.addEventListener('click', function() {
+        sidebar.classList.toggle('hidden');
+        mainContent.classList.toggle('expanded');
+    });
+</script>
+
 {% block extra_js %}{% endblock %}
 </body>
 </html>
