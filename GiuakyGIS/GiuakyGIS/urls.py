@@ -8,3 +8,5 @@ urlpatterns = [
     path('dashboard/', include('dashboard.urls')),
     
 ]
+
+handler404 = 'home.views.custom_404'

@@ -68,10 +68,10 @@
 
     <nav>
         <ul class="nav-left">
-            <li><a href="/"><i class="fa-solid fa-house"></i> Trang chủ</a></li>
-            <li><a href="#"><i class="fa-solid fa-address-book"></i> Liên hệ</a></li>
-            <li><a href="#" style="color: #d32f2f;"><i class="fa-solid fa-map-location-dot"></i> Tìm đường</a></li>
-            <li><a href="#"><i class="fa-solid fa-truck-fast"></i> Tình trạng</a></li>
+            <li><a href="{% url 'home' %}"><i class="fa-solid fa-house"></i> Trang chủ</a></li>
+            <li><a href="{% url 'lien_he' %}" ><i class="fa-solid fa-address-book"></i> Liên hệ</a></li>
+            <li><a href="{% url 'tim_duong' %}" style="color: #d62828;"><i class="fa-solid fa-map-location-dot"></i> Tìm đường</a></li>
+            <li><a href="{% url 'tinh_trang' %}"><i class="fa-solid fa-truck-fast"></i> Tình trạng</a></li>
         </ul>
         <div class="nav-right">
             <i class="fa-solid fa-cart-shopping cart-icon" title="Giỏ hàng"></i>

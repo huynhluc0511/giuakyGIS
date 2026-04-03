@@ -1,4 +1,7 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.contrib.auth.models import User
+from django.contrib import messages
+from django.contrib.auth import login
 
 # --- Trang chủ ---
 def home_view(request):
@@ -29,23 +32,11 @@ def login_view(request):
     return render(request, 'login.html')
 
 def register_view(request):
-    return render(request, 'register.html')
-# Thêm các dòng import này lên TRÊN CÙNG của views.py
-from django.shortcuts import render, redirect
-from django.contrib.auth.models import User
-from django.contrib import messages
-from django.contrib.auth import login
-
-# ... (các hàm hiện tại của bạn như home_view, tim_duong_view cứ giữ nguyên) ...
-
-# Thêm hàm này vào CUỐI file views.py
-def register_view(request):
     if request.method == 'POST':
         hoten = request.POST.get('hoten')
         email = request.POST.get('email')
         matkhau = request.POST.get('matkhau')
         xacnhan_matkhau = request.POST.get('xacnhan_matkhau')
-        # loai_tk = request.POST.get('loai_tk') # Có thể dùng sau nếu bạn có Model riêng
 
         # Kiểm tra mật khẩu khớp nhau
         if matkhau != xacnhan_matkhau:
@@ -63,7 +54,7 @@ def register_view(request):
 
         # Đăng nhập luôn cho khách hàng sau khi đăng ký thành công
         login(request, user)
-        return redirect('home') # Chuyển hướng về trang chủ
+        return redirect('home')
 
     return render(request, 'register.html')
 
@@ -74,7 +65,8 @@ def tinh_trang_view(request):
     # File của bạn là 'Tinhtrang.html'
     return render(request, 'Tinhtrang.html')
 
-def tim_duong(request):
+def tim_duong_view(request):
     return render(request, 'tim_duong.html')
+
 def custom_404(request, exception):
     return render(request, '404.html', status=404)
