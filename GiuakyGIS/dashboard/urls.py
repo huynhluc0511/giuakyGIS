@@ -1,5 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+
 from . import views
 
 router = DefaultRouter()
@@ -36,15 +37,33 @@ urlpatterns = [
 
     # Orders
     path('orders/',                views.orders_list,   name='orders_list'),
+    path('orders/create/',         views.orders_create, name='orders_create'),
     path('orders/<int:pk>/',       views.orders_detail, name='orders_detail'),
     path('orders/<int:pk>/edit/',  views.orders_edit,   name='orders_edit'),
     path('orders/<int:pk>/delete/',views.orders_delete, name='orders_delete'),
 
     # Users
     path('users/',                views.users_list,   name='users_list'),
+    path('users/create/',         views.users_create, name='users_create'),
     path('users/<int:pk>/',       views.users_detail, name='users_detail'),
     path('users/<int:pk>/edit/',  views.users_edit,   name='users_edit'),
     path('users/<int:pk>/delete/',views.users_delete, name='users_delete'),
+
+    # Warehouse
+    path('warehouse/',                views.warehouse_list,   name='warehouse_list'),
+    path('warehouse/create/',         views.warehouse_create, name='warehouse_create'),
+    path('warehouse/<int:pk>/',       views.warehouse_detail, name='warehouse_detail'),
+    path('warehouse/<int:pk>/edit/',  views.warehouse_edit,   name='warehouse_edit'),
+    path('warehouse/<int:pk>/delete/',views.warehouse_delete, name='warehouse_delete'),
+    
+    # Warehouse Item
+    path('warehouse/item/create/',        views.warehouse_item_create, name='warehouse_item_create'),
+    path('warehouse/item/<int:pk>/edit/', views.warehouse_item_edit,   name='warehouse_item_edit'),
+    path('warehouse/item/<int:pk>/delete/',views.warehouse_item_delete, name='warehouse_item_delete'),
+    
+    # Warehouse Transaction
+    path('warehouse/transaction/create/',         views.warehouse_transaction_create, name='warehouse_transaction_create'),
+    path('warehouse/transaction/<int:pk>/delete/',views.warehouse_transaction_delete, name='warehouse_transaction_delete'),
 
     # Manage stores (full-featured page)
     path('manage/', views.manage_stores_view, name='manage_stores'),

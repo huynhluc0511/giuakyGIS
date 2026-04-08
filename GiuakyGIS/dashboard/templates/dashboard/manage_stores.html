@@ -53,6 +53,37 @@
         <div class="icon" style="background:linear-gradient(135deg,#0052D4,#6FB1FC);"><i class="fas fa-receipt"></i></div>
         <div><div class="num" id="statOrder">--</div><div class="lbl">Đơn Hàng</div></div>
     </div>
+</div></div>
+
+<!-- ===== QUICK ACTIONS ===== -->
+<div style="margin-bottom:2rem;">
+    <div style="font-size:0.85rem;font-weight:700;color:#8898aa;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:1rem;"><i class="fas fa-zap" style="color:#ffc107;margin-right:6px;"></i>Hành Động Nhanh</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;">
+        <a href="{% url 'dashboard:stores_create' %}" class="ql-card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:110px;text-decoration:none;color:#32325d;transition:all 0.2s;cursor:pointer;border:2px solid transparent;">
+            <div style="width:44px;height:44px;background:#e8edff;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#667eea;font-size:1.3rem;margin-bottom:0.5rem;"><i class="fas fa-store"></i></div>
+            <span style="font-weight:600;text-align:center;font-size:0.9rem;">Thêm Cửa Hàng</span>
+        </a>
+        <a href="{% url 'dashboard:categories_create' %}" class="ql-card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:110px;text-decoration:none;color:#32325d;transition:all 0.2s;cursor:pointer;border:2px solid transparent;">
+            <div style="width:44px;height:44px;background:#c8e8c8;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#2dce89;font-size:1.3rem;margin-bottom:0.5rem;"><i class="fas fa-layer-group"></i></div>
+            <span style="font-weight:600;text-align:center;font-size:0.9rem;">Thêm Danh Mục</span>
+        </a>
+        <a href="{% url 'dashboard:products_create' %}" class="ql-card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:110px;text-decoration:none;color:#32325d;transition:all 0.2s;cursor:pointer;border:2px solid transparent;">
+            <div style="width:44px;height:44px;background:#fff0cd;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#ffc107;font-size:1.3rem;margin-bottom:0.5rem;"><i class="fas fa-plus"></i></div>
+            <span style="font-weight:600;text-align:center;font-size:0.9rem;">Thêm Món Ăn</span>
+        </a>
+        <a href="{% url 'dashboard:orders_list' %}" class="ql-card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:110px;text-decoration:none;color:#32325d;transition:all 0.2s;cursor:pointer;border:2px solid transparent;">
+            <div style="width:44px;height:44px;background:#ffe8e8;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#ee0979;font-size:1.3rem;margin-bottom:0.5rem;"><i class="fas fa-envelope-open"></i></div>
+            <span style="font-weight:600;text-align:center;font-size:0.9rem;">Xem Đơn Hàng</span>
+        </a>
+        <div onclick="showStoreHours()" class="ql-card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:110px;text-decoration:none;color:#32325d;transition:all 0.2s;cursor:pointer;border:2px solid transparent;">
+            <div style="width:44px;height:44px;background:#e8d4ff;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#9b59b6;font-size:1.3rem;margin-bottom:0.5rem;"><i class="fas fa-clock"></i></div>
+            <span style="font-weight:600;text-align:center;font-size:0.9rem;">Giờ Mở Cửa</span>
+        </div>
+        <a href="{% url 'dashboard:manage_stores' %}" class="ql-card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:110px;text-decoration:none;color:#32325d;transition:all 0.2s;cursor:pointer;border:2px solid transparent;">
+            <div style="width:44px;height:44px;background:#d4f1ff;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#0052D4;font-size:1.3rem;margin-bottom:0.5rem;"><i class="fas fa-sliders"></i></div>
+            <span style="font-weight:600;text-align:center;font-size:0.9rem;">Quản Lý & Bản Đồ</span>
+        </a>
+    </div>
 </div>
 
 <!-- ===== MAIN GRID ===== -->
@@ -73,6 +104,14 @@
                 <div style="margin-bottom:0.85rem;">
                     <label class="ql-label">Địa chỉ <span style="color:#f5365c;">*</span></label>
                     <textarea id="storeAddress" class="ql-input" rows="2" placeholder="Địa chỉ chi tiết..."></textarea>
+                </div>
+                <div style="margin-bottom:0.85rem;">
+                    <label class="ql-label">Giờ Mở Cửa</label>
+                    <input type="text" id="storeHours" class="ql-input" placeholder="9:00 - 22:00">
+                </div>
+                <div style="margin-bottom:0.85rem;">
+                    <label class="ql-label">Thông Tin Quản Lý Kho</label>
+                    <textarea id="storeWarehouse" class="ql-input" rows="2" placeholder="Thông tin quản lý kho..."></textarea>
                 </div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.7rem;margin-bottom:0.85rem;">
                     <div>
@@ -143,6 +182,8 @@
                         <tr>
                             <th>Tên Cửa Hàng</th>
                             <th>Địa Chỉ</th>
+                            <th>Giờ Mở Cửa</th>
+                            <th>Quản Lý Kho</th>
                             <th>Tọa Độ</th>
                             <th style="text-align:center;">Xóa</th>
                         </tr>
@@ -209,11 +250,11 @@ let overviewMap, pickMap, pickMarker;
 function initMaps() {
     // Overview map
     overviewMap = L.map('overviewMap').setView([10.7769, 106.7009], 12);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OSM'}).addTo(overviewMap);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png', {attribution:'© OpenStreetMap, © CartoDB',maxZoom:20}).addTo(overviewMap);
 
     // Picker map
     pickMap = L.map('mapPicker').setView([10.7769, 106.7009], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OSM'}).addTo(pickMap);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png', {attribution:'© OpenStreetMap, © CartoDB',maxZoom:20}).addTo(pickMap);
     pickMarker = L.marker([10.7769, 106.7009], {draggable:true}).addTo(pickMap);
     pickMap.on('click', function(e) { pickMarker.setLatLng(e.latlng); setPickCoords(e.latlng.lat, e.latlng.lng); });
     pickMarker.on('dragend', function(e) { var p = e.target.getLatLng(); setPickCoords(p.lat, p.lng); });
@@ -263,6 +304,8 @@ async function loadStores() {
             html += `<tr>
                 <td style="font-weight:600;color:#32325d;">${s.name}</td>
                 <td style="color:#8898aa;font-size:0.8rem;">${s.address || '—'}</td>
+                <td style="font-size:0.82rem;color:#667eea;"><i class="fas fa-clock"></i> ${s.opening_hours || '—'}</td>
+                <td style="font-size:0.8rem;color:#8898aa;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${s.warehouse_info}">${s.warehouse_info || '—'}</td>
                 <td style="font-family:monospace;font-size:0.75rem;color:#adb5bd;">${parseFloat(s.latitude||0).toFixed(4)}, ${parseFloat(s.longitude||0).toFixed(4)}</td>
                 <td style="text-align:center;">
                     <button onclick="deleteStore(${s.id})" class="ql-btn-danger" title="Xóa"><i class="fas fa-trash-can"></i></button>
@@ -272,11 +315,11 @@ async function loadStores() {
             if (s.latitude && s.longitude) {
                 L.marker([s.latitude, s.longitude])
                  .addTo(overviewMap)
-                 .bindPopup(`<b>${s.name}</b><br><small>${s.address}</small>`);
+                 .bindPopup(`<b>${s.name}</b><br><small>${s.address}</small><br><small>⏰ ${s.opening_hours || 'N/A'}</small>`);
             }
         });
-        document.getElementById('storeBody').innerHTML = html || '<tr><td colspan="4" class="empty-msg"><i class="fas fa-store"></i>Chưa có cửa hàng</td></tr>';
-    } catch(e) { document.getElementById('storeBody').innerHTML = '<tr><td colspan="4" class="empty-msg">Lỗi tải dữ liệu</td></tr>'; }
+        document.getElementById('storeBody').innerHTML = html || '<tr><td colspan="6" class="empty-msg"><i class="fas fa-store"></i>Chưa có cửa hàng</td></tr>';
+    } catch(e) { document.getElementById('storeBody').innerHTML = '<tr><td colspan="6" class="empty-msg">Lỗi tải dữ liệu</td></tr>'; }
 }
 
 async function loadProducts() {
@@ -318,6 +361,8 @@ function filterProducts() {
 async function addStore() {
     const name = document.getElementById('storeName').value.trim();
     const address = document.getElementById('storeAddress').value.trim();
+    const hours = document.getElementById('storeHours').value.trim() || '9:00 - 22:00';
+    const warehouse = document.getElementById('storeWarehouse').value.trim() || '';
     let lat = document.getElementById('storeLat').value;
     let lng = document.getElementById('storeLng').value;
     if (!name || !address) return showMsg('Vui lòng nhập tên và địa chỉ!', 'error');
@@ -333,12 +378,14 @@ async function addStore() {
         const res = await fetch(API_STORES, {
             method: 'POST',
             headers: {'Content-Type':'application/json', 'X-CSRFToken': CSRF},
-            body: JSON.stringify({name, address, latitude: lat||10.7769, longitude: lng||106.7009})
+            body: JSON.stringify({name, address, latitude: lat||10.7769, longitude: lng||106.7009, opening_hours: hours, warehouse_info: warehouse})
         });
         if (res.ok) {
             showMsg('Cửa hàng đã được thêm!', 'success');
             document.getElementById('storeName').value = '';
             document.getElementById('storeAddress').value = '';
+            document.getElementById('storeHours').value = '';
+            document.getElementById('storeWarehouse').value = '';
             document.getElementById('storeLat').value = '';
             document.getElementById('storeLng').value = '';
             loadStores(); loadStats();
@@ -385,13 +432,33 @@ async function deleteStore(id) {
     await fetch(`${API_STORES}${id}/`, {method:'DELETE', headers:{'X-CSRFToken':CSRF}});
     showMsg('Đã xóa cửa hàng!', 'success'); loadStores(); loadStats();
 }
+
+async function showStoreHours() {
+    try {
+        const res = await fetch(API_STORES);
+        const data = await res.json();
+        const stores = Array.isArray(data) ? data : (data.results || []);
+        
+        let hoursHtml = '<table style="width:100%;border-collapse:collapse;">';
+        hoursHtml += '<tr style="background:#f8f9fe;"><th style="text-align:left;padding:0.75rem;border-bottom:1px solid #e9ecef;font-weight:700;color:#32325d;font-size:0.85rem;">Cửa Hàng</th><th style="text-align:left;padding:0.75rem;border-bottom:1px solid #e9ecef;font-weight:700;color:#32325d;font-size:0.85rem;">⏰ Giờ Mở Cửa</th></tr>';
+        
+        stores.forEach(s => {
+            hoursHtml += `<tr style="border-bottom:1px solid #f0f2f5;"><td style="padding:0.75rem;color:#32325d;font-weight:600;">${s.name}</td><td style="padding:0.75rem;color:#667eea;"><i class="fas fa-clock"></i> ${s.opening_hours || 'Chưa cập nhật'}</td></tr>`;
+        });
+        hoursHtml += '</table>';
+        
+        showModalMsg('Giờ Mở Cửa Các Cửa Hàng', hoursHtml);
+    } catch(e) {
+        showMsg('Lỗi tải dữ liệu!', 'error');
+    }
+}
 async function deleteProduct(id) {
     if (!confirm('Xóa món ăn này?')) return;
     await fetch(`${API_PRODUCTS}${id}/`, {method:'DELETE', headers:{'X-CSRFToken':CSRF}});
     showMsg('Đã xóa món ăn!', 'success'); loadProducts(); loadStats();
 }
 
-// ===== TOAST =====
+// ===== TOAST & MODAL =====
 function showMsg(msg, type) {
     const d = document.createElement('div');
     d.style.cssText = `position:fixed;top:1.5rem;right:1.5rem;z-index:9999;
@@ -401,6 +468,27 @@ function showMsg(msg, type) {
     d.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i> ${msg}`;
     document.body.appendChild(d);
     setTimeout(() => d.remove(), 3500);
+}
+
+function showModalMsg(title, content) {
+    // Xoá modal cũ nếu có
+    const oldModal = document.getElementById('customModal');
+    if (oldModal) oldModal.remove();
+    
+    const modal = document.createElement('div');
+    modal.id = 'customModal';
+    modal.style.cssText = `position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000;`;
+    modal.innerHTML = `
+        <div style="background:white;border-radius:12px;padding:1.5rem;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                <h2 style="margin:0;color:#32325d;font-size:1.1rem;">${title}</h2>
+                <button onclick="document.getElementById('customModal').remove();" style="background:none;border:none;font-size:1.5rem;color:#adb5bd;cursor:pointer;">&times;</button>
+            </div>
+            <div style="color:#32325d;">${content}</div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
 }
 
 // ===== INIT =====

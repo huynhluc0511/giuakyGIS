@@ -132,7 +132,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 var map = L.map('orderMap').setView([{{ order.lat }}, {{ order.lng }}], 15);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OSM'}).addTo(map);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png', {attribution:'© OpenStreetMap, © CartoDB',maxZoom:20}).addTo(map);
 L.marker([{{ order.lat }}, {{ order.lng }}])
  .addTo(map)
  .bindPopup('<b>{{ order.full_name }}</b><br>{{ order.address }}')

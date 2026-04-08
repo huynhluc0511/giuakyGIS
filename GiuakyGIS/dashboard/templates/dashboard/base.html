@@ -225,6 +225,9 @@
             <a href="{% url 'dashboard:users_list' %}" class="nav-link {% if 'users' in request.resolver_match.url_name %}active{% endif %}">
                 <i class="fas fa-users"></i> Người Dùng
             </a>
+            <a href="{% url 'dashboard:warehouse_list' %}" class="nav-link {% if 'warehouse' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="fas fa-warehouse"></i> Quản Lý Kho
+            </a>
         </div>
 
         <div class="sidebar-footer">

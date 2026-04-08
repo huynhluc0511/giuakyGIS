@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.models import User
 from django.contrib import messages
+from django.db import models
 
 from dashboard.models import Store, Product, Order, OrderItem, Category
 from rest_framework import viewsets, permissions
@@ -159,7 +160,7 @@ def products_list(request):
         products = products.filter(is_available=True)
     elif available_filter == '0':
         products = products.filter(is_available=False)
-    page_obj, paginator = paginate_queryset(products, request.GET.get('page'), 15)
+    page_obj, paginator = paginate_queryset(products, request.GET.get('page'), 6)
     categories = Category.objects.all()
     return render(request, 'dashboard/products/list.html', {
         'page_obj': page_obj, 'paginator': paginator,
@@ -225,12 +226,26 @@ def orders_list(request):
     status_filter = request.GET.get('status')
     if status_filter:
         orders = orders.filter(status=status_filter)
-    page_obj, paginator = paginate_queryset(orders, request.GET.get('page'), 15)
+    page_obj, paginator = paginate_queryset(orders, request.GET.get('page'), 6)
     status_choices = Order.STATUS_CHOICES
     return render(request, 'dashboard/orders/list.html', {
         'page_obj': page_obj, 'paginator': paginator,
         'search_form': search_form, 'status_choices': status_choices,
         'current_status': status_filter, 'page_title': 'Quản Lý Đơn Hàng',
+    })
+
+@admin_required
+def orders_create(request):
+    if request.method == 'POST':
+        form = OrderForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Đơn hàng đã được tạo thành công!')
+            return redirect('dashboard:orders_list')
+    else:
+        form = OrderForm()
+    return render(request, 'dashboard/orders/form.html', {
+        'form': form, 'page_title': 'Thêm Đơn Hàng', 'is_create': True,
     })
 
 @admin_required
@@ -274,10 +289,29 @@ def users_list(request):
     if search_form.is_valid() and search_form.cleaned_data.get('q'):
         q = search_form.cleaned_data['q']
         users = search_items(users, q, ['username', 'email', 'first_name', 'last_name'])
-    page_obj, paginator = paginate_queryset(users, request.GET.get('page'), 15)
+    page_obj, paginator = paginate_queryset(users, request.GET.get('page'), 6)
     return render(request, 'dashboard/users/list.html', {
         'page_obj': page_obj, 'paginator': paginator,
         'search_form': search_form, 'page_title': 'Quản Lý Người Dùng',
+    })
+
+@admin_required
+def users_create(request):
+    if request.method == 'POST':
+        form = UserForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            password = form.cleaned_data.get('password')
+            if password:
+                user.set_password(password)
+            user.save()
+            messages.success(request, f'Người dùng "{user.username}" đã được tạo thành công!')
+            return redirect('dashboard:users_detail', pk=user.pk)
+    else:
+        form = UserForm()
+    return render(request, 'dashboard/users/form.html', {
+        'form': form, 'is_create': True,
+        'page_title': 'Thêm Người Dùng',
     })
 
 @admin_required
@@ -305,7 +339,7 @@ def users_edit(request, pk):
     else:
         form = UserForm(instance=user)
     return render(request, 'dashboard/users/form.html', {
-        'form': form, 'user_obj': user,
+        'form': form, 'user_obj': user, 'is_create': False,
         'page_title': f'Chỉnh sửa: {user.get_full_name() or user.username}',
     })
 
@@ -317,6 +351,178 @@ def users_delete(request, pk):
     user.delete()
     messages.success(request, f'Người dùng "{username}" đã được xóa!')
     return redirect('dashboard:users_list')
+
+
+# ==================== WAREHOUSE ====================
+@admin_required
+def warehouse_list(request):
+    from dashboard.models import Warehouse, WarehouseItem, WarehouseTransaction
+    
+    # Lấy lịch sử giao dịch gần nhất (có phân trang)
+    all_transactions = WarehouseTransaction.objects.select_related(
+        'warehouse_item__product', 'warehouse_item__warehouse__store'
+    ).order_by('-created_at')
+    trans_page = request.GET.get('trans_page', 1)
+    transaction_page_obj, transaction_paginator = paginate_queryset(all_transactions, trans_page, 6)
+    
+    # Lấy sản phẩm với tồn kho thấp
+    low_stock_items = WarehouseItem.objects.filter(
+        quantity__lte=models.F('min_quantity')
+    ).select_related('product', 'warehouse__store')
+    
+    # Lấy tất cả sản phẩm trong kho (có phân trang)
+    warehouse_items = WarehouseItem.objects.select_related('product', 'warehouse__store').all()
+    page_obj, paginator = paginate_queryset(warehouse_items, request.GET.get('page'), 6)
+    
+    return render(request, 'dashboard/warehouse/list.html', {
+        'transaction_page_obj': transaction_page_obj,
+        'transaction_paginator': transaction_paginator,
+        'low_stock_items': low_stock_items,
+        'page_obj': page_obj,
+        'paginator': paginator,
+        'page_title': 'Quản Lý Kho',
+    })
+
+@admin_required
+def warehouse_detail(request, pk):
+    from dashboard.models import Warehouse
+    warehouse = get_object_or_404(Warehouse, pk=pk)
+    return render(request, 'dashboard/warehouse/detail.html', {
+        'warehouse': warehouse, 'page_title': f'Kho - {warehouse.store.name}',
+    })
+
+@admin_required
+def warehouse_create(request):
+    from dashboard.models import Warehouse
+    from dashboard.forms import WarehouseForm
+    if request.method == 'POST':
+        form = WarehouseForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Quản lý kho đã được thêm!')
+            return redirect('dashboard:warehouse_list')
+    else:
+        form = WarehouseForm()
+    return render(request, 'dashboard/warehouse/form.html', {
+        'form': form, 'page_title': 'Thêm Quản Lý Kho', 'is_create': True,
+    })
+
+@admin_required
+def warehouse_edit(request, pk):
+    from dashboard.models import Warehouse
+    from dashboard.forms import WarehouseForm
+    warehouse = get_object_or_404(Warehouse, pk=pk)
+    if request.method == 'POST':
+        form = WarehouseForm(request.POST, instance=warehouse)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Quản lý kho đã được cập nhật!')
+            return redirect('dashboard:warehouse_detail', pk=warehouse.pk)
+    else:
+        form = WarehouseForm(instance=warehouse)
+    return render(request, 'dashboard/warehouse/form.html', {
+        'form': form, 'warehouse': warehouse,
+        'page_title': f'Chỉnh Sửa Kho - {warehouse.store.name}', 'is_edit': True,
+    })
+
+@admin_required
+@require_http_methods(["POST"])
+def warehouse_delete(request, pk):
+    from dashboard.models import Warehouse
+    warehouse = get_object_or_404(Warehouse, pk=pk)
+    warehouse.delete()
+    messages.success(request, 'Quản lý kho đã được xóa!')
+    return redirect('dashboard:warehouse_list')
+
+
+# ==================== WAREHOUSE ITEM ====================
+@admin_required
+def warehouse_item_create(request):
+    from dashboard.models import WarehouseItem
+    from dashboard.forms import WarehouseItemForm
+    if request.method == 'POST':
+        form = WarehouseItemForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Sản phẩm đã được thêm vào kho!')
+            return redirect('dashboard:warehouse_list')
+    else:
+        form = WarehouseItemForm()
+    return render(request, 'dashboard/warehouse/form.html', {
+        'form': form, 'page_title': 'Thêm Sản Phẩm Vào Kho', 'is_item': True, 'is_create': True,
+    })
+
+@admin_required
+def warehouse_item_edit(request, pk):
+    from dashboard.models import WarehouseItem
+    from dashboard.forms import WarehouseItemForm
+    item = get_object_or_404(WarehouseItem, pk=pk)
+    if request.method == 'POST':
+        form = WarehouseItemForm(request.POST, instance=item)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Sản phẩm đã được cập nhật!')
+            return redirect('dashboard:warehouse_list')
+    else:
+        form = WarehouseItemForm(instance=item)
+    return render(request, 'dashboard/warehouse/form.html', {
+        'form': form, 'page_title': 'Chỉnh Sửa Sản Phẩm', 'is_item': True, 'is_edit': True,
+    })
+
+@admin_required
+@require_http_methods(["POST"])
+def warehouse_item_delete(request, pk):
+    from dashboard.models import WarehouseItem
+    item = get_object_or_404(WarehouseItem, pk=pk)
+    item.delete()
+    messages.success(request, 'Sản phẩm đã được xóa khỏi kho!')
+    return redirect('dashboard:warehouse_list')
+
+
+# ==================== WAREHOUSE TRANSACTION ====================
+@admin_required
+def warehouse_transaction_create(request):
+    from dashboard.models import WarehouseTransaction
+    from dashboard.forms import WarehouseTransactionForm
+    
+    if request.method == 'POST':
+        form = WarehouseTransactionForm(request.POST)
+        if form.is_valid():
+            transaction = form.save()
+            # Cập nhật số lượng tồn
+            item = transaction.warehouse_item
+            if transaction.transaction_type == 'import':
+                item.quantity += transaction.quantity
+            else:
+                item.quantity -= transaction.quantity
+            item.save()
+            msg = 'Nhập hàng thành công!' if transaction.transaction_type == 'import' else 'Xuất hàng thành công!'
+            messages.success(request, msg)
+            return redirect('dashboard:warehouse_list')
+    else:
+        form = WarehouseTransactionForm()
+    
+    return render(request, 'dashboard/warehouse/form.html', {
+        'form': form, 'page_title': 'Thêm Giao Dịch Kho', 'is_transaction': True, 'is_create': True,
+    })
+
+@admin_required
+@require_http_methods(["POST"])
+def warehouse_transaction_delete(request, pk):
+    from dashboard.models import WarehouseTransaction
+    transaction = get_object_or_404(WarehouseTransaction, pk=pk)
+    item = transaction.warehouse_item
+    
+    # Hoàn tác số lượng
+    if transaction.transaction_type == 'import':
+        item.quantity -= transaction.quantity
+    else:
+        item.quantity += transaction.quantity
+    item.save()
+    
+    transaction.delete()
+    messages.success(request, 'Giao dịch đã được xóa!')
+    return redirect('dashboard:warehouse_list')
 
 
 # ==================== MANAGE STORES LEGACY ====================

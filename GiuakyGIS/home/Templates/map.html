@@ -76,9 +76,9 @@
     var hcmCoords = [10.762622, 106.660172]; 
     var map = L.map('map').setView(hcmCoords, 13);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
-        maxZoom: 19
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png', {
+        attribution: '© OpenStreetMap, © CartoDB',
+        maxZoom: 20
     }).addTo(map);
 
     // --- 2. Xử lý dữ liệu ---

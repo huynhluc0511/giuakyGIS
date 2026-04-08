@@ -29,6 +29,7 @@
                     <th>Địa Chỉ</th>
                     <th>Vĩ Độ</th>
                     <th>Kinh Độ</th>
+                    <th>Giờ Mở Cửa</th>
                     <th style="text-align:center;">Thao Tác</th>
                 </tr>
             </thead>
@@ -42,6 +43,7 @@
                     <td style="color:#525f7f;max-width:220px;">{{ store.address }}</td>
                     <td style="font-family:monospace;font-size:0.8rem;color:#8898aa;">{{ store.latitude|floatformat:5 }}</td>
                     <td style="font-family:monospace;font-size:0.8rem;color:#8898aa;">{{ store.longitude|floatformat:5 }}</td>
+                    <td style="color:#667eea;font-weight:600;font-size:0.9rem;"><i class="fas fa-clock" style="margin-right:6px;"></i>{{ store.opening_hours }}</td>
                     <td style="text-align:center;">
                         <a href="{% url 'dashboard:stores_detail' store.pk %}" class="btn btn-outline btn-sm btn-icon" title="Xem chi tiết"><i class="fas fa-eye"></i></a>
                         <a href="{% url 'dashboard:stores_edit' store.pk %}" class="btn btn-primary btn-sm btn-icon" title="Chỉnh sửa" style="margin:0 4px;"><i class="fas fa-edit"></i></a>
@@ -53,7 +55,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="6" style="text-align:center;padding:3rem;color:#adb5bd;">
+                    <td colspan="7" style="text-align:center;padding:3rem;color:#adb5bd;">
                         <i class="fas fa-store" style="font-size:2.5rem;display:block;margin-bottom:1rem;opacity:0.3;"></i>
                         Chưa có cửa hàng nào. <a href="{% url 'dashboard:stores_create' %}" style="color:#667eea;">Thêm ngay</a>
                     </td>

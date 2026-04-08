@@ -25,7 +25,6 @@
         .food-card { background: white; border-radius: 25px; padding: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); border: 1px solid #eee; transition: 0.3s; display: flex; flex-direction: column; }
         .food-card:hover { transform: translateY(-10px); box-shadow: 0 15px 30px rgba(230, 126, 34, 0.15); }
         
-        /* CSS Mới cho hình ảnh thực tế */
         .food-img-wrapper { 
             width: 100%; 
             height: 220px; 
@@ -105,7 +104,7 @@
 
         <div class="food-card" id="g2">
             <div class="food-img-wrapper">
-                <img src="https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=600&q=80" alt="Gà Sốt Cay Hàn Quốc">
+                <img src="https://images.pexels.com/photos/2338407/pexels-photo-2338407.jpeg?auto=compress&cs=tinysrgb&w=600" alt="Gà Sốt Cay Hàn Quốc">
             </div>
             <div class="food-info">
                 <h3>Gà Sốt Cay Hàn Quốc</h3>
@@ -118,7 +117,7 @@
                         <option value="0">Cay vừa</option>
                         <option value="5000">Siêu cay 🔥 (+5k)</option>
                     </select>
-                    <button class="btn btn-confirm" onclick="processAddToCart('g2', 'Gà Sốt Cay Hàn Quốc', 45000, 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=600&q=80')">Xác nhận vào giỏ</button>
+                    <button class="btn btn-confirm" onclick="processAddToCart('g2', 'Gà Sốt Cay Hàn Quốc', 45000, 'https://images.pexels.com/photos/2338407/pexels-photo-2338407.jpeg?auto=compress&cs=tinysrgb&w=600')">Xác nhận vào giỏ</button>
                 </div>
             </div>
         </div>
@@ -146,7 +145,6 @@
         const extraPrice = optionSelect ? parseInt(optionSelect.value) : 0;
         const finalPrice = basePrice + extraPrice;
         
-        // Thêm các tuỳ chọn vào ID để phân biệt các loại món khác nhau trong giỏ
         const itemId = `${name}-${finalPrice}`;
         const existingItem = cart.find(item => item.id === itemId);
 
@@ -161,7 +159,6 @@
         
         alert(`Đã thêm ${name} vào giỏ hàng thành công!`);
         
-        // Trả lại trạng thái ban đầu của thẻ sau khi thêm
         const card = document.getElementById(divId);
         card.querySelector('.order-custom').classList.remove('active');
         card.querySelector('.btn-add').style.display = 'block';
@@ -178,7 +175,6 @@
         if (e.key === 'cart_data') updateCartQty();
     });
     
-    // Khởi tạo hiển thị số lượng giỏ hàng khi tải trang
     updateCartQty();
 </script>
 

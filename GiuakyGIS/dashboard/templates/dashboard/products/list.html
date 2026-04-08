@@ -83,14 +83,29 @@
             </tbody>
         </table>
     </div>
-    {% if page_obj.has_other_pages %}
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;border-top:1px solid #f0f2f5;">
-        <span style="font-size:0.82rem;color:#8898aa;">Trang {{ page_obj.number }} / {{ paginator.num_pages }} · {{ paginator.count }} kết quả</span>
-        <div style="display:flex;gap:6px;">
-            {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}" class="page-link">‹</a>{% endif %}
-            {% for i in paginator.page_range %}<a href="?page={{ i }}" class="page-link {% if i == page_obj.number %}active{% endif %}">{{ i }}</a>{% endfor %}
-            {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}" class="page-link">›</a>{% endif %}
+    {% if paginator.count > 6 %}
+    <div style="display:flex;align-items:center;justify-content:center;padding:1.5rem;border-top:1px solid #f0f2f5;background:#f8f9fe;gap:1rem;flex-wrap:wrap;">
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.available %}&available={{ request.GET.available }}{% endif %}" style="color:#667eea;font-weight:700;text-decoration:none;font-size:0.95rem;">« Trước</a>
+        {% else %}
+            <span style="color:#ccc;font-weight:700;font-size:0.95rem;">« Trước</span>
+        {% endif %}
+        
+        <div style="display:flex;gap:0.5rem;align-items:center;">
+            {% for i in paginator.page_range %}
+                {% if i == page_obj.number %}
+                    <span style="color:#667eea;font-weight:700;font-size:0.95rem;padding:0.5rem 0.75rem;background:#e8edff;border-radius:6px;min-width:32px;text-align:center;">{{ i }}</span>
+                {% else %}
+                    <a href="?page={{ i }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.available %}&available={{ request.GET.available }}{% endif %}" style="color:#667eea;text-decoration:none;font-weight:600;font-size:0.95rem;padding:0.5rem 0.75rem;border-radius:6px;min-width:32px;text-align:center;">{{ i }}</a>
+                {% endif %}
+            {% endfor %}
         </div>
+        
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.available %}&available={{ request.GET.available }}{% endif %}" style="color:#667eea;font-weight:700;text-decoration:none;font-size:0.95rem;">Tiếp »</a>
+        {% else %}
+            <span style="color:#ccc;font-weight:700;font-size:0.95rem;">Tiếp »</span>
+        {% endif %}
     </div>
     {% endif %}
 </div>

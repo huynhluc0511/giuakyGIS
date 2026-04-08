@@ -75,8 +75,9 @@
 
             var map = L.map('map').setView([10.7634, 106.6821], 13);
 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution:'© OpenStreetMap'
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png', {
+                attribution: '© OpenStreetMap, © CartoDB',
+                maxZoom: 20
             }).addTo(map);
 
             var shopIcon = L.icon({

@@ -42,7 +42,10 @@
         <script>
             // 1. Khởi tạo bản đồ
             var map = L.map('map').setView([10.7634, 106.6821], 14);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png', {
+                attribution: '© OpenStreetMap, © CartoDB',
+                maxZoom: 20
+            }).addTo(map);
 
             var shopIcon = L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/3448/3448650.png', iconSize: [40, 40] });
             var homeIcon = L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/1177/1177577.png', iconSize: [40, 40] });

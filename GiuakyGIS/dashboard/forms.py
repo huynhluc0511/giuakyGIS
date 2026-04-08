@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User
-from dashboard.models import Store, Product, Order, OrderItem, Category
+from dashboard.models import Store, Product, Order, OrderItem, Category, Warehouse, WarehouseItem, WarehouseTransaction
 
 
 INPUT_CLASS = 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent'
@@ -10,12 +10,13 @@ SELECT_CLASS = 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 
 class StoreForm(forms.ModelForm):
     class Meta:
         model = Store
-        fields = ['name', 'address', 'latitude', 'longitude']
+        fields = ['name', 'address', 'latitude', 'longitude', 'opening_hours']
         widgets = {
             'name': forms.TextInput(attrs={'class': INPUT_CLASS, 'placeholder': 'Tên cửa hàng'}),
             'address': forms.TextInput(attrs={'class': INPUT_CLASS, 'placeholder': 'Địa chỉ chi tiết'}),
             'latitude': forms.NumberInput(attrs={'class': INPUT_CLASS, 'placeholder': 'Vĩ độ', 'step': '0.000001'}),
             'longitude': forms.NumberInput(attrs={'class': INPUT_CLASS, 'placeholder': 'Kinh độ', 'step': '0.000001'}),
+            'opening_hours': forms.TextInput(attrs={'class': INPUT_CLASS, 'placeholder': '9:00 - 22:00'}),
         }
 
 
@@ -55,9 +56,21 @@ class OrderForm(forms.ModelForm):
             'address': forms.Textarea(attrs={'class': INPUT_CLASS, 'rows': 3, 'placeholder': 'Địa chỉ giao hàng'}),
             'status': forms.Select(attrs={'class': SELECT_CLASS}),
             'total_price': forms.NumberInput(attrs={'class': INPUT_CLASS, 'step': '0.01'}),
-            'lat': forms.NumberInput(attrs={'class': INPUT_CLASS, 'step': '0.000001', 'placeholder': 'Vĩ độ'}),
-            'lng': forms.NumberInput(attrs={'class': INPUT_CLASS, 'step': '0.000001', 'placeholder': 'Kinh độ'}),
+            'lat': forms.NumberInput(attrs={'class': INPUT_CLASS, 'step': '0.000001', 'placeholder': 'Vĩ độ', 'min': '0'}),
+            'lng': forms.NumberInput(attrs={'class': INPUT_CLASS, 'step': '0.000001', 'placeholder': 'Kinh độ', 'min': '0'}),
         }
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        lat = cleaned_data.get('lat')
+        lng = cleaned_data.get('lng')
+        
+        if lat is not None and lat < 0:
+            self.add_error('lat', 'Vĩ độ không được là số âm')
+        if lng is not None and lng < 0:
+            self.add_error('lng', 'Kinh độ không được là số âm')
+        
+        return cleaned_data
 
 
 class SearchForm(forms.Form):
@@ -89,4 +102,42 @@ class UserForm(forms.ModelForm):
             'last_name': forms.TextInput(attrs={'class': INPUT_CLASS, 'placeholder': 'Tên'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'h-4 w-4 text-indigo-600'}),
             'is_staff': forms.CheckboxInput(attrs={'class': 'h-4 w-4 text-indigo-600'}),
+        }
+
+
+class WarehouseForm(forms.ModelForm):
+    class Meta:
+        model = Warehouse
+        fields = ['store', 'info']
+        widgets = {
+            'store': forms.Select(attrs={'class': SELECT_CLASS}),
+            'info': forms.Textarea(attrs={'class': INPUT_CLASS, 'rows': 8, 'placeholder': 'Nhập thông tin quản lý kho...'}),
+        }
+
+
+class WarehouseItemForm(forms.ModelForm):
+    class Meta:
+        model = WarehouseItem
+        fields = ['warehouse', 'product', 'quantity', 'unit', 'min_quantity', 'unit_price']
+        widgets = {
+            'warehouse': forms.Select(attrs={'class': SELECT_CLASS}),
+            'product': forms.Select(attrs={'class': SELECT_CLASS}),
+            'quantity': forms.NumberInput(attrs={'class': INPUT_CLASS, 'placeholder': 'Số lượng tồn'}),
+            'unit': forms.TextInput(attrs={'class': INPUT_CLASS, 'placeholder': 'cái, kg, lít...'}),
+            'min_quantity': forms.NumberInput(attrs={'class': INPUT_CLASS, 'placeholder': 'Tồn kho tối thiểu'}),
+            'unit_price': forms.NumberInput(attrs={'class': INPUT_CLASS, 'placeholder': 'Giá nhập', 'step': '0.01'}),
+        }
+
+
+class WarehouseTransactionForm(forms.ModelForm):
+    class Meta:
+        model = WarehouseTransaction
+        fields = ['warehouse_item', 'transaction_type', 'quantity', 'unit_price', 'supplier', 'note']
+        widgets = {
+            'warehouse_item': forms.Select(attrs={'class': SELECT_CLASS}),
+            'transaction_type': forms.Select(attrs={'class': SELECT_CLASS}),
+            'quantity': forms.NumberInput(attrs={'class': INPUT_CLASS, 'placeholder': 'Số lượng'}),
+            'unit_price': forms.NumberInput(attrs={'class': INPUT_CLASS, 'placeholder': 'Đơn giá', 'step': '0.01'}),
+            'supplier': forms.TextInput(attrs={'class': INPUT_CLASS, 'placeholder': 'Nhà cung cấp'}),
+            'note': forms.Textarea(attrs={'class': INPUT_CLASS, 'rows': 3, 'placeholder': 'Ghi chú'}),
         }

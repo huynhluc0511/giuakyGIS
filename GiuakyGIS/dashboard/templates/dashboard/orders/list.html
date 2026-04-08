@@ -17,7 +17,10 @@
         <button type="submit" class="btn btn-outline"><i class="fas fa-search"></i></button>
         <a href="{% url 'dashboard:orders_list' %}" class="btn btn-secondary">Xóa</a>
     </form>
-    <span style="font-size:0.82rem;color:#8898aa;">{{ page_obj.paginator.count }} đơn hàng</span>
+    <div style="display:flex;gap:1rem;align-items:center;">
+        <span style="font-size:0.82rem;color:#8898aa;">{{ page_obj.paginator.count }} đơn hàng</span>
+        <a href="{% url 'dashboard:orders_create' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Thêm Đơn Hàng</a>
+    </div>
 </div>
 
 <div class="card">
@@ -81,14 +84,27 @@
             </tbody>
         </table>
     </div>
-    {% if page_obj.has_other_pages %}
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;border-top:1px solid #f0f2f5;">
-        <span style="font-size:0.82rem;color:#8898aa;">Trang {{ page_obj.number }} / {{ paginator.num_pages }} · {{ paginator.count }} kết quả</span>
-        <div style="display:flex;gap:6px;">
-            {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}" class="page-link">‹</a>{% endif %}
-            {% for i in paginator.page_range %}<a href="?page={{ i }}" class="page-link {% if i == page_obj.number %}active{% endif %}">{{ i }}</a>{% endfor %}
-            {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}" class="page-link">›</a>{% endif %}
-        </div>
+    {% if paginator.count > 6 %}
+    <div style="display:flex;align-items:center;justify-content:center;gap:0.75rem;padding:1.5rem;border-top:1px solid #e3e6f0;margin-top:1rem;">
+        {% if page_obj.has_previous %}
+            <a href="?page=1{% if current_status %}&status={{ current_status }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" style="padding:0.5rem 1rem;border:1px solid #e3e6f0;border-radius:4px;color:#667eea;text-decoration:none;font-weight:600;transition:all 0.3s ease;">« Trước</a>
+        {% else %}
+            <span style="padding:0.5rem 1rem;border:1px solid #e3e6f0;border-radius:4px;color:#adb5bd;font-weight:600;">« Trước</span>
+        {% endif %}
+
+        {% for num in paginator.page_range %}
+            {% if page_obj.number == num %}
+                <span style="padding:0.5rem 0.75rem;border:1px solid #667eea;border-radius:4px;background:#667eea;color:white;font-weight:700;min-width:2.5rem;text-align:center;">{{ num }}</span>
+            {% else %}
+                <a href="?page={{ num }}{% if current_status %}&status={{ current_status }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" style="padding:0.5rem 0.75rem;border:1px solid #e3e6f0;border-radius:4px;color:#667eea;text-decoration:none;font-weight:600;min-width:2.5rem;text-align:center;transition:all 0.3s ease;">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" style="padding:0.5rem 1rem;border:1px solid #e3e6f0;border-radius:4px;color:#667eea;text-decoration:none;font-weight:600;transition:all 0.3s ease;">Tiếp »</a>
+        {% else %}
+            <span style="padding:0.5rem 1rem;border:1px solid #e3e6f0;border-radius:4px;color:#adb5bd;font-weight:600;">Tiếp »</span>
+        {% endif %}
     </div>
     {% endif %}
 </div>

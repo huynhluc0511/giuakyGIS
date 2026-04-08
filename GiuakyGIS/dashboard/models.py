@@ -72,9 +72,59 @@ class Store(models.Model):
     address = models.CharField(max_length=255, verbose_name="Địa chỉ cửa hàng")
     latitude = models.FloatField(verbose_name="Vĩ độ")
     longitude = models.FloatField(verbose_name="Kinh độ")
+    opening_hours = models.CharField(max_length=255, verbose_name="Giờ mở cửa", default="9:00 - 22:00", blank=True)
+    warehouse_info = models.TextField(verbose_name="Thông tin quản lý kho", blank=True, default="")
 
     def __str__(self):
         return self.name
 
+# 6. Quản Lý Kho
+class Warehouse(models.Model):
+    store = models.OneToOneField(Store, on_delete=models.CASCADE, related_name='warehouse', verbose_name="Cửa hàng")
+    info = models.TextField(verbose_name="Thông tin quản lý kho", blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Ngày tạo")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Cập nhật lần cuối")
+
+    def __str__(self):
+        return f"Kho - {self.store.name}"
+
     class Meta:
-        verbose_name_plural = "Cửa hàng"
+        verbose_name_plural = "Quản Lý Kho"
+
+# 7. Sản phẩm trong kho
+class WarehouseItem(models.Model):
+    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE, related_name='items', verbose_name="Kho")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name="Sản phẩm")
+    quantity = models.IntegerField(default=0, verbose_name="Số lượng tồn")
+    unit = models.CharField(max_length=50, default="cái", verbose_name="Đơn vị")
+    min_quantity = models.IntegerField(default=10, verbose_name="Tồn kho tối thiểu")
+    unit_price = models.FloatField(default=0, verbose_name="Giá nhập")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Cập nhật lần cuối")
+
+    def __str__(self):
+        return f"{self.product.name} - {self.quantity} {self.unit}"
+
+    class Meta:
+        verbose_name_plural = "Sản Phẩm Kho"
+
+# 8. Giao dịch kho (nhập/xuất)
+class WarehouseTransaction(models.Model):
+    TRANSACTION_TYPES = (
+        ('import', 'Nhập hàng'),
+        ('export', 'Xuất hàng'),
+    )
+    
+    warehouse_item = models.ForeignKey(WarehouseItem, on_delete=models.CASCADE, related_name='transactions', verbose_name="Sản phẩm kho")
+    transaction_type = models.CharField(max_length=20, choices=TRANSACTION_TYPES, verbose_name="Loại giao dịch")
+    quantity = models.IntegerField(verbose_name="Số lượng")
+    unit_price = models.FloatField(default=0, verbose_name="Đơn giá")
+    supplier = models.CharField(max_length=255, blank=True, verbose_name="Nhà cung ứng")
+    note = models.TextField(blank=True, verbose_name="Ghi chú")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Ngày giao dịch")
+
+    def __str__(self):
+        return f"{self.get_transaction_type_display()} - {self.warehouse_item.product.name}"
+
+    class Meta:
+        verbose_name_plural = "Giao Dịch Kho"
+        ordering = ['-created_at']
