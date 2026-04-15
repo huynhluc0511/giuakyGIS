@@ -1,0 +1,123 @@
+{% extends 'dashboard/base.html' %}
+{% load dashboard_tags %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block content %}
+
+<div style="margin-bottom:1.5rem;">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h1 style="font-size:2rem;font-weight:700;color:#32325d;margin:0;">{{ page_title }}</h1>
+    </div>
+    <div style="background:#e8f4fd;border:1px solid #b3e5fc;border-radius:8px;padding:1rem;margin-top:1rem;border-left:4px solid #2196f3;">
+        <p style="margin:0;color:#01579b;font-size:0.95rem;">
+            <strong>Phiếu:</strong> {{ batch.batch_number }} | 
+            <strong>Loại:</strong> 
+            <span style="background:{% if batch.batch_type == 'import' %}#66bb6a{% else %}#ef5350{% endif %};color:white;padding:0.25rem 0.75rem;border-radius:4px;font-size:0.85rem;font-weight:700;">
+                {{ batch.get_batch_type_display }}
+            </span> | 
+            <strong>Kho:</strong> {{ batch.warehouse.store.name }}
+        </p>
+    </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 2fr;gap:1.5rem;">
+    <!-- Form Thêm Sản Phẩm -->
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-plus" style="color:#667eea;margin-right:8px;"></i>Thêm Sản Phẩm
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                {% for field in form %}
+                <div style="margin-bottom:1rem;">
+                    <label class="form-label" style="font-weight:700;color:#32325d;margin-bottom:0.5rem;display:block;">
+                        {{ field.label }} <span style="color:#f5365c;">*</span>
+                    </label>
+                    {% if field.field.widget.input_type == 'select' %}
+                        {{ field }}
+                    {% else %}
+                        {{ field }}
+                    {% endif %}
+                    {% if field.errors %}
+                    <div style="color:#f5365c;font-size:0.78rem;margin-top:0.5rem;">
+                        {% for error in field.errors %}<div><i class="fas fa-exclamation-circle"></i> {{ error }}</div>{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+                <button type="submit" class="btn btn-primary btn-block" style="background:#667eea;border:none;color:white;padding:0.75rem;border-radius:4px;font-weight:700;width:100%;cursor:pointer;margin-top:1rem;">
+                    <i class="fas fa-plus"></i> Thêm Sản Phẩm
+                </button>
+                <small style="color:#8898aa;display:block;text-align:center;margin-top:0.5rem;">Lặp lại để thêm nhiều sản phẩm</small>
+            </form>
+        </div>
+    </div>
+
+    <!-- Danh sách Sản phẩm -->
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-list" style="color:#667eea;margin-right:8px;"></i>Chi Tiết Phiếu
+        </div>
+        <div class="card-body" style="padding:0;">
+            {% if batch.items.all %}
+            <div style="overflow-x:auto;">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Sản Phẩm</th>
+                            <th style="text-align:center;width:80px;">SL</th>
+                            <th style="text-align:center;width:100px;">Đơn Giá</th>
+                            <th style="text-align:center;width:100px;">Thành Tiền</th>
+                            <th style="text-align:center;width:70px;">Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in batch.items.all %}
+                        <tr>
+                            <td style="font-weight:600;color:#32325d;">{{ item.warehouse_item.product.name }}</td>
+                            <td style="text-align:center;">{{ item.quantity }}</td>
+                            <td style="text-align:center;color:#8898aa;">{{ item.unit_price|floatformat:0 }} ₫</td>
+                            <td style="text-align:center;color:#667eea;font-weight:700;">{{ item.quantity|multiply:item.unit_price|floatformat:0 }} ₫</td>
+                            <td style="text-align:center;">
+                                <form method="post" action="{% url 'dashboard:warehouse_batch_item_delete' item.id %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" onclick="return confirm('Xóa?')" style="background:none;border:none;color:#f5365c;cursor:pointer;font-size:0.9rem;">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot style="background:#f0f2f5;font-weight:700;">
+                        <tr>
+                            <td colspan="3" style="text-align:right;padding:1rem;border-top:2px solid #e0e4e8;">Tổng Cộng:</td>
+                            <td style="text-align:center;padding:1rem;color:#667eea;border-top:2px solid #e0e4e8;">{{ batch.total_amount|floatformat:0 }} ₫</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div style="padding:1.5rem;display:flex;gap:0.75rem;border-top:1px solid #e0e4e8;">
+                <a href="{% url 'dashboard:warehouse_batch_detail' batch.id %}" class="btn btn-success" style="flex:1;background:#66bb6a;border:none;color:white;padding:0.75rem;border-radius:4px;font-weight:700;text-align:center;cursor:pointer;">
+                    <i class="fas fa-check"></i> Hoàn Thành
+                </a>
+                <a href="{% url 'dashboard:warehouse_batch_list' %}" class="btn btn-secondary" style="flex:1;background:#8898aa;border:none;color:white;padding:0.75rem;border-radius:4px;font-weight:700;text-align:center;cursor:pointer;">
+                    <i class="fas fa-times"></i> Hủy
+                </a>
+            </div>
+            {% else %}
+            <div style="text-align:center;padding:3rem 1.5rem;color:#8898aa;">
+                <i class="fas fa-inbox" style="font-size:3rem;margin-bottom:1rem;display:block;opacity:0.5;"></i>
+                <p style="margin:0;font-size:1rem;">Chưa có sản phẩm nào trong phiếu</p>
+                <small style="color:#bbb;">Hãy chọn sản phẩm từ bên trái</small>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

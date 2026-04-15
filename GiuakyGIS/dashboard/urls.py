@@ -50,25 +50,41 @@ urlpatterns = [
     path('users/<int:pk>/delete/',views.users_delete, name='users_delete'),
 
     # Warehouse
-    path('warehouse/',                views.warehouse_list,   name='warehouse_list'),
-    path('warehouse/create/',         views.warehouse_create, name='warehouse_create'),
-    path('warehouse/<int:pk>/',       views.warehouse_detail, name='warehouse_detail'),
-    path('warehouse/<int:pk>/edit/',  views.warehouse_edit,   name='warehouse_edit'),
-    path('warehouse/<int:pk>/delete/',views.warehouse_delete, name='warehouse_delete'),
-    
+    path('warehouse/',                     views.warehouse_list,            name='warehouse_list'),
+    path('warehouse/<int:pk>/',            views.warehouse_detail,          name='warehouse_detail'),
+    path('warehouse/create/',              views.warehouse_create,          name='warehouse_create'),
+    path('warehouse/<int:pk>/edit/',       views.warehouse_edit,            name='warehouse_edit'),
+    path('warehouse/<int:pk>/delete/',     views.warehouse_delete,          name='warehouse_delete'),
+
     # Warehouse Item
-    path('warehouse/item/create/',        views.warehouse_item_create, name='warehouse_item_create'),
-    path('warehouse/item/<int:pk>/edit/', views.warehouse_item_edit,   name='warehouse_item_edit'),
-    path('warehouse/item/<int:pk>/delete/',views.warehouse_item_delete, name='warehouse_item_delete'),
-    
+    path('warehouse-item/create/',         views.warehouse_item_create,     name='warehouse_item_create'),
+    path('warehouse-item/<int:pk>/edit/',  views.warehouse_item_edit,       name='warehouse_item_edit'),
+    path('warehouse-item/<int:pk>/delete/',views.warehouse_item_delete,     name='warehouse_item_delete'),
+
     # Warehouse Transaction
-    path('warehouse/transaction/create/',         views.warehouse_transaction_create, name='warehouse_transaction_create'),
-    path('warehouse/transaction/<int:pk>/delete/',views.warehouse_transaction_delete, name='warehouse_transaction_delete'),
+    path('warehouse-transaction/create/',      views.warehouse_transaction_create,  name='warehouse_transaction_create'),
+    path('warehouse-transaction/<int:pk>/delete/', views.warehouse_transaction_delete, name='warehouse_transaction_delete'),
 
-    # Manage stores (full-featured page)
-    path('manage/', views.manage_stores_view, name='manage_stores'),
+    # Warehouse Batch (NEW)
+    path('warehouse-batch/',                           views.warehouse_batch_list,        name='warehouse_batch_list'),
+    path('warehouse-batch/create/',                    views.warehouse_batch_create,      name='warehouse_batch_create'),
+    path('warehouse-batch/<int:pk>/add-items/',        views.warehouse_batch_add_items,   name='warehouse_batch_add_items'),
+    path('warehouse-batch/<int:pk>/',                  views.warehouse_batch_detail,      name='warehouse_batch_detail'),
+    path('warehouse-batch/<int:pk>/print/',            views.warehouse_batch_print,       name='warehouse_batch_print'),
+    path('warehouse-batch/<int:pk>/export-excel/',     views.warehouse_batch_export_excel, name='warehouse_batch_export_excel'),
+    path('warehouse-batch/<int:pk>/delete/',           views.warehouse_batch_delete,      name='warehouse_batch_delete'),
+    path('warehouse-batch-item/<int:pk>/delete/',      views.warehouse_batch_item_delete, name='warehouse_batch_item_delete'),
+    path('warehouse/import-excel/',                    views.warehouse_import_excel,      name='warehouse_import_excel'),
 
-    # API (DRF)
+    # Search & API
+    path('api/search/stores/',            views.api_search_stores,       name='api_search_stores'),
+    path('api/search/alley/',             views.api_search_by_alley,     name='api_search_alley'),
+    path('api/warehouse/low-stock/',      views.api_warehouse_low_stock, name='api_low_stock'),
+
+    # REST Framework
     path('api/', include(router.urls)),
     path('api/stores-create/', views.store_list_create, name='store_api'),
+    
+    # Manage stores (full-featured page)
+    path('manage/', views.manage_stores_view, name='manage_stores'),
 ]

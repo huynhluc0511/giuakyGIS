@@ -88,15 +88,50 @@ setCoords(lat, lng);
 marker.on('dragend', function(e) { var p = e.target.getLatLng(); setCoords(p.lat, p.lng); });
 map.on('click', function(e) { marker.setLatLng(e.latlng); setCoords(e.latlng.lat, e.latlng.lng); });
 
+// Debounce timer
+var geocodeTimer = null;
+var geocodeLoading = false;
+
 async function geocodeAddress() {
     var addr = document.getElementById('id_address').value;
-    if (!addr) return alert('Nhập địa chỉ trước!');
-    var res = await fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(addr) + ',Vietnam&limit=1');
-    var data = await res.json();
-    if (data.length) {
-        var lt = parseFloat(data[0].lat), ln = parseFloat(data[0].lon);
-        setCoords(lt, ln); marker.setLatLng([lt, ln]); map.setView([lt, ln], 15);
-    } else { alert('Không tìm thấy địa chỉ!'); }
+    if (!addr) return;
+    
+    geocodeLoading = true;
+    document.getElementById('id_address').style.borderColor = '#667eea';
+    
+    try {
+        var res = await fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(addr) + ',Vietnam&limit=1', {
+            timeout: 5000
+        });
+        var data = await res.json();
+        
+        if (data.length) {
+            var lt = parseFloat(data[0].lat), ln = parseFloat(data[0].lon);
+            setCoords(lt, ln); 
+            marker.setLatLng([lt, ln]); 
+            map.setView([lt, ln], 15);
+            document.getElementById('id_address').style.borderColor = '#28a745';
+        } else { 
+            document.getElementById('id_address').style.borderColor = '#f5365c';
+        }
+    } catch(e) {
+        console.error('Geocoding error:', e);
+        document.getElementById('id_address').style.borderColor = '#f5365c';
+    }
+    geocodeLoading = false;
 }
+
+// Tự động search khi người dùng gõ địa chỉ (với debounce 1 giây)
+document.getElementById('id_address').addEventListener('input', function() {
+    clearTimeout(geocodeTimer);
+    document.getElementById('id_address').style.borderColor = '#ffc107';
+    this.style.transition = 'border-color 0.3s ease';
+    
+    geocodeTimer = setTimeout(function() {
+        if (document.getElementById('id_address').value.length > 3) {
+            geocodeAddress();
+        }
+    }, 1000);
+});
 </script>
 {% endblock %}

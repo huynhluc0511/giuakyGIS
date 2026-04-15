@@ -3,6 +3,7 @@ from django.views.decorators.http import require_http_methods
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db import models
+from django.http import HttpResponse
 
 from dashboard.models import Store, Product, Order, OrderItem, Category
 from rest_framework import viewsets, permissions
@@ -356,32 +357,102 @@ def users_delete(request, pk):
 # ==================== WAREHOUSE ====================
 @admin_required
 def warehouse_list(request):
-    from dashboard.models import Warehouse, WarehouseItem, WarehouseTransaction
+    import logging
+    import traceback
+    logger = logging.getLogger(__name__)
     
-    # Lấy lịch sử giao dịch gần nhất (có phân trang)
-    all_transactions = WarehouseTransaction.objects.select_related(
-        'warehouse_item__product', 'warehouse_item__warehouse__store'
-    ).order_by('-created_at')
-    trans_page = request.GET.get('trans_page', 1)
-    transaction_page_obj, transaction_paginator = paginate_queryset(all_transactions, trans_page, 6)
-    
-    # Lấy sản phẩm với tồn kho thấp
-    low_stock_items = WarehouseItem.objects.filter(
-        quantity__lte=models.F('min_quantity')
-    ).select_related('product', 'warehouse__store')
-    
-    # Lấy tất cả sản phẩm trong kho (có phân trang)
-    warehouse_items = WarehouseItem.objects.select_related('product', 'warehouse__store').all()
-    page_obj, paginator = paginate_queryset(warehouse_items, request.GET.get('page'), 6)
-    
-    return render(request, 'dashboard/warehouse/list.html', {
-        'transaction_page_obj': transaction_page_obj,
-        'transaction_paginator': transaction_paginator,
-        'low_stock_items': low_stock_items,
-        'page_obj': page_obj,
-        'paginator': paginator,
-        'page_title': 'Quản Lý Kho',
-    })
+    try:
+        from dashboard.models import Warehouse, WarehouseItem, WarehouseTransaction, WarehouseBatch
+        from django.core.paginator import Paginator
+        from django.db import models
+        
+        # Lấy tất cả batches và transactions, gộp lại theo thời gian
+        combined_list = []
+        
+        # Thêm transactions (cũ)
+        all_transactions = WarehouseTransaction.objects.select_related(
+            'warehouse_item__product', 'warehouse_item__warehouse__store'
+        ).order_by('-created_at')
+        
+        for trans in all_transactions:
+            combined_list.append({
+                'id': trans.id,
+                'type': 'transaction',
+                'date': trans.created_at,
+                'product': trans.warehouse_item.product.name,
+                'quantity': trans.quantity,
+                'unit_price': trans.unit_price,
+                'batch_type': 'Xuất kho' if trans.transaction_type == 'export' else 'Nhập kho',
+                'supplier': trans.supplier or 'N/A',
+                'store': trans.warehouse_item.warehouse.store.name,
+                'note': trans.note or '',
+                'obj': trans
+            })
+        
+        # Thêm batches (mới)
+        all_batches = WarehouseBatch.objects.select_related(
+            'warehouse__store', 'created_by'
+        ).order_by('-created_at')
+        
+        for batch in all_batches:
+            try:
+                items_count = batch.items.count()
+                total_qty = sum([item.quantity for item in batch.items.all()])
+            except:
+                items_count = 0
+                total_qty = 0
+                
+            combined_list.append({
+                'id': batch.id,
+                'type': 'batch',
+                'date': batch.created_at,
+                'product': f'{items_count} sản phẩm',
+                'quantity': total_qty,
+                'unit_price': 0,
+                'batch_type': 'Xuất kho' if batch.batch_type == 'export' else 'Nhập kho',
+                'supplier': batch.supplier or 'N/A',
+                'store': batch.warehouse.store.name,
+                'note': batch.description or '',
+                'obj': batch
+            })
+        
+        # Sắp xếp theo thời gian
+        combined_list.sort(key=lambda x: x['date'], reverse=True)
+        
+        # Phân trang bằng Paginator
+        trans_page = request.GET.get('trans_page', 1)
+        paginator = Paginator(combined_list, 6)
+        try:
+            transaction_page_obj = paginator.page(trans_page)
+        except:
+            transaction_page_obj = paginator.page(1)
+        
+        # Lấy sản phẩm với tồn kho thấp
+        low_stock_items = WarehouseItem.objects.filter(
+            quantity__lte=models.F('min_quantity')
+        ).select_related('product', 'warehouse__store')
+        
+        # Lấy tất cả sản phẩm trong kho (có phân trang)
+        warehouse_items = WarehouseItem.objects.select_related('product', 'warehouse__store').all()
+        page_num = request.GET.get('page', 1)
+        paginator_items = Paginator(warehouse_items, 6)
+        try:
+            page_obj = paginator_items.page(page_num)
+        except:
+            page_obj = paginator_items.page(1)
+        
+        return render(request, 'dashboard/warehouse/list.html', {
+            'transaction_page_obj': transaction_page_obj,
+            'transaction_paginator': paginator,
+            'low_stock_items': low_stock_items,
+            'page_obj': page_obj,
+            'paginator': paginator_items,
+            'page_title': 'Quản Lý Kho',
+        })
+    except Exception as e:
+        logger.error(f'Error in warehouse_list: {str(e)}')
+        logger.error(traceback.format_exc())
+        raise
 
 @admin_required
 def warehouse_detail(request, pk):
@@ -482,29 +553,8 @@ def warehouse_item_delete(request, pk):
 # ==================== WAREHOUSE TRANSACTION ====================
 @admin_required
 def warehouse_transaction_create(request):
-    from dashboard.models import WarehouseTransaction
-    from dashboard.forms import WarehouseTransactionForm
-    
-    if request.method == 'POST':
-        form = WarehouseTransactionForm(request.POST)
-        if form.is_valid():
-            transaction = form.save()
-            # Cập nhật số lượng tồn
-            item = transaction.warehouse_item
-            if transaction.transaction_type == 'import':
-                item.quantity += transaction.quantity
-            else:
-                item.quantity -= transaction.quantity
-            item.save()
-            msg = 'Nhập hàng thành công!' if transaction.transaction_type == 'import' else 'Xuất hàng thành công!'
-            messages.success(request, msg)
-            return redirect('dashboard:warehouse_list')
-    else:
-        form = WarehouseTransactionForm()
-    
-    return render(request, 'dashboard/warehouse/form.html', {
-        'form': form, 'page_title': 'Thêm Giao Dịch Kho', 'is_transaction': True, 'is_create': True,
-    })
+    """Chuyển hướng sang batch create (cho phép nhập nhiều sản phẩm cùng lúc)"""
+    return redirect('dashboard:warehouse_batch_create')
 
 @admin_required
 @require_http_methods(["POST"])
@@ -529,6 +579,259 @@ def warehouse_transaction_delete(request, pk):
 @admin_required
 def manage_stores_view(request):
     return render(request, 'dashboard/manage_stores.html')
+
+
+# ==================== WAREHOUSE BATCH (NEW) ====================
+@admin_required
+def warehouse_batch_list(request):
+    from dashboard.models import WarehouseBatch
+    batches = WarehouseBatch.objects.select_related('warehouse__store', 'created_by').order_by('-created_at')
+    batch_type_filter = request.GET.get('batch_type')
+    if batch_type_filter:
+        batches = batches.filter(batch_type=batch_type_filter)
+    page_obj, paginator = paginate_queryset(batches, request.GET.get('page'), 10)
+    return render(request, 'dashboard/warehouse/batch_list.html', {
+        'page_obj': page_obj, 'paginator': paginator,
+        'page_title': 'Phiếu Nhập/Xuất Kho',
+    })
+
+@admin_required
+def warehouse_batch_create(request):
+    from dashboard.models import WarehouseBatch, WarehouseItem, WarehouseBatchItem
+    from dashboard.forms import WarehouseBatchForm, ImportExcelForm
+    from dashboard.utils import import_warehouse_from_excel, generate_batch_number
+    
+    if request.method == 'POST':
+        form = WarehouseBatchForm(request.POST)
+        if form.is_valid():
+            batch = form.save(commit=False)
+            batch.created_by = request.user
+            if not batch.batch_number:
+                batch.batch_number = generate_batch_number(batch.batch_type)
+            batch.save()
+            messages.success(request, 'Phiếu đã được tạo! Hãy thêm sản phẩm.')
+            return redirect('dashboard:warehouse_batch_add_items', pk=batch.pk)
+    else:
+        form = WarehouseBatchForm()
+    
+    return render(request, 'dashboard/warehouse/batch_form.html', {
+        'form': form, 'page_title': 'Tạo Phiếu Nhập/Xuất Kho', 'is_create': True,
+    })
+
+@admin_required
+def warehouse_batch_add_items(request, pk):
+    import traceback
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        from dashboard.models import WarehouseBatch, WarehouseBatchItem
+        from dashboard.forms import WarehouseBatchItemForm
+        
+        batch = get_object_or_404(WarehouseBatch, pk=pk)
+        if request.method == 'POST':
+            form = WarehouseBatchItemForm(request.POST)
+            if form.is_valid():
+                item = form.save(commit=False)
+                item.batch = batch
+                item.save()
+                
+                # Cập nhật tồn kho
+                warehouse_item = item.warehouse_item
+                if batch.batch_type == 'import':
+                    warehouse_item.quantity += item.quantity
+                else:
+                    warehouse_item.quantity -= item.quantity
+                warehouse_item.save()
+                
+                messages.success(request, 'Sản phẩm đã được thêm vào phiếu!')
+                return redirect('dashboard:warehouse_batch_add_items', pk=batch.pk)
+        else:
+            form = WarehouseBatchItemForm()
+        
+        return render(request, 'dashboard/warehouse/batch_add_items.html', {
+            'batch': batch,
+            'form': form,
+            'page_title': f'Thêm Sản Phẩm - Phiếu {batch.batch_number}',
+        })
+    except Exception as e:
+        logger.error(f'Error in warehouse_batch_add_items: {str(e)}')
+        logger.error(traceback.format_exc())
+        raise
+
+@admin_required
+def warehouse_batch_detail(request, pk):
+    from dashboard.models import WarehouseBatch
+    batch = get_object_or_404(WarehouseBatch, pk=pk)
+    return render(request, 'dashboard/warehouse/batch_detail.html', {
+        'batch': batch, 'page_title': f'Phiếu {batch.batch_number}',
+    })
+
+@admin_required
+def warehouse_batch_print(request, pk):
+    from dashboard.models import WarehouseBatch
+    from dashboard.utils import export_batch_to_pdf
+    batch = get_object_or_404(WarehouseBatch, pk=pk)
+    
+    # Cập nhật trạng thái in
+    from django.utils import timezone
+    batch.is_printed = True
+    batch.printed_at = timezone.now()
+    batch.save()
+    
+    return export_batch_to_pdf(batch)
+
+@admin_required  
+def warehouse_batch_export_excel(request, pk):
+    from dashboard.models import WarehouseBatch
+    from dashboard.utils import export_batch_to_excel
+    batch = get_object_or_404(WarehouseBatch, pk=pk)
+    
+    wb = export_batch_to_excel(batch)
+    if wb is None:
+        messages.error(request, 'openpyxl chưa được cài đặt. Vui lòng cài đặt bằng pip install openpyxl')
+        return redirect('dashboard:warehouse_batch_detail', pk=batch.pk)
+    
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="phieu_{batch.batch_number}.xlsx"'
+    wb.save(response)
+    return response
+
+@admin_required
+@require_http_methods(["POST"])
+def warehouse_batch_delete(request, pk):
+    from dashboard.models import WarehouseBatch
+    batch = get_object_or_404(WarehouseBatch, pk=pk)
+    batch.delete()
+    messages.success(request, 'Phiếu đã được xóa!')
+    return redirect('dashboard:warehouse_batch_list')
+
+
+# ==================== WAREHOUSE BATCH ITEM MANAGEMENT ====================
+@admin_required
+def warehouse_batch_item_delete(request, pk):
+    from dashboard.models import WarehouseBatchItem
+    item = get_object_or_404(WarehouseBatchItem, pk=pk)
+    batch = item.batch
+    
+    # Hoàn tác số lượng tồn kho
+    warehouse_item = item.warehouse_item
+    if batch.batch_type == 'import':
+        warehouse_item.quantity -= item.quantity
+    else:
+        warehouse_item.quantity += item.quantity
+    warehouse_item.save()
+    
+    item.delete()
+    messages.success(request, 'Sản phẩm đã được xóa khỏi phiếu!')
+    return redirect('dashboard:warehouse_batch_add_items', pk=batch.pk)
+
+@admin_required
+def warehouse_import_excel(request):
+    from dashboard.models import Warehouse
+    from dashboard.forms import ImportExcelForm
+    from dashboard.utils import import_warehouse_from_excel
+    
+    if request.method == 'POST':
+        form = ImportExcelForm(request.POST, request.FILES)
+        if form.is_valid():
+            excel_file = request.FILES.get('excel_file')
+            warehouse = form.cleaned_data['warehouse']
+            supplier = form.cleaned_data.get('supplier', '')
+            
+            result = import_warehouse_from_excel(excel_file, warehouse, supplier)
+            if result['success']:
+                messages.success(request, f"Đã nhập {result['items_added']} sản phẩm. Phiếu: {result['batch_number']}")
+                if result['errors']:
+                    for error in result['errors']:
+                        messages.warning(request, error)
+                return redirect('dashboard:warehouse_batch_detail', pk=result['batch_id'])
+            else:
+                messages.error(request, f"Lỗi: {result['error']}")
+    else:
+        form = ImportExcelForm()
+    
+    return render(request, 'dashboard/warehouse/import_excel.html', {
+        'form': form,
+        'page_title': 'Nhập Kho Từ Excel',
+    })
+
+
+# ==================== SEARCH API ====================
+@api_view(['GET'])
+def api_search_stores(request):
+    """API tìm cửa hàng theo tên hoặc địa chỉ"""
+    from dashboard.utils import search_stores_by_location
+    
+    query = request.GET.get('q', '').strip()
+    latitude = request.GET.get('lat')
+    longitude = request.GET.get('lng')
+    radius = float(request.GET.get('radius', 5))  # km
+    
+    stores = Store.objects.all()
+    
+    # Tìm kiếm theo tên hoặc địa chỉ
+    if query:
+        stores = search_items(stores, query, ['name', 'address'])
+    
+    # Tìm kiếm theo vị trí địa lý
+    if latitude and longitude:
+        try:
+            lat = float(latitude)
+            lng = float(longitude)
+            nearby = search_stores_by_location(lat, lng, radius)
+            result_data = [{
+                'id': item['store'].id,
+                'name': item['store'].name,
+                'address': item['store'].address,
+                'latitude': item['store'].latitude,
+                'longitude': item['store'].longitude,
+                'distance': item['distance'],
+                'opening_hours': item['store'].opening_hours,
+            } for item in nearby]
+            return Response(result_data)
+        except ValueError:
+            return Response({'error': 'Vĩ độ/Kinh độ không hợp lệ'}, status=400)
+    
+    serializer = StoreSerializer(stores, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+def api_search_by_alley(request):
+    """API tìm cửa hàng trong hẻm/con hẻm"""
+    query = request.GET.get('q', '').strip()
+    if not query:
+        return Response({'error': 'Vui lòng nhập từ khóa tìm kiếm'}, status=400)
+    
+    stores = Store.objects.all()
+    results = search_items(stores, query, ['address'])
+    
+    serializer = StoreSerializer(results, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+def api_warehouse_low_stock(request):
+    """API lấy danh sách sản phẩm tồn kho thấp"""
+    from dashboard.models import WarehouseItem
+    
+    warehouse_id = request.GET.get('warehouse_id')
+    low_stock = WarehouseItem.objects.filter(quantity__lte=models.F('min_quantity'))
+    
+    if warehouse_id:
+        low_stock = low_stock.filter(warehouse_id=warehouse_id)
+    
+    data = [{
+        'id': item.id,
+        'product': item.product.name,
+        'warehouse': item.warehouse.store.name,
+        'quantity': item.quantity,
+        'min_quantity': item.min_quantity,
+        'unit': item.unit,
+    } for item in low_stock.select_related('product', 'warehouse__store')]
+    
+    return Response(data)
 
 
 # ==================== API (DRF) ====================

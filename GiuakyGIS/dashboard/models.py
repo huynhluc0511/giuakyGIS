@@ -128,3 +128,49 @@ class WarehouseTransaction(models.Model):
     class Meta:
         verbose_name_plural = "Giao Dịch Kho"
         ordering = ['-created_at']
+
+
+# 9. Phiếu nhập/xuất kho (Batch) - để nhóm nhiều giao dịch
+class WarehouseBatch(models.Model):
+    BATCH_TYPES = (
+        ('import', 'Nhập hàng'),
+        ('export', 'Xuất hàng'),
+    )
+    
+    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE, related_name='batches', verbose_name="Kho")
+    batch_type = models.CharField(max_length=20, choices=BATCH_TYPES, verbose_name="Loại phiếu")
+    batch_number = models.CharField(max_length=50, unique=True, verbose_name="Số phiếu")
+    supplier = models.CharField(max_length=255, blank=True, verbose_name="Nhà cung ứng/Người nhận")
+    description = models.TextField(blank=True, verbose_name="Mô tả")
+    total_amount = models.FloatField(default=0, verbose_name="Tổng tiền")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Ngày tạo")
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name="Người tạo")
+    is_printed = models.BooleanField(default=False, verbose_name="Đã in")
+    printed_at = models.DateTimeField(null=True, blank=True, verbose_name="Thời gian in")
+
+    def __str__(self):
+        return f"{self.batch_number} - {self.get_batch_type_display()}"
+
+    class Meta:
+        verbose_name_plural = "Phiếu Nhập/Xuất Kho"
+        ordering = ['-created_at']
+
+    def calculate_total(self):
+        """Tính tổng tiền của phiếu"""
+        total = sum(item.quantity * item.unit_price for item in self.items.all())
+        self.total_amount = total
+        return total
+
+
+# 10. Chi tiết phiếu nhập/xuất kho
+class WarehouseBatchItem(models.Model):
+    batch = models.ForeignKey(WarehouseBatch, on_delete=models.CASCADE, related_name='items', verbose_name="Phiếu")
+    warehouse_item = models.ForeignKey(WarehouseItem, on_delete=models.CASCADE, verbose_name="Sản phẩm kho")
+    quantity = models.IntegerField(verbose_name="Số lượng")
+    unit_price = models.FloatField(verbose_name="Đơn giá")
+
+    def __str__(self):
+        return f"{self.warehouse_item.product.name} - {self.quantity}"
+
+    class Meta:
+        verbose_name_plural = "Chi Tiết Phiếu Nhập/Xuất"

@@ -23,15 +23,14 @@
     {% endif %}
 </div>
 
-<!-- Nút thêm giao dịch -->
+<!-- Nút thêm phiếu nhập/xuất (cho phép nhiều sản phẩm) -->
 <div style="margin-bottom:1.5rem;display:flex;gap:0.75rem;justify-content:space-between;align-items:center;">
-    <div></div>
+    <div style="font-size:0.9rem;color:#666;padding:0.5rem 1rem;background:#f0f5ff;border-radius:6px;border-left:4px solid #667eea;">
+        💡 <strong>Ghi chú:</strong> Bạn có thể thêm nhiều sản phẩm cùng lúc trong một phiếu
+    </div>
     <div style="display:flex;gap:0.75rem;">
-        <a href="{% url 'dashboard:warehouse_transaction_create' %}?type=import" class="btn btn-success" style="background:#28a745;color:white;">
-            <i class="fas fa-arrow-down"></i> Nhập hàng
-        </a>
-        <a href="{% url 'dashboard:warehouse_transaction_create' %}?type=export" class="btn btn-warning" style="background:#ffc107;color:#333;">
-            <i class="fas fa-arrow-up"></i> Xuất hàng
+        <a href="{% url 'dashboard:warehouse_batch_create' %}" class="btn btn-success" style="background:#28a745;color:white;">
+            <i class="fas fa-plus"></i> Tạo Phiếu Nhập/Xuất Kho
         </a>
     </div>
 </div>
@@ -58,24 +57,44 @@
             <tbody>
                 {% for transaction in transaction_page_obj %}
                 <tr>
-                    <td style="font-weight:600;color:#32325d;">{{ transaction.created_at|date:"d/m/Y" }}</td>
+                    <td style="font-weight:600;color:#32325d;">{{ transaction.date|date:"d/m/Y" }}</td>
                     <td>
-                        {% if transaction.transaction_type == 'import' %}
+                        {% if transaction.batch_type == 'Nhập kho' %}
                             <span style="background:#d1e7dd;color:#0a3622;padding:0.25rem 0.75rem;border-radius:20px;font-size:0.8rem;font-weight:700;"><i class="fas fa-arrow-down"></i> Nhập kho</span>
                         {% else %}
                             <span style="background:#ffc107;color:#333;padding:0.25rem 0.75rem;border-radius:20px;font-size:0.8rem;font-weight:700;"><i class="fas fa-arrow-up"></i> Xuất kho</span>
                         {% endif %}
                     </td>
-                    <td style="color:#32325d;font-weight:500;">{{ transaction.warehouse_item.product.name }}</td>
-                    <td style="color:#667eea;font-weight:700;">{{ transaction.quantity }} {{ transaction.warehouse_item.unit }}</td>
-                    <td style="color:#8898aa;">{{ transaction.unit_price|floatformat:0 }} VNĐ</td>
-                    <td style="color:#8898aa;font-size:0.9rem;">{{ transaction.supplier|default:"—" }}</td>
+                    <td style="color:#32325d;font-weight:500;">
+                        {% if transaction.type == 'batch' %}
+                            <strong style="background:#667eea;color:white;padding:0.25rem 0.5rem;border-radius:4px;font-size:0.75rem;">PHIẾU</strong> {{ transaction.product }}
+                        {% else %}
+                            {{ transaction.product }}
+                        {% endif %}
+                    </td>
+                    <td style="color:#667eea;font-weight:700;">{{ transaction.quantity }}</td>
+                    <td style="color:#8898aa;">
+                        {% if transaction.type == 'batch' %}
+                            —
+                        {% else %}
+                            {{ transaction.unit_price|floatformat:0 }} VNĐ
+                        {% endif %}
+                    </td>
+                    <td style="color:#8898aa;font-size:0.9rem;">{{ transaction.supplier }}</td>
                     <td style="color:#8898aa;font-size:0.85rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ transaction.note }}">{{ transaction.note|truncatewords:5 }}</td>
                     <td style="text-align:center;">
-                        <form method="post" action="{% url 'dashboard:warehouse_transaction_delete' transaction.pk %}" style="display:inline;">
-                            {% csrf_token %}
-                            <button type="submit" style="background:none;border:none;color:#f5365c;cursor:pointer;font-size:1rem;" onclick="return confirm('Xóa giao dịch này?');"><i class="fas fa-trash"></i></button>
-                        </form>
+                        {% if transaction.type == 'batch' %}
+                            <a href="{% url 'dashboard:warehouse_batch_detail' transaction.id %}" style="color:#667eea;cursor:pointer;margin-right:0.5rem;"><i class="fas fa-eye"></i></a>
+                            <form method="post" action="{% url 'dashboard:warehouse_batch_delete' transaction.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" style="background:none;border:none;color:#f5365c;cursor:pointer;font-size:1rem;" onclick="return confirm('Xóa phiếu này?');"><i class="fas fa-trash"></i></button>
+                            </form>
+                        {% else %}
+                            <form method="post" action="{% url 'dashboard:warehouse_transaction_delete' transaction.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" style="background:none;border:none;color:#f5365c;cursor:pointer;font-size:1rem;" onclick="return confirm('Xóa giao dịch này?');"><i class="fas fa-trash"></i></button>
+                            </form>
+                        {% endif %}
                     </td>
                 </tr>
                 {% empty %}

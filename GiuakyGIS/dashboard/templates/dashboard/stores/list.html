@@ -2,6 +2,101 @@
 {% block title %}Cửa Hàng{% endblock %}
 {% block content %}
 
+<style>
+    /* Responsive cho mobile */
+    @media (max-width: 768px) {
+        /* Ẩn sidebar trên mobile */
+        .sidebar, [class*="sidebar"] {
+            display: none !important;
+        }
+        
+        /* Main content full width */
+        .main-content, [class*="main"], [class*="content"] {
+            width: 100% !important;
+            margin-left: 0 !important;
+        }
+        
+        /* Table responsive */
+        .admin-table {
+            font-size: 0.8rem;
+        }
+        
+        .admin-table th, .admin-table td {
+            padding: 0.5rem !important;
+        }
+        
+        /* Ẩn cột ID và tọa độ trên mobile */
+        .admin-table th:nth-child(1),
+        .admin-table td:nth-child(1),
+        .admin-table th:nth-child(4),
+        .admin-table td:nth-child(4),
+        .admin-table th:nth-child(5),
+        .admin-table td:nth-child(5) {
+            display: none;
+        }
+        
+        /* Search input responsive */
+        input[name="q"] {
+            width: 100% !important;
+            margin-bottom: 0.75rem;
+        }
+        
+        /* Search form responsive */
+        form[method="get"] {
+            flex-direction: column !important;
+            width: 100%;
+        }
+        
+        /* Button responsive */
+        .btn {
+            padding: 0.5rem 0.75rem !important;
+            font-size: 0.85rem !important;
+        }
+        
+        /* Card responsive */
+        .card {
+            margin: 0 -1rem;
+            border-radius: 0;
+        }
+        
+        .card-header {
+            padding: 1rem !important;
+            flex-wrap: wrap;
+        }
+        
+        /* Header responsive */
+        div[style*="display:flex"] {
+            flex-direction: column !important;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        /* Extra small screens */
+        .admin-table {
+            font-size: 0.75rem;
+        }
+        
+        .admin-table th:nth-child(3),
+        .admin-table td:nth-child(3) {
+            max-width: 120px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        /* Ẩn giờ mở cửa trên very small screens */
+        .admin-table th:nth-child(6),
+        .admin-table td:nth-child(6) {
+            display: none;
+        }
+        
+        .btn-sm {
+            padding: 0.35rem 0.5rem !important;
+            font-size: 0.75rem !important;
+        }
+    }
+</style>
+
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
     <div style="display:flex;gap:0.5rem;">
         <form method="get" style="display:flex;gap:0.5rem;">

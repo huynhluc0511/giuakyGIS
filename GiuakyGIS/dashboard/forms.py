@@ -1,6 +1,9 @@
 from django import forms
 from django.contrib.auth.models import User
-from dashboard.models import Store, Product, Order, OrderItem, Category, Warehouse, WarehouseItem, WarehouseTransaction
+from dashboard.models import (
+    Store, Product, Order, OrderItem, Category, Warehouse, WarehouseItem, 
+    WarehouseTransaction, WarehouseBatch, WarehouseBatchItem
+)
 
 
 INPUT_CLASS = 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent'
@@ -141,3 +144,77 @@ class WarehouseTransactionForm(forms.ModelForm):
             'supplier': forms.TextInput(attrs={'class': INPUT_CLASS, 'placeholder': 'Nhà cung cấp'}),
             'note': forms.Textarea(attrs={'class': INPUT_CLASS, 'rows': 3, 'placeholder': 'Ghi chú'}),
         }
+
+
+class WarehouseBatchForm(forms.ModelForm):
+    class Meta:
+        model = WarehouseBatch
+        fields = ['warehouse', 'batch_type', 'batch_number', 'supplier', 'description']
+        widgets = {
+            'warehouse': forms.Select(attrs={'class': SELECT_CLASS}),
+            'batch_type': forms.Select(attrs={'class': SELECT_CLASS}),
+            'batch_number': forms.TextInput(attrs={'class': INPUT_CLASS, 'placeholder': 'Số phiếu (tự động)'}),
+            'supplier': forms.TextInput(attrs={'class': INPUT_CLASS, 'placeholder': 'Nhà cung cấp/Người nhận'}),
+            'description': forms.Textarea(attrs={'class': INPUT_CLASS, 'rows': 3, 'placeholder': 'Mô tả chi tiết'}),
+        }
+
+
+class WarehouseBatchItemForm(forms.ModelForm):
+    class Meta:
+        model = WarehouseBatchItem
+        fields = ['warehouse_item', 'quantity', 'unit_price']
+        widgets = {
+            'warehouse_item': forms.Select(attrs={'class': SELECT_CLASS}),
+            'quantity': forms.NumberInput(attrs={'class': INPUT_CLASS, 'placeholder': 'Số lượng', 'step': '1'}),
+            'unit_price': forms.NumberInput(attrs={'class': INPUT_CLASS, 'placeholder': 'Đơn giá', 'step': '0.01'}),
+        }
+
+
+class ImportExcelForm(forms.Form):
+    """Form để tải lên file Excel import kho"""
+    excel_file = forms.FileField(
+        label='Tệp Excel',
+        widget=forms.FileInput(attrs={'class': INPUT_CLASS, 'accept': '.xlsx,.xls,.csv'})
+    )
+    warehouse = forms.ModelChoiceField(
+        queryset=Warehouse.objects.all(),
+        label='Kho hàng',
+        widget=forms.Select(attrs={'class': SELECT_CLASS})
+    )
+    supplier = forms.CharField(
+        max_length=255,
+        label='Nhà cung cấp',
+        widget=forms.TextInput(attrs={'class': INPUT_CLASS, 'placeholder': 'Nhà cung cấp'}),
+        required=False
+    )
+
+
+class StoreSearchForm(forms.Form):
+    """Form tìm kiếm cửa hàng theo tên hoặc địa chỉ"""
+    query = forms.CharField(
+        max_length=255,
+        required=False,
+        label='Tìm cửa hàng',
+        widget=forms.TextInput(attrs={
+            'class': INPUT_CLASS,
+            'placeholder': 'Tìm kiếm theo tên hoặc địa chỉ...'
+        })
+    )
+    latitude = forms.FloatField(
+        required=False,
+        label='Vĩ độ',
+        widget=forms.NumberInput(attrs={
+            'class': INPUT_CLASS,
+            'placeholder': 'Vĩ độ (tùy chọn)',
+            'step': '0.000001'
+        })
+    )
+    longitude = forms.FloatField(
+        required=False,
+        label='Kinh độ',
+        widget=forms.NumberInput(attrs={
+            'class': INPUT_CLASS,
+            'placeholder': 'Kinh độ (tùy chọn)',
+            'step': '0.000001'
+        })
+    )

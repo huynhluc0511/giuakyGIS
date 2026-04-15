@@ -1,0 +1,95 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6 max-w-2xl">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">{{ page_title }}</h1>
+
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <h3 class="font-semibold text-blue-900 mb-2">📋 Hướng Dẫn Định Dạng File Excel</h3>
+            <ul class="text-sm text-blue-800 space-y-1">
+                <li>• <strong>Cột 1:</strong> Tên sản phẩm (phải tồn tại trong hệ thống)</li>
+                <li>• <strong>Cột 2:</strong> Số lượng (số nguyên)</li>
+                <li>• <strong>Cột 3:</strong> Đơn giá (số thập phân)</li>
+                <li>• Không có hàng tiêu đề - bắt đầu từ hàng đầu tiên</li>
+                <li>• Hỗ trợ: .xlsx, .xls, .csv</li>
+            </ul>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+            <div class="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            {% for field in form %}
+            <div>
+                <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    {{ field.label }}
+                </label>
+                {{ field }}
+                {% if field.errors %}
+                <div class="mt-1 text-red-600 text-sm">{{ field.errors }}</div>
+                {% else %}
+                <p class="mt-1 text-xs text-gray-500">
+                    {% if field.name == 'excel_file' %}
+                        Chọn file Excel để nhập kho
+                    {% elif field.name == 'warehouse' %}
+                        Chọn kho hàng đích
+                    {% elif field.name == 'supplier' %}
+                        Tên nhà cung cấp (tùy chọn)
+                    {% endif %}
+                </p>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <div class="flex gap-4 pt-4 border-t">
+                <button type="submit" class="flex-1 bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 font-medium">
+                    ⬆️ Nhập Kho
+                </button>
+                <a href="{% url 'dashboard:warehouse_batch_list' %}" class="flex-1 text-center bg-gray-200 text-gray-800 py-2 rounded-lg hover:bg-gray-300 font-medium">
+                    Hủy
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Ví dụ -->
+    <div class="mt-6 bg-gray-50 rounded-lg shadow p-6">
+        <h3 class="font-semibold text-gray-800 mb-4">📝 Ví Dụ Định Dạng</h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm bg-white">
+                <thead class="bg-gray-200">
+                    <tr>
+                        <th class="border border-gray-300 px-4 py-2 text-left">Tên Sản Phẩm</th>
+                        <th class="border border-gray-300 px-4 py-2 text-center">Số Lượng</th>
+                        <th class="border border-gray-300 px-4 py-2 text-center">Đơn Giá</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="border border-gray-300 px-4 py-2">Gà chiên</td>
+                        <td class="border border-gray-300 px-4 py-2 text-center">10</td>
+                        <td class="border border-gray-300 px-4 py-2 text-center">50000</td>
+                    </tr>
+                    <tr>
+                        <td class="border border-gray-300 px-4 py-2">Cơm tấm</td>
+                        <td class="border border-gray-300 px-4 py-2 text-center">20</td>
+                        <td class="border border-gray-300 px-4 py-2 text-center">30000</td>
+                    </tr>
+                    <tr>
+                        <td class="border border-gray-300 px-4 py-2">Nước cam</td>
+                        <td class="border border-gray-300 px-4 py-2 text-center">15</td>
+                        <td class="border border-gray-300 px-4 py-2 text-center">15000</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
