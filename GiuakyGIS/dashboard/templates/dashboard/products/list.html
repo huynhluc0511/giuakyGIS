@@ -42,8 +42,11 @@
                 {% for product in page_obj %}
                 <tr>
                     <td>
-                        {% if product.image %}
-                        <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width:48px;height:48px;border-radius:12px;object-fit:cover;box-shadow:0 2px 8px rgba(0,0,0,0.12);">
+                        {% if product.image and product.image.name %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width:48px;height:48px;border-radius:12px;object-fit:cover;box-shadow:0 2px 8px rgba(0,0,0,0.12);" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                        <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#f6d365,#fda085);display:none;align-items:center;justify-content:center;color:white;">
+                            <i class="fas fa-bowl-food"></i>
+                        </div>
                         {% else %}
                         <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#f6d365,#fda085);display:flex;align-items:center;justify-content:center;color:white;">
                             <i class="fas fa-bowl-food"></i>

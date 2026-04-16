@@ -598,19 +598,170 @@ def warehouse_batch_list(request):
 @admin_required
 def warehouse_batch_create(request):
     from dashboard.models import WarehouseBatch, WarehouseItem, WarehouseBatchItem
-    from dashboard.forms import WarehouseBatchForm, ImportExcelForm
-    from dashboard.utils import import_warehouse_from_excel, generate_batch_number
+    from dashboard.forms import WarehouseBatchForm
+    from dashboard.utils import generate_batch_number
+    from django.utils import timezone
+    import openpyxl
+    import csv
     
     if request.method == 'POST':
+        action = request.POST.get('action', 'create')
         form = WarehouseBatchForm(request.POST)
-        if form.is_valid():
+        
+        if action == 'import-excel':
+            # ===== XỬ LÝ IMPORT EXCEL =====
+            if 'excel_file' not in request.FILES:
+                messages.error(request, '❌ Vui lòng chọn file Excel!')
+                return render(request, 'dashboard/warehouse/batch_form.html', {
+                    'form': form, 'page_title': 'Tạo Phiếu Nhập/Xuất Kho', 'is_create': True,
+                })
+            
+            # Tạo batch trước
+            if not form.is_valid():
+                messages.error(request, f'❌ Lỗi form: {form.errors}')
+                return render(request, 'dashboard/warehouse/batch_form.html', {
+                    'form': form, 'page_title': 'Tạo Phiếu Nhập/Xuất Kho', 'is_create': True,
+                })
+            
             batch = form.save(commit=False)
             batch.created_by = request.user
             if not batch.batch_number:
                 batch.batch_number = generate_batch_number(batch.batch_type)
             batch.save()
-            messages.success(request, 'Phiếu đã được tạo! Hãy thêm sản phẩm.')
-            return redirect('dashboard:warehouse_batch_add_items', pk=batch.pk)
+            
+            # Xử lý file Excel
+            try:
+                excel_file = request.FILES['excel_file']
+                filename = excel_file.name.lower()
+                
+                # ===== XÓA ITEM CŨ (LƯU THAY THẾ) =====
+                batch.items.all().delete()
+                
+                rows_added = 0
+                errors = []
+                
+                if filename.endswith('.csv'):
+                    # ===== XỬ LÝ CSV =====
+                    import io
+                    file_content = io.TextIOWrapper(excel_file.file, encoding='utf-8')
+                    reader = csv.reader(file_content)
+                    next(reader)  # Bỏ header
+                    
+                    for row_num, row in enumerate(reader, start=2):
+                        if not row or not row[0].strip():
+                            continue
+                        try:
+                            product_name = row[0].strip()
+                            quantity = int(row[1]) if len(row) > 1 else 1
+                            unit_price = float(row[2]) if len(row) > 2 else 0
+                            
+                            # Tìm sản phẩm trong kho
+                            warehouse_item = WarehouseItem.objects.filter(
+                                warehouse=batch.warehouse,
+                                product__name__icontains=product_name
+                            ).first()
+                            
+                            if not warehouse_item:
+                                errors.append(f"❌ Hàng {row_num}: Sản phẩm '{product_name}' không tìm thấy")
+                                continue
+                            
+                            # Tạo batch item
+                            WarehouseBatchItem.objects.create(
+                                batch=batch,
+                                warehouse_item=warehouse_item,
+                                quantity=quantity,
+                                unit_price=unit_price
+                            )
+                            rows_added += 1
+                        except (ValueError, IndexError) as e:
+                            errors.append(f"❌ Hàng {row_num}: Lỗi dữ liệu - {str(e)}")
+                            continue
+                
+                elif filename.endswith(('.xlsx', '.xls')):
+                    # ===== XỬ LÝ EXCEL =====
+                    try:
+                        wb = openpyxl.load_workbook(excel_file)
+                        ws = wb.active
+                        
+                        for row_num, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+                            if not row or not row[0]:
+                                continue
+                            try:
+                                product_name = str(row[0]).strip()
+                                quantity = int(row[1]) if row[1] else 1
+                                unit_price = float(row[2]) if row[2] else 0
+                                
+                                # Tìm sản phẩm trong kho
+                                warehouse_item = WarehouseItem.objects.filter(
+                                    warehouse=batch.warehouse,
+                                    product__name__icontains=product_name
+                                ).first()
+                                
+                                if not warehouse_item:
+                                    errors.append(f"❌ Hàng {row_num}: Sản phẩm '{product_name}' không tìm thấy")
+                                    continue
+                                
+                                # Tạo batch item
+                                WarehouseBatchItem.objects.create(
+                                    batch=batch,
+                                    warehouse_item=warehouse_item,
+                                    quantity=quantity,
+                                    unit_price=unit_price
+                                )
+                                rows_added += 1
+                            except (ValueError, TypeError) as e:
+                                errors.append(f"❌ Hàng {row_num}: {str(e)}")
+                                continue
+                    except Exception as e:
+                        messages.error(request, f'❌ Lỗi đọc file Excel: {str(e)}')
+                        batch.delete()
+                        return render(request, 'dashboard/warehouse/batch_form.html', {
+                            'form': form, 'page_title': 'Tạo Phiếu Nhập/Xuất Kho', 'is_create': True,
+                        })
+                else:
+                    messages.error(request, '❌ Định dạng file không hỗ trợ. Vui lòng upload .xlsx, .xls hoặc .csv')
+                    batch.delete()
+                    return render(request, 'dashboard/warehouse/batch_form.html', {
+                        'form': form, 'page_title': 'Tạo Phiếu Nhập/Xuất Kho', 'is_create': True,
+                    })
+                
+                # ===== CẬP NHẬT NGÀY TẠO LẠI =====
+                batch.created_at = timezone.now()
+                batch.calculate_total()
+                batch.save()
+                
+                # Hiển thị kết quả
+                msg = f'✅ Import thành công {rows_added} sản phẩm'
+                if errors:
+                    msg += f' ({len(errors)} lỗi)'
+                    for error in errors[:5]:  # Hiển thị 5 lỗi đầu
+                        messages.warning(request, error)
+                    if len(errors) > 5:
+                        messages.warning(request, f'... và {len(errors)-5} lỗi khác')
+                
+                messages.success(request, msg)
+                # Render lại form với thông báo thành công (không redirect)
+                return render(request, 'dashboard/warehouse/batch_form.html', {
+                    'form': form, 'page_title': 'Tạo Phiếu Nhập/Xuất Kho', 'is_create': True,
+                })
+                
+            except Exception as e:
+                messages.error(request, f' Lỗi: {str(e)}')
+                batch.delete()
+                return render(request, 'dashboard/warehouse/batch_form.html', {
+                    'form': form, 'page_title': 'Tạo Phiếu Nhập/Xuất Kho', 'is_create': True,
+                })
+        
+        else:
+            # ===== TẠO PHIẾU BÌNH THƯỜNG =====
+            if form.is_valid():
+                batch = form.save(commit=False)
+                batch.created_by = request.user
+                if not batch.batch_number:
+                    batch.batch_number = generate_batch_number(batch.batch_type)
+                batch.save()
+                messages.success(request, ' Phiếu đã được tạo! Hãy thêm sản phẩm.')
+                return redirect('dashboard:warehouse_batch_add_items', pk=batch.pk)
     else:
         form = WarehouseBatchForm()
     
@@ -644,10 +795,17 @@ def warehouse_batch_add_items(request, pk):
                     warehouse_item.quantity -= item.quantity
                 warehouse_item.save()
                 
+                # Cập nhật tổng tiền của phiếu
+                batch.calculate_total()
+                batch.save()
+                
                 messages.success(request, 'Sản phẩm đã được thêm vào phiếu!')
                 return redirect('dashboard:warehouse_batch_add_items', pk=batch.pk)
         else:
             form = WarehouseBatchItemForm()
+        
+        # Tính tổng tiền trước khi render
+        batch.calculate_total()
         
         return render(request, 'dashboard/warehouse/batch_add_items.html', {
             'batch': batch,
@@ -663,6 +821,10 @@ def warehouse_batch_add_items(request, pk):
 def warehouse_batch_detail(request, pk):
     from dashboard.models import WarehouseBatch
     batch = get_object_or_404(WarehouseBatch, pk=pk)
+    
+    # Tính tổng tiền trước khi render
+    batch.calculate_total()
+    
     return render(request, 'dashboard/warehouse/batch_detail.html', {
         'batch': batch, 'page_title': f'Phiếu {batch.batch_number}',
     })
@@ -672,6 +834,9 @@ def warehouse_batch_print(request, pk):
     from dashboard.models import WarehouseBatch
     from dashboard.utils import export_batch_to_pdf
     batch = get_object_or_404(WarehouseBatch, pk=pk)
+    
+    # Tính tổng tiền trước khi in
+    batch.calculate_total()
     
     # Cập nhật trạng thái in
     from django.utils import timezone
@@ -687,6 +852,9 @@ def warehouse_batch_export_excel(request, pk):
     from dashboard.utils import export_batch_to_excel
     batch = get_object_or_404(WarehouseBatch, pk=pk)
     
+    # Tính tổng tiền trước khi export
+    batch.calculate_total()
+    
     wb = export_batch_to_excel(batch)
     if wb is None:
         messages.error(request, 'openpyxl chưa được cài đặt. Vui lòng cài đặt bằng pip install openpyxl')
@@ -696,6 +864,26 @@ def warehouse_batch_export_excel(request, pk):
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
     response['Content-Disposition'] = f'attachment; filename="phieu_{batch.batch_number}.xlsx"'
+    wb.save(response)
+    return response
+
+@admin_required
+def warehouse_batch_template_excel(request, warehouse_id):
+    """Download Excel template cho import dữ liệu"""
+    from dashboard.models import Warehouse
+    from dashboard.utils import generate_excel_template
+    
+    warehouse = get_object_or_404(Warehouse, pk=warehouse_id)
+    
+    wb = generate_excel_template(warehouse)
+    if wb is None:
+        messages.error(request, 'Lỗi: openpyxl chưa được cài đặt hoặc lỗi tạo template')
+        return redirect('dashboard:warehouse_batch_create')
+    
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="template_import_{warehouse.store.name}.xlsx"'
     wb.save(response)
     return response
 
@@ -725,6 +913,11 @@ def warehouse_batch_item_delete(request, pk):
     warehouse_item.save()
     
     item.delete()
+    
+    # Cập nhật tổng tiền của phiếu
+    batch.calculate_total()
+    batch.save()
+    
     messages.success(request, 'Sản phẩm đã được xóa khỏi phiếu!')
     return redirect('dashboard:warehouse_batch_add_items', pk=batch.pk)
 

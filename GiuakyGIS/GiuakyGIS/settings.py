@@ -126,7 +126,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-DEBUG = False# Chuyển thành False để test trang 404
+DEBUG = True  # ✅ PHẢI LÀ True để development server phục vụ media files
 ALLOWED_HOSTS = ['*'] # Cho phép mọi host để chạy local
 
 # Media files (User uploads)

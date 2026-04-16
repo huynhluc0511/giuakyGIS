@@ -312,3 +312,64 @@ def import_warehouse_from_excel(file_obj, warehouse, supplier=''):
         }
     except Exception as e:
         return {'success': False, 'error': str(e)}
+
+
+def generate_excel_template(warehouse):
+    """Tạo file Excel mẫu cho import dữ liệu kho"""
+    try:
+        import openpyxl
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    except ImportError:
+        return None
+    
+    try:
+        from dashboard.models import WarehouseItem
+        
+        # Tạo workbook mới
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Import Template"
+        
+        # Tạo header
+        headers = ["Tên Sản Phẩm", "Số Lượng", "Đơn Giá", "Ghi Chú"]
+        ws.append(headers)
+        
+        # Style header
+        header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+        header_font = Font(bold=True, color="FFFFFF", size=12)
+        header_alignment = Alignment(horizontal="center", vertical="center")
+        
+        for cell in ws[1]:
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = header_alignment
+        
+        # Thêm các sản phẩm có sẵn trong kho
+        warehouse_items = WarehouseItem.objects.filter(warehouse=warehouse).select_related('product')
+        
+        thin_border = Border(
+            left=Side(style='thin'),
+            right=Side(style='thin'),
+            top=Side(style='thin'),
+            bottom=Side(style='thin')
+        )
+        
+        for idx, item in enumerate(warehouse_items[:20], start=2):  # Giới hạn 20 sản phẩm
+            product_name = item.product.name
+            # Thêm dữ liệu mẫu
+            ws.append([product_name, 1, 0, ""])
+            
+            # Style các ô dữ liệu
+            for cell in ws[idx]:
+                cell.border = thin_border
+                cell.alignment = Alignment(horizontal="left", vertical="center")
+        
+        # Điều chỉnh độ rộng cột
+        ws.column_dimensions['A'].width = 30
+        ws.column_dimensions['B'].width = 12
+        ws.column_dimensions['C'].width = 12
+        ws.column_dimensions['D'].width = 20
+        
+        return wb
+    except Exception as e:
+        return None

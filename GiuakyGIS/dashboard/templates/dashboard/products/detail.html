@@ -13,13 +13,12 @@
 </div>
 <div style="display:grid;grid-template-columns:1fr 2fr;gap:1.5rem;">
     <div class="card">
-        {% if product.image %}
-        <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width:100%;border-radius:1rem 1rem 0 0;object-fit:cover;max-height:260px;">
-        {% else %}
-        <div style="height:200px;background:linear-gradient(135deg,#f6d365,#fda085);border-radius:1rem 1rem 0 0;display:flex;align-items:center;justify-content:center;">
+        {% if product.image and product.image.name %}
+        <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width:100%;border-radius:1rem 1rem 0 0;object-fit:cover;max-height:260px;" onerror="this.style.display='none';this.parentElement.querySelector('.fallback').style.display='flex';">
+        {% endif %}
+        <div class="fallback" style="height:200px;background:linear-gradient(135deg,#f6d365,#fda085);border-radius:1rem 1rem 0 0;display:{% if not product.image or not product.image.name %}flex{% else %}none{% endif %};align-items:center;justify-content:center;">
             <i class="fas fa-bowl-food" style="font-size:4rem;color:rgba(255,255,255,0.7);"></i>
         </div>
-        {% endif %}
         <div class="card-body" style="text-align:center;">
             {% if product.is_available %}
             <span class="badge badge-available" style="font-size:0.85rem;padding:0.4em 1.2em;">✓ Còn Hàng</span>

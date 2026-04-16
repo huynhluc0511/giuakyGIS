@@ -144,6 +144,7 @@ class WarehouseBatch(models.Model):
     description = models.TextField(blank=True, verbose_name="Mô tả")
     total_amount = models.FloatField(default=0, verbose_name="Tổng tiền")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Ngày tạo")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Lần cập nhật cuối")
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name="Người tạo")
     is_printed = models.BooleanField(default=False, verbose_name="Đã in")
     printed_at = models.DateTimeField(null=True, blank=True, verbose_name="Thời gian in")

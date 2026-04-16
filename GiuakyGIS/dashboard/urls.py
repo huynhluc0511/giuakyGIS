@@ -68,6 +68,7 @@ urlpatterns = [
     # Warehouse Batch (NEW)
     path('warehouse-batch/',                           views.warehouse_batch_list,        name='warehouse_batch_list'),
     path('warehouse-batch/create/',                    views.warehouse_batch_create,      name='warehouse_batch_create'),
+    path('warehouse-batch/template-excel/<int:warehouse_id>/', views.warehouse_batch_template_excel, name='warehouse_batch_template_excel'),
     path('warehouse-batch/<int:pk>/add-items/',        views.warehouse_batch_add_items,   name='warehouse_batch_add_items'),
     path('warehouse-batch/<int:pk>/',                  views.warehouse_batch_detail,      name='warehouse_batch_detail'),
     path('warehouse-batch/<int:pk>/print/',            views.warehouse_batch_print,       name='warehouse_batch_print'),
