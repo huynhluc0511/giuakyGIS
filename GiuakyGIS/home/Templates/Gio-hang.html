@@ -111,9 +111,16 @@
         <aside class="cart-summary" data-aos="fade-left" data-aos-delay="200">
             <div class="summary-section">
                 <h4>1. Thông tin người nhận</h4>
-                <input type="text" id="cus-name" placeholder="Họ và tên khách hàng">
-                <input type="tel" id="cus-phone" placeholder="Số điện thoại liên lạc">
-                <textarea id="cus-address" rows="3" placeholder="Địa chỉ giao hàng chi tiết (Số nhà, tên đường, phường/xã...)"></textarea>
+                {% if user_profile %}
+                <div style="background: #e8f5e9; padding: 12px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #4caf50;">
+                    <small style="color: #2e7d32; font-weight: 600;"><i class="fas fa-user-check"></i> Đã điền từ thông tin tài khoản</small>
+                </div>
+                {% endif %}
+                <input type="text" id="cus-name" placeholder="Họ và tên khách hàng" 
+                       value="{{ user_profile.full_name|default:'' }}">
+                <input type="tel" id="cus-phone" placeholder="Số điện thoại liên lạc" 
+                       value="{{ user_profile.phone|default:'' }}">
+                <textarea id="cus-address" rows="3" placeholder="Địa chỉ giao hàng chi tiết (Số nhà, tên đường, phường/xã...)">{{ user_profile.address|default:'' }}</textarea>
             </div>
 
             <div class="summary-section">
@@ -289,7 +296,7 @@
         }
     }
 
-    function submitOrder() {
+    async function submitOrder() {
         const name = document.getElementById('cus-name').value.trim();
         const phone = document.getElementById('cus-phone').value.trim();
         const address = document.getElementById('cus-address').value.trim();
@@ -297,29 +304,70 @@
         if (cart.length === 0) return alert("Giỏ hàng của bạn đang trống!");
         if (!name || !phone || !address) return alert("Vui lòng nhập đầy đủ thông tin giao hàng!");
 
-        // Đóng gói dữ liệu để gửi sang trang Tình trạng
-        const orderData = {
-            customerName: name,
-            customerAddress: address,
-            customerPhone: phone,
-            totalAmount: document.getElementById('final-total').innerText,
-            orderDate: new Date().toLocaleString()
-        };
-        
-        // Lưu vào bộ nhớ trình duyệt
-        localStorage.setItem('current_order', JSON.stringify(orderData));
-        localStorage.removeItem('cart_data'); // Xóa giỏ hàng sau khi đặt
-        
         // Cập nhật giao diện nút bấm thành đang tải
         const btn = document.getElementById('btn-submit-order');
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
         btn.disabled = true;
-        btn.style.background = "#6c757d"; // Đổi màu nút sang xám
+        btn.style.background = "#6c757d";
         
-        // Chuyển sang trang Tình trạng sau 1 giây tạo cảm giác mượt mà
-        setTimeout(() => {
-            window.location.href = "{% url 'tinh_trang' %}";
-        }, 1000);
+        // Chuẩn bị dữ liệu đơn hàng
+        const ship = parseInt(document.getElementById('shipping-method').value) || 0;
+        const temp = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        const total = temp + ship;
+        
+        const orderData = {
+            name: name,
+            phone: phone,
+            address: address,
+            total: total,
+            items: cart.map(item => ({
+                id: item.id,
+                name: item.name,
+                qty: item.qty,
+                price: item.price
+            }))
+        };
+        
+        try {
+            // Gọi API lưu đơn hàng
+            const response = await fetch("{% url 'api_create_order' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(orderData)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                // Lưu vào localStorage để backup
+                localStorage.setItem('current_order', JSON.stringify({
+                    customerName: name,
+                    customerAddress: address,
+                    customerPhone: phone,
+                    totalAmount: total.toLocaleString() + 'đ',
+                    orderDate: new Date().toLocaleString(),
+                    orderId: result.order_id
+                }));
+                localStorage.removeItem('cart_data'); // Xóa giỏ hàng
+                
+                // Chuyển sang trang Tình trạng với order_id
+                window.location.href = result.redirect_url;
+            } else {
+                alert("Có lỗi xảy ra: " + (result.error || "Không thể tạo đơn hàng"));
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> ĐẶT HÀNG NGAY';
+                btn.disabled = false;
+                btn.style.background = "#2a9d8f";
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert("Lỗi kết nối máy chủ. Vui lòng thử lại!");
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> ĐẶT HÀNG NGAY';
+            btn.disabled = false;
+            btn.style.background = "#2a9d8f";
+        }
     }
 
     // CSS Keyframes cho hiệu ứng khi các món ăn được render

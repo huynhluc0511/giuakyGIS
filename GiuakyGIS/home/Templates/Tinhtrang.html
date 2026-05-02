@@ -32,6 +32,11 @@
         .customer-info h3 { color: #d32f2f; margin-bottom: 8px; font-size: 1.3rem; font-weight: 700; }
         .customer-info p { margin: 0; color: #555; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
         .customer-info i { color: #ffb703; }
+        
+        .order-items { background: #f8f9fa; border-radius: 10px; padding: 15px; margin-top: 15px; }
+        .order-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px dashed #ddd; }
+        .order-item:last-child { border-bottom: none; }
+        .order-total { display: flex; justify-content: space-between; align-items: center; padding-top: 10px; margin-top: 10px; border-top: 2px solid #ffb703; font-weight: 700; color: #d32f2f; }
 
         .search-box { display: flex; justify-content: center; gap: 10px; margin: 20px auto; max-width: 600px; }
         .search-box input { flex: 1; padding: 12px 20px; border: 2px solid #eee; border-radius: 10px; font-size: 1rem; outline: none; }
@@ -242,13 +247,45 @@
         <div class="status-card">
             <h2>Kiểm tra Tình trạng Giao hàng</h2>
             
+            {% if has_order %}
+            <!-- Order from Database -->
+            <div class="customer-info" id="db-customer-info">
+                <h3><i class="fa-solid fa-receipt"></i> Đơn hàng #{{ order.id }}</h3>
+                <p><i class="fa-solid fa-user"></i> <strong>{{ order.full_name }}</strong></p>
+                <p><i class="fa-solid fa-location-dot"></i> {{ order.address }}</p>
+                <p><i class="fa-solid fa-phone"></i> {{ order.phone }}</p>
+                <p><i class="fa-solid fa-calendar"></i> {{ order.created_at|date:"d/m/Y H:i" }}</p>
+                <p><i class="fa-solid fa-money-bill"></i> <strong style="color:#d32f2f;">{{ order.total_price|floatformat:0 }}đ</strong></p>
+                
+                <div class="order-items">
+                    {% for item in order_items %}
+                    <div class="order-item">
+                        <span>{{ item.product.name }} x {{ item.quantity }}</span>
+                        <span>{{ item.price|floatformat:0 }}đ</span>
+                    </div>
+                    {% endfor %}
+                    <div class="order-total">
+                        <span>Tổng cộng</span>
+                        <span>{{ order.total_price|floatformat:0 }}đ</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Hidden inputs for map routing -->
+            <input type="hidden" id="db-address" value="{{ order.address }}">
+            <input type="hidden" id="db-lat" value="{{ order.lat|default:'' }}">
+            <input type="hidden" id="db-lng" value="{{ order.lng|default:'' }}">
+            
+            {% else %}
+            <!-- Order from localStorage (fallback) -->
             <div class="customer-info" id="customer-info-box" style="display: none;">
                 <h3 id="display-name">Đơn hàng của: Khách hàng</h3>
                 <p><i class="fa-solid fa-location-dot"></i> <span id="display-address">Đang cập nhật địa chỉ...</span></p>
                 <p><i class="fa-solid fa-phone"></i> <span id="display-phone">Đang cập nhật SĐT...</span></p>
+                <p><i class="fa-solid fa-money-bill"></i> <span id="display-total">...</span></p>
                 <button onclick="document.getElementById('manual-search-box').style.display='flex';" style="background:none; border:none; color:#d32f2f; text-decoration:underline; cursor:pointer; font-size: 0.85rem; margin-top:10px;">Thay đổi địa chỉ giao hàng</button>
             </div>
-
+            
             <div class="search-box" id="manual-search-box">
                 <button class="btn-gps" onclick="getMyLocation()" title="Lấy vị trí GPS"><i class="fa-solid fa-location-crosshairs"></i></button>
                 <input type="text" id="address-input" placeholder="Nhập địa chỉ nhận hàng...">
@@ -258,6 +295,7 @@
             <div id="error-message" class="error-box">
                 <i class="fa-solid fa-circle-xmark"></i> <span id="error-text"></span>
             </div>
+            {% endif %}
             
             <div class="stepper" id="order-stepper">
                 <div class="step" id="s1"><div class="circle"><i class="fa-solid fa-receipt"></i></div><p>Đã nhận đơn</p></div>
@@ -311,8 +349,75 @@
 
         document.addEventListener("DOMContentLoaded", () => {
             anime({ targets: '#main-container', translateY: [40, 0], opacity: [0, 1], easing: 'easeOutExpo', duration: 1000 });
+            
+            {% if has_order %}
+            // Database order - use address from server
+            updateStepperByStatus('{{ order.status }}');
+            {% else %}
+            // localStorage fallback
+            loadLocalStorageOrder();
             updateStepper(1);
+            {% endif %}
         });
+        
+        {% if has_order %}
+        // Update stepper based on order status
+        function updateStepperByStatus(status) {
+            const statusMap = {
+                'Pending': 1,
+                'Processing': 2,
+                'Shipped': 3,
+                'Delivered': 4,
+                'Cancelled': 0
+            };
+            const step = statusMap[status] || 1;
+            if (step === 0) {
+                // Cancelled - show all grey
+                document.querySelectorAll('.step').forEach(s => s.className = 'step cancelled');
+            } else {
+                updateStepper(step);
+            }
+        }
+        
+        // Auto-calculate route for database order
+        window.addEventListener('load', () => {
+            const address = document.getElementById('db-address').value;
+            if (address) {
+                setTimeout(() => calculateRouteForAddress(address), 500);
+            }
+        });
+        
+        async function calculateRouteForAddress(address) {
+            try {
+                let res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address + ", Ho Chi Minh, Vietnam")}&format=json&limit=1`);
+                let data = await res.json();
+                if (data && data.length > 0) {
+                    calculateRoute([parseFloat(data[0].lat), parseFloat(data[0].lon)], address);
+                }
+            } catch (err) {
+                console.error('Geocoding error:', err);
+            }
+        }
+        {% else %}
+        // LocalStorage fallback functions
+        function loadLocalStorageOrder() {
+            const orderData = JSON.parse(localStorage.getItem('current_order'));
+            if (orderData) {
+                document.getElementById('display-name').innerText = "Đơn hàng của: " + (orderData.customerName || 'Khách hàng');
+                document.getElementById('display-address').innerText = orderData.customerAddress || 'Chưa có địa chỉ';
+                document.getElementById('display-phone').innerText = orderData.customerPhone || 'Chưa có SĐT';
+                document.getElementById('display-total').innerText = orderData.totalAmount || '';
+                document.getElementById('customer-info-box').style.display = 'block';
+                document.getElementById('manual-search-box').style.display = 'none';
+                
+                // Pre-fill search box
+                document.getElementById('address-input').value = orderData.customerAddress || '';
+            } else {
+                document.getElementById('customer-info-box').style.display = 'none';
+                document.getElementById('manual-search-box').style.display = 'flex';
+            }
+        }
+        {% endif %}
 
         // 2. LẤY VỊ TRÍ GPS
         function getMyLocation() {
