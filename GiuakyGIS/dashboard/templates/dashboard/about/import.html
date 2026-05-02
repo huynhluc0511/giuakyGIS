@@ -1,0 +1,258 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">{{ page_title }}</h1>
+        <p class="text-gray-600 mt-2">Nhập nội dung bài viết từ file Word hoặc liên kết URL</p>
+    </div>
+
+    <!-- Import Options -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Word Import Card -->
+        <div class="bg-white rounded-lg shadow-md p-6 border-2 border-gray-200 hover:border-blue-400 transition-colors">
+            <div class="text-center mb-4">
+                <i class="fas fa-file-word text-6xl text-blue-500 mb-4"></i>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Nhập từ file Word</h3>
+                <p class="text-gray-600">Tải lên file .docx hoặc .doc để nhập nội dung</p>
+            </div>
+            <div class="space-y-3 text-sm text-gray-600">
+                <div class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    Hỗ trợ định dạng văn bản
+                </div>
+                <div class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    Giữ lại định dạng cơ bản
+                </div>
+                <div class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    Tự động trích xuất hình ảnh
+                </div>
+            </div>
+        </div>
+
+        <!-- URL Import Card -->
+        <div class="bg-white rounded-lg shadow-md p-6 border-2 border-gray-200 hover:border-green-400 transition-colors">
+            <div class="text-center mb-4">
+                <i class="fas fa-link text-6xl text-green-500 mb-4"></i>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Nhập từ URL</h3>
+                <p class="text-gray-600">Nhập nội dung từ bài viết trên trang web khác</p>
+            </div>
+            <div class="space-y-3 text-sm text-gray-600">
+                <div class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    Tự động lấy nội dung
+                </div>
+                <div class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    Trích xuất hình ảnh
+                </div>
+                <div class="flex items-center">
+                    <i class="fas fa-check text-green-500 mr-2"></i>
+                    Giữ lại liên kết gốc
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Form -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <form method="POST" enctype="multipart/form-data" id="import-form">
+            {% csrf_token %}
+            
+            <!-- Import Type Selection -->
+            <div class="mb-6">
+                <label for="{{ form.import_type.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    Chọn phương thức nhập
+                </label>
+                {{ form.import_type }}
+                {% if form.import_type.errors %}
+                    <div class="text-red-500 text-sm mt-1">
+                        {% for error in form.import_type.errors %}{{ error }}{% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Dynamic Content Based on Import Type -->
+            <div id="word-import-section" class="import-section">
+                <div class="mb-6">
+                    <label for="{{ form.word_file.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Chọn file Word <span class="text-red-500">*</span>
+                    </label>
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                        <p class="text-gray-600 mb-2">Kéo và thả file Word vào đây hoặc</p>
+                        {{ form.word_file }}
+                        <p class="text-sm text-gray-500 mt-2">Hỗ trợ: .docx, .doc (tối đa 10MB)</p>
+                    </div>
+                    {% if form.word_file.errors %}
+                        <div class="text-red-500 text-sm mt-1">
+                            {% for error in form.word_file.errors %}{{ error }}{% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div id="external-import-section" class="import-section hidden">
+                <div class="mb-6">
+                    <label for="{{ form.external_url.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        URL bài viết <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.external_url }}
+                    <div class="text-sm text-gray-500 mt-1">
+                        Ví dụ: https://example.com/bai-viet-gioi-thieu
+                    </div>
+                    {% if form.external_url.errors %}
+                        <div class="text-red-500 text-sm mt-1">
+                            {% for error in form.external_url.errors %}{{ error }}{% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Preview Section -->
+            <div id="preview-section" class="hidden mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-3">Xem trước nội dung:</h3>
+                <div class="bg-gray-50 rounded-lg p-4 max-h-64 overflow-y-auto">
+                    <div id="preview-content"></div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex justify-between items-center pt-6 border-t">
+                <a href="{% url 'dashboard:about_list' %}" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-arrow-left mr-2"></i>Quay lại danh sách
+                </a>
+                <div class="space-x-3">
+                    <button type="button" id="preview-btn" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-eye mr-2"></i>Xem trước
+                    </button>
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-import mr-2"></i>Nhập bài viết
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Help Section -->
+    <div class="mt-8 bg-blue-50 rounded-lg p-6">
+        <h3 class="text-lg font-semibold text-blue-900 mb-3">
+            <i class="fas fa-info-circle mr-2"></i>Hướng dẫn sử dụng
+        </h3>
+        <div class="space-y-3 text-blue-800">
+            <div class="flex items-start">
+                <i class="fas fa-check-circle mt-1 mr-3"></i>
+                <div>
+                    <strong>Nhập từ Word:</strong> Chọn file Word từ máy tính, hệ thống sẽ tự động trích xuất nội dung và hình ảnh.
+                </div>
+            </div>
+            <div class="flex items-start">
+                <i class="fas fa-check-circle mt-1 mr-3"></i>
+                <div>
+                    <strong>Nhập từ URL:</strong> Nhập đường dẫn bài viết, hệ thống sẽ lấy nội dung và hình ảnh từ trang web đó.
+                </div>
+            </div>
+            <div class="flex items-start">
+                <i class="fas fa-check-circle mt-1 mr-3"></i>
+                <div>
+                    <strong>Xem trước:</strong> Sử dụng nút "Xem trước" để kiểm tra nội dung trước khi nhập.
+                </div>
+            </div>
+            <div class="flex items-start">
+                <i class="fas fa-check-circle mt-1 mr-3"></i>
+                <div>
+                    <strong>Sau khi nhập:</strong> Bài viết sẽ được lưu dưới dạng bản nháp, bạn có thể chỉnh sửa và xuất bản sau.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Handle import type change
+    document.querySelector('select[name="import_type"]').addEventListener('change', function(e) {
+        const importType = e.target.value;
+        
+        // Hide all sections
+        document.querySelectorAll('.import-section').forEach(section => {
+            section.classList.add('hidden');
+        });
+        
+        // Show relevant section
+        if (importType === 'word') {
+            document.getElementById('word-import-section').classList.remove('hidden');
+        } else if (importType === 'external') {
+            document.getElementById('external-import-section').classList.remove('hidden');
+        }
+    });
+
+    // File upload preview
+    document.querySelector('input[name="word_file"]').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Simple file validation
+            if (file.size > 10 * 1024 * 1024) { // 10MB
+                alert('File quá lớn. Vui lòng chọn file dưới 10MB.');
+                e.target.value = '';
+                return;
+            }
+            
+            const validTypes = ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword'];
+            if (!validTypes.includes(file.type)) {
+                alert('Vui lòng chọn file Word (.docx hoặc .doc).');
+                e.target.value = '';
+                return;
+            }
+        }
+    });
+
+    // Preview functionality
+    document.getElementById('preview-btn').addEventListener('click', function() {
+        const importType = document.querySelector('select[name="import_type"]').value;
+        const previewSection = document.getElementById('preview-section');
+        const previewContent = document.getElementById('preview-content');
+        
+        if (importType === 'word') {
+            const fileInput = document.querySelector('input[name="word_file"]');
+            if (fileInput.files.length > 0) {
+                previewContent.innerHTML = `
+                    <div class="text-center">
+                        <i class="fas fa-file-word text-4xl text-blue-500 mb-2"></i>
+                        <p class="font-semibold">${fileInput.files[0].name}</p>
+                        <p class="text-sm text-gray-600">Kích thước: ${(fileInput.files[0].size / 1024 / 1024).toFixed(2)} MB</p>
+                        <p class="text-sm text-green-600 mt-2">✅ File hợp lệ, sẵn sàng nhập</p>
+                    </div>
+                `;
+                previewSection.classList.remove('hidden');
+            } else {
+                alert('Vui lòng chọn file Word.');
+            }
+        } else if (importType === 'external') {
+            const urlInput = document.querySelector('input[name="external_url"]');
+            if (urlInput.value) {
+                previewContent.innerHTML = `
+                    <div class="text-center">
+                        <i class="fas fa-link text-4xl text-green-500 mb-2"></i>
+                        <p class="font-semibold">URL: ${urlInput.value}</p>
+                        <p class="text-sm text-gray-600">Hệ thống sẽ lấy nội dung từ URL này</p>
+                        <p class="text-sm text-green-600 mt-2">✅ URL hợp lệ, sẵn sàng nhập</p>
+                    </div>
+                `;
+                previewSection.classList.remove('hidden');
+            } else {
+                alert('Vui lòng nhập URL.');
+            }
+        }
+    });
+
+    // Initialize with word import section visible
+    document.getElementById('word-import-section').classList.remove('hidden');
+</script>
+{% endblock %}

@@ -1,0 +1,172 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">{{ page_title }}</h1>
+            <p class="text-gray-600 mt-2">Xem chi tiết bài viết giới thiệu</p>
+        </div>
+        <div class="flex space-x-3">
+            <a href="{% url 'dashboard:about_edit' article.pk %}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">
+                <i class="fas fa-edit mr-2"></i>Chỉnh sửa
+            </a>
+            <a href="{% url 'dashboard:about_delete' article.pk %}" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors">
+                <i class="fas fa-trash mr-2"></i>Xóa
+            </a>
+            <a href="{% url 'dashboard:about_list' %}" class="text-gray-500 hover:text-gray-700 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>Quay lại
+            </a>
+        </div>
+    </div>
+
+    <!-- Article Content -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <!-- Featured Image -->
+        {% if article.featured_image %}
+        <div class="w-full h-64 bg-gray-200">
+            <img src="{{ article.featured_image.url }}" alt="{{ article.title }}" class="w-full h-full object-cover">
+        </div>
+        {% endif %}
+
+        <!-- Article Info -->
+        <div class="p-6">
+            <!-- Title and Meta -->
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ article.title }}</h2>
+                
+                <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-4">
+                    <span class="flex items-center">
+                        <i class="fas fa-user mr-2"></i>
+                        {{ article.author.username|default:"Không có tác giả" }}
+                    </span>
+                    <span class="flex items-center">
+                        <i class="fas fa-calendar mr-2"></i>
+                        Ngày tạo: {{ article.created_at|date:"d/m/Y H:i" }}
+                    </span>
+                    <span class="flex items-center">
+                        <i class="fas fa-clock mr-2"></i>
+                        Cập nhật: {{ article.updated_at|date:"d/m/Y H:i" }}
+                    </span>
+                    <span class="flex items-center">
+                        <i class="fas fa-sort-numeric-up mr-2"></i>
+                        Thứ tự: {{ article.order }}
+                    </span>
+                </div>
+
+                <!-- Status and Source -->
+                <div class="flex flex-wrap items-center gap-3 mb-4">
+                    <span class="px-3 py-1 text-sm rounded-full
+                        {% if article.status == 'published' %}bg-green-100 text-green-800{% elif article.status == 'draft' %}bg-yellow-100 text-yellow-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {% if article.status == 'published' %}Đã xuất bản{% elif article.status == 'draft' %}Bản nháp{% else %}Lưu trữ{% endif %}
+                    </span>
+                    <span class="px-3 py-1 text-sm rounded-full bg-blue-100 text-blue-800">
+                        {% if article.source_type == 'manual' %}Tự viết{% elif article.source_type == 'word' %}Từ Word{% else %}Từ liên kết{% endif %}
+                    </span>
+                    {% if article.is_active %}
+                        <span class="px-3 py-1 text-sm rounded-full bg-emerald-100 text-emerald-800">
+                            <i class="fas fa-check-circle mr-1"></i>Đang kích hoạt
+                        </span>
+                    {% else %}
+                        <span class="px-3 py-1 text-sm rounded-full bg-red-100 text-red-800">
+                            <i class="fas fa-times-circle mr-1"></i>Đã vô hiệu hóa
+                        </span>
+                    {% endif %}
+                </div>
+
+                <!-- Excerpt -->
+                {% if article.excerpt %}
+                <div class="bg-gray-50 border-l-4 border-blue-400 p-4 mb-6">
+                    <p class="text-gray-700 italic">{{ article.excerpt }}</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Content -->
+            {% if article.content %}
+            <div class="prose max-w-none mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-3">Nội dung bài viết:</h3>
+                <div class="bg-gray-50 rounded-lg p-6">
+                    <div class="text-gray-800 leading-relaxed">{{ article.content|safe }}</div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- External Link -->
+            {% if article.external_link %}
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-3">Liên kết gốc:</h3>
+                <a href="{{ article.external_link }}" target="_blank" rel="noopener noreferrer" 
+                   class="text-blue-600 hover:text-blue-800 underline">
+                    <i class="fas fa-external-link-alt mr-2"></i>{{ article.external_link }}
+                </a>
+            </div>
+            {% endif %}
+
+            <!-- Slug -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-3">Slug (URL):</h3>
+                <div class="bg-gray-100 rounded px-3 py-2 font-mono text-sm">
+                    {{ article.slug }}
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            <div class="border-t pt-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-3">Thông tin thống kê:</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <div class="text-2xl font-bold text-blue-600">{{ article.content|length }}</div>
+                        <div class="text-sm text-gray-600">Ký tự nội dung</div>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <div class="text-2xl font-bold text-green-600">{{ article.content|wordcount }}</div>
+                        <div class="text-sm text-gray-600">Từ ngữ</div>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <div class="text-2xl font-bold text-purple-600">{{ article.created_at|timesince }}</div>
+                        <div class="text-sm text-gray-600">Tuổi bài viết</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="mt-6 bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Hành động nhanh:</h3>
+        <div class="flex flex-wrap gap-3">
+            <a href="{% url 'dashboard:about_edit' article.pk %}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">
+                <i class="fas fa-edit mr-2"></i>Chỉnh sửa
+            </a>
+            {% if article.status == 'draft' %}
+                <form method="POST" action="{% url 'dashboard:about_edit' article.pk %}" class="inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="publish">
+                    <button type="submit" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-check mr-2"></i>Xuất bản
+                    </button>
+                </form>
+            {% endif %}
+            {% if article.status == 'published' %}
+                <form method="POST" action="{% url 'dashboard:about_edit' article.pk %}" class="inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="save_draft">
+                    <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-edit mr-2"></i>Chuyển thành bản nháp
+                    </button>
+                </form>
+            {% endif %}
+            <a href="{% url 'dashboard:about_delete' article.pk %}" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors">
+                <i class="fas fa-trash mr-2"></i>Xóa
+            </a>
+            <a href="{% url 'dashboard:about_list' %}" class="text-gray-500 hover:text-gray-700 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>Quay lại danh sách
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
