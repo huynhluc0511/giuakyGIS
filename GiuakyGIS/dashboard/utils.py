@@ -42,7 +42,13 @@ def paginate_queryset(queryset, page, per_page=15):
 
 
 def get_stats():
-    from dashboard.models import Store, Product, Order, Category
+    from dashboard.models import Store, Product, Order, Category, CustomerProfile, News, About, Warehouse
+    from django.db.models import Sum
+    from datetime import datetime, timedelta
+
+    # Today's date
+    today = datetime.now().date()
+    first_day_of_month = today.replace(day=1)
 
     stats = {
         'total_stores': Store.objects.count(),
@@ -53,6 +59,32 @@ def get_stats():
         'pending_orders': Order.objects.filter(status='Pending').count(),
         'processing_orders': Order.objects.filter(status='Processing').count(),
         'delivered_orders': Order.objects.filter(status='Delivered').count(),
+        'cancelled_orders': Order.objects.filter(status='Cancelled').count(),
+        'shipped_orders': Order.objects.filter(status='Shipped').count(),
+        # Customer stats
+        'total_customers': CustomerProfile.objects.count(),
+        'verified_customers': CustomerProfile.objects.filter(is_verified=True).count(),
+        'vip_customers': CustomerProfile.objects.filter(is_premium=True).count(),
+        'new_customers_this_month': CustomerProfile.objects.filter(
+            created_at__date__gte=first_day_of_month
+        ).count(),
+        # Content stats
+        'total_news': News.objects.filter(status='published').count(),
+        'total_about': About.objects.filter(status='published', is_active=True).count(),
+        # Warehouse stats
+        'warehouse_count': Warehouse.objects.count(),
+        # Revenue stats
+        'total_revenue': Order.objects.filter(
+            status__in=['Delivered', 'Shipped']
+        ).aggregate(total=Sum('total_price'))['total'] or 0,
+        'today_revenue': Order.objects.filter(
+            status__in=['Delivered', 'Shipped'],
+            created_at__date=today
+        ).aggregate(total=Sum('total_price'))['total'] or 0,
+        'month_revenue': Order.objects.filter(
+            status__in=['Delivered', 'Shipped'],
+            created_at__date__gte=first_day_of_month
+        ).aggregate(total=Sum('total_price'))['total'] or 0,
     }
     return stats
 

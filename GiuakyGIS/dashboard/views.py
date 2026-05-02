@@ -2,16 +2,19 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.models import User
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.db import models
 from django.http import HttpResponse
+from django.utils import timezone
 
-from dashboard.models import Store, Product, Order, OrderItem, Category
+from dashboard.models import Store, Product, Order, OrderItem, Category, About, CustomerProfile, News, Review, ReviewImage
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .serializers import ProductSerializer, StoreSerializer, OrderSerializer, CategorySerializer
 from .forms import (
-    StoreForm, ProductForm, OrderForm, CategoryForm, SearchForm, UserForm
+    StoreForm, ProductForm, OrderForm, CategoryForm, SearchForm, UserForm, AboutForm, AboutImportForm,
+    CustomerProfileForm, UserBasicInfoForm, NewsForm, ReviewReplyForm
 )
 from .utils import admin_required, search_items, paginate_queryset, get_stats
 
@@ -22,10 +25,40 @@ def dashboard_index(request):
     stats = get_stats()
     recent_orders = Order.objects.all().order_by('-created_at')[:5]
     recent_products = Product.objects.all().order_by('-id')[:5]
+    
+    # Get top customers by order count
+    top_customers = CustomerProfile.objects.select_related('user').annotate(
+        order_count=models.Count('user__order')
+    ).order_by('-order_count')[:5]
+    
+    # Get popular products (most ordered)
+    popular_products = Product.objects.annotate(
+        order_count=models.Count('orderitem')
+    ).order_by('-order_count')[:5]
+    
+    # Get low stock products
+    low_stock_products = Product.objects.filter(
+        is_available=True,
+        orderitem__isnull=False
+    ).annotate(
+        sold_count=models.Count('orderitem')
+    ).order_by('sold_count')[:5]
+    
+    # Get recent customers
+    recent_customers = CustomerProfile.objects.select_related('user').order_by('-created_at')[:5]
+    
+    # Get published news
+    recent_news = News.objects.filter(status='published').order_by('-published_at')[:5]
+    
     context = {
         'stats': stats,
         'recent_orders': recent_orders,
         'recent_products': recent_products,
+        'top_customers': top_customers,
+        'popular_products': popular_products,
+        'low_stock_products': low_stock_products,
+        'recent_customers': recent_customers,
+        'recent_news': recent_news,
         'page_title': 'Bảng Điều Khiển',
     }
     return render(request, 'dashboard/index.html', context)
@@ -1067,4 +1100,673 @@ class CategoryViewSet(viewsets.ModelViewSet):
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all().order_by('-created_at')
     serializer_class = OrderSerializer
-    permission_classes = [IsAdminOrReadOnly]
+
+
+# ==================== ABOUT MANAGEMENT ====================
+@admin_required
+def about_list(request):
+    """Display list of About articles"""
+    articles = About.objects.all().order_by('order', '-created_at')
+    
+    # Filter by status if provided
+    status_filter = request.GET.get('status')
+    if status_filter:
+        articles = articles.filter(status=status_filter)
+    
+    # Get page number from request
+    page = request.GET.get('page', 1)
+    articles, paginator = paginate_queryset(articles, page)
+    
+    context = {
+        'articles': articles,
+        'page_title': 'Quản Lý Trang Giới Thiệu',
+        'status_filter': status_filter,
+    }
+    return render(request, 'dashboard/about/list.html', context)
+
+
+@admin_required
+def about_create(request):
+    """Create new About article"""
+    if request.method == 'POST':
+        form = AboutForm(request.POST, request.FILES)
+        if form.is_valid():
+            article = form.save(commit=False)
+            article.author = request.user
+            article.save()
+            messages.success(request, '✅ Bài viết giới thiệu đã được tạo thành công!')
+            return redirect('dashboard:about_list')
+    else:
+        form = AboutForm()
+    
+    context = {
+        'form': form,
+        'page_title': 'Tạo Bài Viết Giới Thiệu Mới',
+        'action': 'create',
+    }
+    return render(request, 'dashboard/about/form.html', context)
+
+
+@admin_required
+def about_edit(request, pk):
+    """Edit existing About article"""
+    article = get_object_or_404(About, pk=pk)
+    
+    if request.method == 'POST':
+        form = AboutForm(request.POST, request.FILES, instance=article)
+        if form.is_valid():
+            form.save()
+            messages.success(request, '✅ Bài viết giới thiệu đã được cập nhật thành công!')
+            return redirect('dashboard:about_list')
+    else:
+        form = AboutForm(instance=article)
+    
+    context = {
+        'form': form,
+        'article': article,
+        'page_title': f'Chỉnh Sửa Bài Viết: {article.title}',
+        'action': 'edit',
+    }
+    return render(request, 'dashboard/about/form.html', context)
+
+
+@admin_required
+def about_delete(request, pk):
+    """Delete About article"""
+    article = get_object_or_404(About, pk=pk)
+    
+    if request.method == 'POST':
+        article.delete()
+        messages.success(request, '✅ Bài viết giới thiệu đã được xóa thành công!')
+        return redirect('dashboard:about_list')
+    
+    context = {
+        'article': article,
+        'page_title': 'Xóa Bài Viết Giới Thiệu',
+    }
+    return render(request, 'dashboard/about/delete.html', context)
+
+
+@admin_required
+def about_detail(request, pk):
+    """View details of About article"""
+    article = get_object_or_404(About, pk=pk)
+    
+    context = {
+        'article': article,
+        'page_title': f'Chi Tiết: {article.title}',
+    }
+    return render(request, 'dashboard/about/detail.html', context)
+
+
+@admin_required
+def about_import(request):
+    """Import content from Word file or external URL"""
+    if request.method == 'POST':
+        form = AboutImportForm(request.POST, request.FILES)
+        if form.is_valid():
+            import_type = form.cleaned_data['import_type']
+            
+            if import_type == 'word':
+                # Handle Word file import
+                word_file = form.cleaned_data['word_file']
+                try:
+                    # TODO: Implement Word file parsing
+                    # For now, create a placeholder article
+                    article = About.objects.create(
+                        title=f"Import from {word_file.name}",
+                        slug=f"import-{word_file.name}",
+                        content="Content imported from Word file",
+                        source_type='word',
+                        author=request.user,
+                        status='draft'
+                    )
+                    messages.success(request, '✅ File Word đã được nhập thành công!')
+                    return redirect('dashboard:about_edit', pk=article.pk)
+                except Exception as e:
+                    messages.error(request, f'❌ Lỗi khi đọc file Word: {str(e)}')
+            
+            elif import_type == 'external':
+                # Handle external URL import
+                external_url = form.cleaned_data['external_url']
+                try:
+                    # TODO: Implement external URL content fetching
+                    # For now, create a placeholder article
+                    article = About.objects.create(
+                        title=f"Import from {external_url}",
+                        slug=f"import-{external_url.replace('https://', '').replace('/', '-')}",
+                        content=f"Content imported from: {external_url}",
+                        external_link=external_url,
+                        source_type='external',
+                        author=request.user,
+                        status='draft'
+                    )
+                    messages.success(request, '✅ Nội dung từ URL đã được nhập thành công!')
+                    return redirect('dashboard:about_edit', pk=article.pk)
+                except Exception as e:
+                    messages.error(request, f'❌ Lỗi khi lấy nội dung từ URL: {str(e)}')
+    else:
+        form = AboutImportForm()
+    
+    context = {
+        'form': form,
+        'page_title': 'Nhập Bài Viết Từ Nguồn Bên Ngoài',
+    }
+    return render(request, 'dashboard/about/import.html', context)
+
+
+# ==================== CUSTOMER PROFILE ====================
+def customer_profile_view(request):
+    """View customer profile page"""
+    if not request.user.is_authenticated:
+        messages.error(request, 'Vui lòng đăng nhập để xem thông tin cá nhân.')
+        return redirect('login')
+    
+    # Get or create customer profile
+    profile, created = CustomerProfile.objects.get_or_create(user=request.user)
+    
+    context = {
+        'profile': profile,
+        'page_title': 'Thông Tin Cá Nhân',
+    }
+    return render(request, 'customer/profile.html', context)
+
+
+def customer_profile_edit(request):
+    """Edit customer profile"""
+    if not request.user.is_authenticated:
+        messages.error(request, 'Vui lòng đăng nhập để chỉnh sửa thông tin cá nhân.')
+        return redirect('login')
+    
+    # Get or create customer profile
+    profile, created = CustomerProfile.objects.get_or_create(user=request.user)
+    
+    if request.method == 'POST':
+        profile_form = CustomerProfileForm(request.POST, request.FILES, instance=profile)
+        user_form = UserBasicInfoForm(request.POST, instance=request.user)
+        
+        if profile_form.is_valid() and user_form.is_valid():
+            profile_form.save()
+            user_form.save()
+            messages.success(request, '✅ Thông tin cá nhân đã được cập nhật thành công!')
+            return redirect('customer_profile')
+        else:
+            messages.error(request, '❌ Vui lòng sửa các lỗi bên dưới.')
+    else:
+        profile_form = CustomerProfileForm(instance=profile)
+        user_form = UserBasicInfoForm(instance=request.user)
+    
+    context = {
+        'profile_form': profile_form,
+        'user_form': user_form,
+        'profile': profile,
+        'page_title': 'Chỉnh Sửa Thông Tin Cá Nhân',
+    }
+    return render(request, 'customer/profile_edit_enhanced.html', context)
+
+
+@login_required
+def customer_profile_view_enhanced(request):
+    """Enhanced customer profile view with modern design"""
+    try:
+        profile = request.user.profile
+    except CustomerProfile.DoesNotExist:
+        profile = CustomerProfile.objects.create(user=request.user)
+    
+    context = {
+        'profile': profile,
+        'page_title': 'Thông Tin Cá Nhân',
+    }
+    return render(request, 'customer/profile_enhanced.html', context)
+
+
+# ==================== DASHBOARD CUSTOMER PROFILE MANAGEMENT ====================
+@admin_required
+def customer_profile_list(request):
+    """Display list of all customer profiles for admin with statistics and advanced filtering"""
+    profiles = CustomerProfile.objects.select_related('user').filter(pk__isnull=False).order_by('-created_at')
+    
+    # Search functionality
+    search_query = request.GET.get('search', '')
+    if search_query:
+        profiles = profiles.filter(
+            models.Q(user__username__icontains=search_query) |
+            models.Q(user__email__icontains=search_query) |
+            models.Q(user__first_name__icontains=search_query) |
+            models.Q(user__last_name__icontains=search_query) |
+            models.Q(phone__icontains=search_query) |
+            models.Q(address__icontains=search_query)
+        )
+    
+    # Filter by verification status
+    verified_filter = request.GET.get('verified', '')
+    if verified_filter == 'verified':
+        profiles = profiles.filter(is_verified=True)
+    elif verified_filter == 'unverified':
+        profiles = profiles.filter(is_verified=False)
+    
+    # Filter by account status
+    status_filter = request.GET.get('status', '')
+    if status_filter == 'active':
+        profiles = profiles.filter(user__is_active=True)
+    elif status_filter == 'inactive':
+        profiles = profiles.filter(user__is_active=False)
+    
+    # Filter by gender
+    gender_filter = request.GET.get('gender', '')
+    if gender_filter:
+        profiles = profiles.filter(gender=gender_filter)
+    
+    # Filter by VIP status
+    vip_filter = request.GET.get('vip', '')
+    if vip_filter == 'vip':
+        profiles = profiles.filter(is_premium=True)
+    elif vip_filter == 'normal':
+        profiles = profiles.filter(is_premium=False)
+    
+    # Date range filter
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    if date_from:
+        profiles = profiles.filter(created_at__date__gte=date_from)
+    if date_to:
+        profiles = profiles.filter(created_at__date__lte=date_to)
+    
+    # Calculate statistics
+    total_customers = CustomerProfile.objects.count()
+    verified_count = CustomerProfile.objects.filter(is_verified=True).count()
+    vip_count = CustomerProfile.objects.filter(is_premium=True).count()
+    active_count = CustomerProfile.objects.filter(user__is_active=True).count()
+    new_this_month = CustomerProfile.objects.filter(
+        created_at__month=timezone.now().month,
+        created_at__year=timezone.now().year
+    ).count()
+    
+    # Calculate verification rate percentage
+    verification_rate = 0
+    if total_customers > 0:
+        verification_rate = round((verified_count / total_customers) * 100, 1)
+    
+    # Pagination
+    page = request.GET.get('page', 1)
+    paginated_profiles = paginate_queryset(profiles, page, 20)
+    
+    context = {
+        'profiles': paginated_profiles,
+        'page_title': 'Quản Lý Thông Tin Khách Hàng',
+        'search_query': search_query,
+        'verified_filter': verified_filter,
+        'status_filter': status_filter,
+        'gender_filter': gender_filter,
+        'vip_filter': vip_filter,
+        'date_from': date_from,
+        'date_to': date_to,
+        # Statistics
+        'stats': {
+            'total': total_customers,
+            'verified': verified_count,
+            'vip': vip_count,
+            'active': active_count,
+            'new_this_month': new_this_month,
+            'verification_rate': verification_rate,
+        },
+        'gender_choices': CustomerProfile._meta.get_field('gender').choices,
+    }
+    return render(request, 'dashboard/customer_profiles/list.html', context)
+
+
+@admin_required
+def customer_profile_detail(request, pk):
+    """Display detailed customer profile with order history and activity statistics"""
+    profile = get_object_or_404(CustomerProfile, pk=pk)
+    
+    # Get customer's order history
+    customer_orders = Order.objects.filter(user=profile.user).order_by('-created_at')[:10]
+    
+    # Calculate order statistics
+    total_orders = Order.objects.filter(user=profile.user).count()
+    total_spent = Order.objects.filter(user=profile.user).aggregate(
+        total=models.Sum('total_price')
+    )['total'] or 0
+    
+    # Calculate activity statistics
+    orders_this_month = Order.objects.filter(
+        user=profile.user,
+        created_at__month=timezone.now().month,
+        created_at__year=timezone.now().year
+    ).count()
+    
+    # Get recent activity (last 5 orders with items)
+    recent_orders_with_items = []
+    for order in customer_orders[:5]:
+        items = OrderItem.objects.filter(order=order).select_related('product')
+        recent_orders_with_items.append({
+            'order': order,
+            'items': items,
+            'item_count': items.count()
+        })
+    
+    context = {
+        'profile': profile,
+        'page_title': f'Chi Tiết: {profile.display_name}',
+        'customer_orders': customer_orders,
+        'recent_orders_with_items': recent_orders_with_items,
+        'order_stats': {
+            'total_orders': total_orders,
+            'total_spent': total_spent,
+            'orders_this_month': orders_this_month,
+        },
+        'loyalty_points': profile.loyalty_points,
+        'profile_completion': profile.get_completion_percentage(),
+    }
+    return render(request, 'dashboard/customer_profiles/detail.html', context)
+
+
+@admin_required
+def customer_profile_edit(request, pk):
+    """Edit customer profile from dashboard"""
+    profile = get_object_or_404(CustomerProfile, pk=pk)
+    
+    if request.method == 'POST':
+        profile_form = CustomerProfileForm(request.POST, request.FILES, instance=profile)
+        user_form = UserBasicInfoForm(request.POST, instance=profile.user)
+        
+        if profile_form.is_valid() and user_form.is_valid():
+            # Handle account status fields
+            profile.user.is_active = request.POST.get('is_active') == 'on'
+            profile.user.is_staff = request.POST.get('is_staff') == 'on'
+            profile.is_verified = request.POST.get('is_verified') == 'on'
+            
+            profile_form.save()
+            user_form.save()
+            messages.success(request, f'✅ Thông tin khách hàng {profile.display_name} đã được cập nhật thành công!')
+            return redirect('dashboard:customer_profile_detail', pk=profile.pk)
+        else:
+            messages.error(request, '❌ Vui lòng sửa các lỗi bên dưới.')
+    else:
+        profile_form = CustomerProfileForm(instance=profile)
+        user_form = UserBasicInfoForm(instance=profile.user)
+    
+    context = {
+        'profile_form': profile_form,
+        'user_form': user_form,
+        'profile': profile,
+        'page_title': f'Chỉnh Sửa: {profile.display_name}',
+    }
+    return render(request, 'dashboard/customer_profiles/edit.html', context)
+
+
+@admin_required
+def customer_profile_delete(request, pk):
+    """Delete customer profile and associated user"""
+    profile = get_object_or_404(CustomerProfile, pk=pk)
+    user = profile.user
+    
+    if request.method == 'POST':
+        username = profile.display_name
+        profile.delete()
+        user.delete()
+        messages.success(request, f'✅ Khách hàng {username} đã được xóa thành công!')
+        return redirect('dashboard:customer_profile_list')
+    
+    context = {
+        'profile': profile,
+        'page_title': f'Xóa: {profile.display_name}',
+    }
+    return render(request, 'dashboard/customer_profiles/delete.html', context)
+
+
+@admin_required
+def customer_profile_toggle_verification(request, pk):
+    """Toggle verification status of customer profile"""
+    profile = get_object_or_404(CustomerProfile, pk=pk)
+    profile.is_verified = not profile.is_verified
+    profile.save()
+    
+    status = "xác thực" if profile.is_verified else "hủy xác thực"
+    messages.success(request, f'✅ Đã {status} tài khoản của {profile.display_name}!')
+    
+    return redirect('dashboard:customer_profile_list')
+
+
+# ==================== TIN TỨC (NEWS) ====================
+@admin_required
+def news_list(request):
+    """List all news articles"""
+    news_items = News.objects.all().order_by('-created_at')
+    
+    # Filter by status
+    status_filter = request.GET.get('status')
+    if status_filter:
+        news_items = news_items.filter(status=status_filter)
+    
+    # Filter by category
+    category_filter = request.GET.get('category')
+    if category_filter:
+        news_items = news_items.filter(category=category_filter)
+    
+    # Search
+    search_query = request.GET.get('search')
+    if search_query:
+        news_items = news_items.filter(title__icontains=search_query)
+    
+    context = {
+        'news_items': news_items,
+        'page_title': 'Quản Lý Tin Tức',
+        'status_choices': News.STATUS_CHOICES,
+        'category_choices': News.CATEGORY_CHOICES,
+        'current_status': status_filter,
+        'current_category': category_filter,
+        'search_query': search_query,
+    }
+    return render(request, 'dashboard/news/list.html', context)
+
+
+@admin_required
+def news_create(request):
+    """Create new news article"""
+    if request.method == 'POST':
+        form = NewsForm(request.POST, request.FILES)
+        if form.is_valid():
+            news = form.save(commit=False)
+            news.author = request.user
+            if news.status == 'published' and not news.published_at:
+                from django.utils import timezone
+                news.published_at = timezone.now()
+            news.save()
+            messages.success(request, '✅ Tin tức đã được tạo thành công!')
+            return redirect('dashboard:news_list')
+        else:
+            messages.error(request, '❌ Vui lòng sửa các lỗi bên dưới.')
+    else:
+        form = NewsForm()
+    
+    context = {
+        'form': form,
+        'page_title': 'Thêm Tin Tức Mới',
+    }
+    return render(request, 'dashboard/news/form.html', context)
+
+
+@admin_required
+def news_edit(request, pk):
+    """Edit news article"""
+    news = get_object_or_404(News, pk=pk)
+    
+    if request.method == 'POST':
+        form = NewsForm(request.POST, request.FILES, instance=news)
+        if form.is_valid():
+            news = form.save(commit=False)
+            if news.status == 'published' and not news.published_at:
+                from django.utils import timezone
+                news.published_at = timezone.now()
+            news.save()
+            messages.success(request, '✅ Tin tức đã được cập nhật thành công!')
+            return redirect('dashboard:news_list')
+        else:
+            messages.error(request, '❌ Vui lòng sửa các lỗi bên dưới.')
+    else:
+        form = NewsForm(instance=news)
+    
+    context = {
+        'form': form,
+        'news': news,
+        'page_title': f'Sửa: {news.title}',
+    }
+    return render(request, 'dashboard/news/form.html', context)
+
+
+@admin_required
+def news_delete(request, pk):
+    """Delete news article"""
+    news = get_object_or_404(News, pk=pk)
+    
+    if request.method == 'POST':
+        title = news.title
+        news.delete()
+        messages.success(request, f'✅ Tin tức "{title}" đã được xóa thành công!')
+        return redirect('dashboard:news_list')
+    
+    context = {
+        'news': news,
+        'page_title': f'Xóa: {news.title}',
+    }
+    return render(request, 'dashboard/news/delete.html', context)
+
+
+@admin_required
+def news_toggle_status(request, pk):
+    """Toggle news publish status"""
+    news = get_object_or_404(News, pk=pk)
+    
+    if news.status == 'published':
+        news.status = 'draft'
+        messages.success(request, f'✅ Tin tức "{news.title}" đã chuyển sang bản nháp!')
+    else:
+        news.status = 'published'
+        if not news.published_at:
+            from django.utils import timezone
+            news.published_at = timezone.now()
+        messages.success(request, f'✅ Tin tức "{news.title}" đã được xuất bản!')
+    
+    news.save()
+    return redirect('dashboard:news_list')
+
+
+@admin_required
+def news_toggle_featured(request, pk):
+    """Toggle news featured status"""
+    news = get_object_or_404(News, pk=pk)
+    news.is_featured = not news.is_featured
+    news.save()
+    
+    status = "nổi bật" if news.is_featured else "bình thường"
+    messages.success(request, f'✅ Tin tức "{news.title}" đã chuyển sang trạng thái {status}!')
+    
+    return redirect('dashboard:news_list')
+
+
+# ==================== REVIEW MANAGEMENT ====================
+@admin_required
+def review_list(request):
+    """List and manage all product reviews"""
+    reviews = Review.objects.select_related('user', 'order_item__product', 'order_item__order').prefetch_related('images').all()
+    
+    # Filter by status
+    status_filter = request.GET.get('status')
+    if status_filter:
+        reviews = reviews.filter(status=status_filter)
+    
+    # Filter by rating
+    rating_filter = request.GET.get('rating')
+    if rating_filter:
+        reviews = reviews.filter(rating=rating_filter)
+    
+    # Search
+    search_query = request.GET.get('q')
+    if search_query:
+        reviews = reviews.filter(
+            models.Q(content__icontains=search_query) |
+            models.Q(user__username__icontains=search_query) |
+            models.Q(order_item__product__name__icontains=search_query)
+        )
+    
+    # Statistics
+    stats = {
+        'total': Review.objects.count(),
+        'pending': Review.objects.filter(status='pending').count(),
+        'approved': Review.objects.filter(status='approved').count(),
+        'rejected': Review.objects.filter(status='rejected').count(),
+        'avg_rating': Review.objects.filter(status='approved').aggregate(avg=models.Avg('rating'))['avg'] or 0,
+    }
+    
+    context = {
+        'reviews': reviews,
+        'stats': stats,
+        'page_title': 'Quản lý Đánh giá',
+        'status_filter': status_filter,
+        'rating_filter': rating_filter,
+        'search_query': search_query,
+    }
+    return render(request, 'dashboard/reviews/list.html', context)
+
+
+@admin_required
+def review_detail(request, pk):
+    """View review details"""
+    review = get_object_or_404(Review.objects.select_related('user', 'order_item__product', 'order_item__order'), pk=pk)
+    
+    if request.method == 'POST':
+        # Handle admin reply
+        reply_form = ReviewReplyForm(request.POST)
+        if reply_form.is_valid():
+            review.admin_reply = reply_form.cleaned_data['admin_reply']
+            review.admin_reply_at = timezone.now()
+            review.save()
+            messages.success(request, '✅ Đã gửi phản hồi!')
+            return redirect('dashboard:review_detail', pk=pk)
+    else:
+        reply_form = ReviewReplyForm(initial={'admin_reply': review.admin_reply})
+    
+    context = {
+        'review': review,
+        'reply_form': reply_form,
+        'page_title': f'Đánh giá #{review.id}',
+    }
+    return render(request, 'dashboard/reviews/detail.html', context)
+
+
+@admin_required
+def review_approve(request, pk):
+    """Approve a review"""
+    review = get_object_or_404(Review, pk=pk)
+    review.status = 'approved'
+    review.save()
+    messages.success(request, f'✅ Đã duyệt đánh giá #{review.id}!')
+    return redirect('dashboard:review_list')
+
+
+@admin_required
+def review_reject(request, pk):
+    """Reject a review"""
+    review = get_object_or_404(Review, pk=pk)
+    review.status = 'rejected'
+    review.save()
+    messages.success(request, f'✅ Đã từ chối đánh giá #{review.id}!')
+    return redirect('dashboard:review_list')
+
+
+@admin_required
+def review_delete(request, pk):
+    """Delete a review"""
+    review = get_object_or_404(Review, pk=pk)
+    if request.method == 'POST':
+        review.delete()
+        messages.success(request, '✅ Đã xóa đánh giá!')
+        return redirect('dashboard:review_list')
+    
+    context = {
+        'review': review,
+        'page_title': 'Xóa đánh giá',
+    }
+    return render(request, 'dashboard/reviews/delete.html', context)

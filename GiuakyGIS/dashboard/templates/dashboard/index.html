@@ -2,77 +2,254 @@
 {% block title %}Bảng Điều Khiển{% endblock %}
 {% block content %}
 
-<!-- ===== STAT CARDS ===== -->
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1.25rem;margin-bottom:2rem;">
-    <div class="stat-card grad-purple">
-        <div class="stat-label">Tổng Cửa Hàng</div>
-        <div class="stat-value">{{ stats.total_stores }}</div>
-        <i class="fas fa-store icon-bg"></i>
+<style>
+/* Compact Dashboard Styles */
+.dashboard-header { margin-bottom: 1.5rem; }
+.dashboard-header h1 { font-size: 1.5rem; font-weight: 700; color: #32325d; margin-bottom: 0.25rem; }
+.dashboard-header p { color: #8898aa; font-size: 0.9rem; }
+
+/* Stat Cards - Compact */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.stat-card-compact {
+    background: white; border-radius: 12px; padding: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    display: flex; align-items: center; gap: 0.75rem;
+    transition: all 0.2s ease;
+}
+.stat-card-compact:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.stat-icon {
+    width: 44px; height: 44px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; flex-shrink: 0;
+}
+.stat-icon.purple { background: linear-gradient(135deg,#667eea,#764ba2); color: white; }
+.stat-icon.green { background: linear-gradient(135deg,#11998e,#38ef7d); color: white; }
+.stat-icon.orange { background: linear-gradient(135deg,#fc4a1a,#f7b733); color: white; }
+.stat-icon.blue { background: linear-gradient(135deg,#2193b0,#6dd5ed); color: white; }
+.stat-icon.pink { background: linear-gradient(135deg,#ee0979,#ff6b6b); color: white; }
+.stat-icon.teal { background: linear-gradient(135deg,#00b894,#55efc4); color: white; }
+.stat-icon.yellow { background: linear-gradient(135deg,#f39c12,#f1c40f); color: white; }
+.stat-icon.red { background: linear-gradient(135deg,#e74c3c,#c0392b); color: white; }
+.stat-icon.cyan { background: linear-gradient(135deg,#00cec9,#81ecec); color: white; }
+.stat-icon.indigo { background: linear-gradient(135deg,#6c5ce7,#a29bfe); color: white; }
+.stat-info { flex: 1; }
+.stat-label-compact { font-size: 0.7rem; color: #8898aa; font-weight: 600; text-transform: uppercase; margin-bottom: 2px; }
+.stat-value-compact { font-size: 1.4rem; font-weight: 700; color: #32325d; line-height: 1; }
+
+/* Revenue Cards */
+.revenue-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+@media (max-width: 768px) { .revenue-grid { grid-template-columns: 1fr; } }
+.revenue-card {
+    border-radius: 12px; padding: 1.25rem; color: white; position: relative; overflow: hidden;
+}
+.revenue-card .label { font-size: 0.75rem; opacity: 0.9; margin-bottom: 0.5rem; }
+.revenue-card .value { font-size: 1.6rem; font-weight: 700; }
+.revenue-card .icon {
+    position: absolute; right: 0.75rem; bottom: 0.75rem; font-size: 2.5rem; opacity: 0.15;
+}
+.revenue-card.gradient-purple { background: linear-gradient(135deg,#667eea,#764ba2); }
+.revenue-card.gradient-green { background: linear-gradient(135deg,#11998e,#38ef7d); }
+.revenue-card.gradient-orange { background: linear-gradient(135deg,#fc4a1a,#f7b733); }
+
+/* Quick Actions - Horizontal */
+.quick-actions {
+    display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.5rem;
+}
+.quick-action-btn {
+    display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1rem;
+    background: white; border-radius: 8px; border: 1px solid #e9ecef;
+    color: #525f7f; font-size: 0.85rem; font-weight: 600;
+    text-decoration: none; transition: all 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.quick-action-btn:hover { border-color: #667eea; color: #667eea; transform: translateY(-1px); box-shadow: 0 3px 8px rgba(102,126,234,0.15); }
+.quick-action-btn i { font-size: 1rem; }
+
+/* Tables Grid */
+.tables-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+@media (max-width: 900px) { .tables-grid { grid-template-columns: 1fr; } }
+.table-card {
+    background: white; border-radius: 12px; overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.table-card-header {
+    padding: 1rem 1.25rem; border-bottom: 1px solid #f0f2f5;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.table-card-header h3 { font-size: 0.95rem; font-weight: 700; color: #32325d; margin: 0; }
+.table-card-header a { font-size: 0.75rem; color: #667eea; font-weight: 600; }
+.table-card-body { padding: 0; }
+
+/* Mini Table */
+.mini-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+.mini-table th { background: #f8f9fa; padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #8898aa; font-size: 0.7rem; text-transform: uppercase; }
+.mini-table td { padding: 0.75rem 1rem; border-bottom: 1px solid #f0f2f5; }
+.mini-table tr:last-child td { border-bottom: none; }
+.mini-table .item-name { font-weight: 600; color: #32325d; }
+.mini-table .item-meta { font-size: 0.75rem; color: #adb5bd; }
+.mini-table .price { font-weight: 700; color: #667eea; }
+.mini-table .badge { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; }
+.badge-pending { background: #fff3cd; color: #856404; }
+.badge-processing { background: #cce5ff; color: #004085; }
+.badge-shipped { background: #d1ecf1; color: #0c5460; }
+.badge-delivered { background: #d4edda; color: #155724; }
+.badge-cancelled { background: #f8d7da; color: #721c24; }
+
+/* Avatar */
+.avatar-sm { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+.avatar-placeholder { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.75rem; font-weight: 600; }
+</style>
+
+<!-- Header -->
+<div class="dashboard-header">
+    <h1>📊 Bảng Điều Khiển</h1>
+    <p>Tổng quan hoạt động cửa hàng hôm nay</p>
+</div>
+
+<!-- Revenue Cards -->
+<div class="revenue-grid">
+    <div class="revenue-card gradient-purple">
+        <div class="label"><i class="fas fa-coins me-1"></i>Doanh Thu Hôm Nay</div>
+        <div class="value">{{ stats.today_revenue|floatformat:0 }}đ</div>
+        <i class="fas fa-wallet icon"></i>
     </div>
-    <div class="stat-card grad-green">
-        <div class="stat-label">Tổng Món Ăn</div>
-        <div class="stat-value">{{ stats.total_products }}</div>
-        <i class="fas fa-bowl-food icon-bg"></i>
+    <div class="revenue-card gradient-green">
+        <div class="label"><i class="fas fa-calendar me-1"></i>Tháng Này</div>
+        <div class="value">{{ stats.month_revenue|floatformat:0 }}đ</div>
+        <i class="fas fa-chart-line icon"></i>
     </div>
-    <div class="stat-card grad-orange">
-        <div class="stat-label">Đơn Chờ Xử Lý</div>
-        <div class="stat-value">{{ stats.pending_orders }}</div>
-        <i class="fas fa-clock icon-bg"></i>
-    </div>
-    <div class="stat-card grad-blue">
-        <div class="stat-label">Tổng Người Dùng</div>
-        <div class="stat-value">{{ stats.total_users }}</div>
-        <i class="fas fa-users icon-bg"></i>
+    <div class="revenue-card gradient-orange">
+        <div class="label"><i class="fas fa-dollar-sign me-1"></i>Tổng Doanh Thu</div>
+        <div class="value">{{ stats.total_revenue|floatformat:0 }}đ</div>
+        <i class="fas fa-money-bill-wave icon"></i>
     </div>
 </div>
 
-<!-- ===== SECONDARY STATS ===== -->
-<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;margin-bottom:2rem;">
-    <div style="background:white;border-radius:1rem;padding:1.2rem 1.5rem;display:flex;align-items:center;gap:1rem;box-shadow:0 0 1.5rem rgba(136,152,170,.12);">
-        <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#f6d365,#fda085);display:flex;align-items:center;justify-content:center;color:white;font-size:1.2rem;flex-shrink:0;">
-            <i class="fas fa-fire"></i>
-        </div>
-        <div>
-            <div style="font-size:0.75rem;color:#8898aa;font-weight:700;text-transform:uppercase;">Đang Chế Biến</div>
-            <div style="font-size:1.6rem;font-weight:700;color:#32325d;">{{ stats.processing_orders }}</div>
+<!-- Quick Actions -->
+<div class="quick-actions">
+    <a href="{% url 'dashboard:orders_list' %}" class="quick-action-btn">
+        <i class="fas fa-receipt" style="color: #ee0979;"></i> Đơn Hàng
+    </a>
+    <a href="{% url 'dashboard:stores_create' %}" class="quick-action-btn">
+        <i class="fas fa-store" style="color: #667eea;"></i> Thêm Cửa Hàng
+    </a>
+    <a href="{% url 'dashboard:products_create' %}" class="quick-action-btn">
+        <i class="fas fa-plus" style="color: #11998e;"></i> Thêm Món
+    </a>
+    <a href="{% url 'dashboard:news_create' %}" class="quick-action-btn">
+        <i class="fas fa-newspaper" style="color: #fc4a1a;"></i> Tin Tức
+    </a>
+    <a href="{% url 'dashboard:customer_profile_list' %}" class="quick-action-btn">
+        <i class="fas fa-users" style="color: #2193b0;"></i> Khách Hàng
+    </a>
+    <a href="{% url 'dashboard:review_list' %}" class="quick-action-btn">
+        <i class="fas fa-star" style="color: #f39c12;"></i> Đánh Giá
+    </a>
+</div>
+
+<!-- Compact Stats Grid -->
+<div class="stat-grid">
+    <div class="stat-card-compact">
+        <div class="stat-icon purple"><i class="fas fa-store"></i></div>
+        <div class="stat-info">
+            <div class="stat-label-compact">Cửa Hàng</div>
+            <div class="stat-value-compact">{{ stats.total_stores }}</div>
         </div>
     </div>
-    <div style="background:white;border-radius:1rem;padding:1.2rem 1.5rem;display:flex;align-items:center;gap:1rem;box-shadow:0 0 1.5rem rgba(136,152,170,.12);">
-        <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#43e97b,#38f9d7);display:flex;align-items:center;justify-content:center;color:white;font-size:1.2rem;flex-shrink:0;">
-            <i class="fas fa-check-circle"></i>
-        </div>
-        <div>
-            <div style="font-size:0.75rem;color:#8898aa;font-weight:700;text-transform:uppercase;">Đã Giao Hàng</div>
-            <div style="font-size:1.6rem;font-weight:700;color:#32325d;">{{ stats.delivered_orders }}</div>
+    <div class="stat-card-compact">
+        <div class="stat-icon green"><i class="fas fa-bowl-food"></i></div>
+        <div class="stat-info">
+            <div class="stat-label-compact">Món Ăn</div>
+            <div class="stat-value-compact">{{ stats.total_products }}</div>
         </div>
     </div>
-    <div style="background:white;border-radius:1rem;padding:1.2rem 1.5rem;display:flex;align-items:center;gap:1rem;box-shadow:0 0 1.5rem rgba(136,152,170,.12);">
-        <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#a18cd1,#fbc2eb);display:flex;align-items:center;justify-content:center;color:white;font-size:1.2rem;flex-shrink:0;">
-            <i class="fas fa-tags"></i>
+    <div class="stat-card-compact">
+        <div class="stat-icon pink"><i class="fas fa-clock"></i></div>
+        <div class="stat-info">
+            <div class="stat-label-compact">Chờ Xử Lý</div>
+            <div class="stat-value-compact">{{ stats.pending_orders }}</div>
         </div>
-        <div>
-            <div style="font-size:0.75rem;color:#8898aa;font-weight:700;text-transform:uppercase;">Danh Mục</div>
-            <div style="font-size:1.6rem;font-weight:700;color:#32325d;">{{ stats.total_categories }}</div>
+    </div>
+    <div class="stat-card-compact">
+        <div class="stat-icon teal"><i class="fas fa-fire"></i></div>
+        <div class="stat-info">
+            <div class="stat-label-compact">Đang Chế Biến</div>
+            <div class="stat-value-compact">{{ stats.processing_orders }}</div>
+        </div>
+    </div>
+    <div class="stat-card-compact">
+        <div class="stat-icon blue"><i class="fas fa-shipping-fast"></i></div>
+        <div class="stat-info">
+            <div class="stat-label-compact">Đang Giao</div>
+            <div class="stat-value-compact">{{ stats.shipped_orders }}</div>
+        </div>
+    </div>
+    <div class="stat-card-compact">
+        <div class="stat-icon cyan"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-info">
+            <div class="stat-label-compact">Đã Giao</div>
+            <div class="stat-value-compact">{{ stats.delivered_orders }}</div>
+        </div>
+    </div>
+    <div class="stat-card-compact">
+        <div class="stat-icon red"><i class="fas fa-times-circle"></i></div>
+        <div class="stat-info">
+            <div class="stat-label-compact">Đã Hủy</div>
+            <div class="stat-value-compact">{{ stats.cancelled_orders }}</div>
+        </div>
+    </div>
+    <div class="stat-card-compact">
+        <div class="stat-icon yellow"><i class="fas fa-tags"></i></div>
+        <div class="stat-info">
+            <div class="stat-label-compact">Danh Mục</div>
+            <div class="stat-value-compact">{{ stats.total_categories }}</div>
+        </div>
+    </div>
+    <div class="stat-card-compact">
+        <div class="stat-icon indigo"><i class="fas fa-users"></i></div>
+        <div class="stat-info">
+            <div class="stat-label-compact">Khách Hàng</div>
+            <div class="stat-value-compact">{{ stats.total_customers }}</div>
+        </div>
+    </div>
+    <div class="stat-card-compact">
+        <div class="stat-icon purple"><i class="fas fa-user-check"></i></div>
+        <div class="stat-info">
+            <div class="stat-label-compact">Đã Xác Thực</div>
+            <div class="stat-value-compact">{{ stats.verified_customers }}</div>
+        </div>
+    </div>
+    <div class="stat-card-compact">
+        <div class="stat-icon orange"><i class="fas fa-crown"></i></div>
+        <div class="stat-info">
+            <div class="stat-label-compact">VIP</div>
+            <div class="stat-value-compact">{{ stats.vip_customers }}</div>
+        </div>
+    </div>
+    <div class="stat-card-compact">
+        <div class="stat-icon green"><i class="fas fa-newspaper"></i></div>
+        <div class="stat-info">
+            <div class="stat-label-compact">Tin Tức</div>
+            <div class="stat-value-compact">{{ stats.total_news }}</div>
         </div>
     </div>
 </div>
 
-<!-- ===== TABLES ROW ===== -->
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
-
+<!-- Tables Grid -->
+<div class="tables-grid">
     <!-- Đơn hàng mới nhất -->
-    <div class="card">
-        <div class="card-header">
-            <span><i class="fas fa-receipt" style="color:#ee0979;margin-right:8px;"></i>Đơn Hàng Mới Nhất</span>
-            <a href="{% url 'dashboard:orders_list' %}" style="font-size:0.82rem;color:#667eea;font-weight:600;text-decoration:none;">Xem tất cả →</a>
+    <div class="table-card">
+        <div class="table-card-header">
+            <h3><i class="fas fa-receipt" style="color:#ee0979;margin-right:8px;"></i>Đơn Hàng Mới</h3>
+            <a href="{% url 'dashboard:orders_list' %}">Xem tất cả →</a>
         </div>
-        <div style="overflow:hidden;border-radius:0 0 1rem 1rem;">
-            <table class="admin-table">
+        <div class="table-card-body">
+            <table class="mini-table">
                 <thead>
                     <tr>
-                        <th>#</th>
+                        <th>Mã</th>
                         <th>Khách Hàng</th>
-                        <th>Tổng Tiền</th>
+                        <th>Giá</th>
                         <th>Trạng Thái</th>
                     </tr>
                 </thead>
@@ -81,95 +258,134 @@
                     <tr>
                         <td><a href="{% url 'dashboard:orders_detail' order.pk %}" style="color:#667eea;font-weight:600;font-family:monospace;">#{{ order.id }}</a></td>
                         <td>
-                            <div style="font-weight:600;color:#32325d;">{{ order.full_name }}</div>
-                            <div style="font-size:0.75rem;color:#adb5bd;">{{ order.created_at|date:'d/m/Y H:i' }}</div>
+                            <div class="item-name">{{ order.full_name }}</div>
+                            <div class="item-meta">{{ order.created_at|date:'d/m H:i' }}</div>
                         </td>
-                        <td style="font-weight:700;color:#667eea;">{{ order.total_price|floatformat:0 }}đ</td>
+                        <td class="price">{{ order.total_price|floatformat:0 }}đ</td>
                         <td>
-                            <span class="badge
-                                {% if order.status == 'Pending' %}badge-pending
-                                {% elif order.status == 'Processing' %}badge-processing
-                                {% elif order.status == 'Shipped' %}badge-shipped
-                                {% elif order.status == 'Delivered' %}badge-delivered
-                                {% elif order.status == 'Cancelled' %}badge-cancelled
-                                {% endif %}">{{ order.get_status_display }}</span>
+                            <span class="badge {% if order.status == 'Pending' %}badge-pending{% elif order.status == 'Processing' %}badge-processing{% elif order.status == 'Shipped' %}badge-shipped{% elif order.status == 'Delivered' %}badge-delivered{% else %}badge-cancelled{% endif %}">{{ order.get_status_display }}</span>
                         </td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="4" style="text-align:center;padding:2rem;color:#adb5bd;">Chưa có đơn hàng</td></tr>
+                    <tr><td colspan="4" style="text-align:center;padding:1.5rem;color:#adb5bd;">Chưa có đơn hàng</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
 
-    <!-- Món ăn mới nhất -->
-    <div class="card">
-        <div class="card-header">
-            <span><i class="fas fa-bowl-food" style="color:#2dce89;margin-right:8px;"></i>Món Ăn Mới Thêm</span>
-            <a href="{% url 'dashboard:products_list' %}" style="font-size:0.82rem;color:#667eea;font-weight:600;text-decoration:none;">Xem tất cả →</a>
+    <!-- Món ăn mới -->
+    <div class="table-card">
+        <div class="table-card-header">
+            <h3><i class="fas fa-bowl-food" style="color:#11998e;margin-right:8px;"></i>Món Mới Thêm</h3>
+            <a href="{% url 'dashboard:products_list' %}">Xem tất cả →</a>
         </div>
-        <div style="overflow:hidden;border-radius:0 0 1rem 1rem;">
-            <table class="admin-table">
+        <div class="table-card-body">
+            <table class="mini-table">
                 <thead>
                     <tr>
                         <th>Món Ăn</th>
                         <th>Danh Mục</th>
                         <th>Giá</th>
-                        <th>Tình Trạng</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for product in recent_products %}
                     <tr>
-                        <td>
-                            <div style="font-weight:600;color:#32325d;">{{ product.name }}</div>
-                        </td>
-                        <td><span class="badge badge-category">{{ product.category.name }}</span></td>
-                        <td style="font-weight:700;color:#667eea;">{{ product.price|floatformat:0 }}đ</td>
-                        <td>
-                            {% if product.is_available %}
-                            <span class="badge badge-available">Còn hàng</span>
-                            {% else %}
-                            <span class="badge badge-unavailable">Hết hàng</span>
-                            {% endif %}
-                        </td>
+                        <td class="item-name">{{ product.name }}</td>
+                        <td><span style="font-size:0.7rem;padding:0.2rem 0.5rem;background:#e9ecef;border-radius:4px;">{{ product.category.name }}</span></td>
+                        <td class="price">{{ product.price|floatformat:0 }}đ</td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="4" style="text-align:center;padding:2rem;color:#adb5bd;">Chưa có món ăn</td></tr>
+                    <tr><td colspan="3" style="text-align:center;padding:1.5rem;color:#adb5bd;">Chưa có món ăn</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
-</div>
 
-<!-- ===== QUICK ACTIONS ===== -->
-<div class="card" style="margin-top:1.5rem;">
-    <div class="card-header">
-        <span><i class="fas fa-bolt" style="color:#667eea;margin-right:8px;"></i>Hành Động Nhanh</span>
+    <!-- Top Khách Hàng -->
+    <div class="table-card">
+        <div class="table-card-header">
+            <h3><i class="fas fa-trophy" style="color:#f7b733;margin-right:8px;"></i>Top Khách Hàng</h3>
+            <a href="{% url 'dashboard:customer_profile_list' %}">Xem tất cả →</a>
+        </div>
+        <div class="table-card-body">
+            <table class="mini-table">
+                <thead>
+                    <tr>
+                        <th>Khách Hàng</th>
+                        <th>Đơn</th>
+                        <th>Trạng Thái</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for customer in top_customers %}
+                    <tr>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:0.5rem;">
+                                {% if customer.avatar %}
+                                <img src="{{ customer.avatar.url }}" class="avatar-sm">
+                                {% else %}
+                                <div class="avatar-placeholder" style="background:linear-gradient(135deg,#667eea,#764ba2);"><i class="fas fa-user"></i></div>
+                                {% endif %}
+                                <span class="item-name">{{ customer.display_name }}</span>
+                            </div>
+                        </td>
+                        <td class="price">{{ customer.order_count }}</td>
+                        <td>
+                            {% if customer.is_verified %}
+                            <span class="badge badge-delivered" style="font-size:0.65rem;"><i class="fas fa-check"></i></span>
+                            {% else %}
+                            <span class="badge badge-pending" style="font-size:0.65rem;"><i class="fas fa-clock"></i></span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" style="text-align:center;padding:1.5rem;color:#adb5bd;">Chưa có dữ liệu</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
-    <div class="card-body" style="display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;">
-        <a href="{% url 'dashboard:stores_create' %}" style="display:flex;flex-direction:column;align-items:center;padding:1.2rem;border:2px dashed #c5cae9;border-radius:12px;text-decoration:none;transition:all 0.2s;" onmouseover="this.style.background='#f3f4ff'" onmouseout="this.style.background='transparent'">
-            <i class="fas fa-store" style="font-size:1.6rem;color:#667eea;margin-bottom:8px;"></i>
-            <span style="font-size:0.8rem;font-weight:600;color:#525f7f;">Thêm Cửa Hàng</span>
-        </a>
-        <a href="{% url 'dashboard:categories_create' %}" style="display:flex;flex-direction:column;align-items:center;padding:1.2rem;border:2px dashed #b2dfdb;border-radius:12px;text-decoration:none;transition:all 0.2s;" onmouseover="this.style.background='#f0faf9'" onmouseout="this.style.background='transparent'">
-            <i class="fas fa-tags" style="font-size:1.6rem;color:#11998e;margin-bottom:8px;"></i>
-            <span style="font-size:0.8rem;font-weight:600;color:#525f7f;">Thêm Danh Mục</span>
-        </a>
-        <a href="{% url 'dashboard:products_create' %}" style="display:flex;flex-direction:column;align-items:center;padding:1.2rem;border:2px dashed #ffccbc;border-radius:12px;text-decoration:none;transition:all 0.2s;" onmouseover="this.style.background='#fff8f5'" onmouseout="this.style.background='transparent'">
-            <i class="fas fa-plus" style="font-size:1.6rem;color:#ee0979;margin-bottom:8px;"></i>
-            <span style="font-size:0.8rem;font-weight:600;color:#525f7f;">Thêm Món Ăn</span>
-        </a>
-        <a href="{% url 'dashboard:orders_list' %}" style="display:flex;flex-direction:column;align-items:center;padding:1.2rem;border:2px dashed #d1c4e9;border-radius:12px;text-decoration:none;transition:all 0.2s;" onmouseover="this.style.background='#f8f5ff'" onmouseout="this.style.background='transparent'">
-            <i class="fas fa-receipt" style="font-size:1.6rem;color:#764ba2;margin-bottom:8px;"></i>
-            <span style="font-size:0.8rem;font-weight:600;color:#525f7f;">Xem Đơn Hàng</span>
-        </a>
-        <a href="{% url 'dashboard:manage_stores' %}" style="display:flex;flex-direction:column;align-items:center;padding:1.2rem;border:2px dashed #b3e5fc;border-radius:12px;text-decoration:none;transition:all 0.2s;" onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background='transparent'">
-            <i class="fas fa-map-location-dot" style="font-size:1.6rem;color:#0052D4;margin-bottom:8px;"></i>
-            <span style="font-size:0.8rem;font-weight:600;color:#525f7f;">Quản Lý & Bản Đồ</span>
-        </a>
+
+    <!-- Món Bán Chạy -->
+    <div class="table-card">
+        <div class="table-card-header">
+            <h3><i class="fas fa-fire" style="color:#ee0979;margin-right:8px;"></i>Bán Chạy</h3>
+            <a href="{% url 'dashboard:products_list' %}">Xem tất cả →</a>
+        </div>
+        <div class="table-card-body">
+            <table class="mini-table">
+                <thead>
+                    <tr>
+                        <th>Món Ăn</th>
+                        <th>Đã Bán</th>
+                        <th>Giá</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in popular_products %}
+                    <tr>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:0.5rem;">
+                                {% if product.image %}
+                                <img src="{{ product.image.url }}" class="avatar-sm" style="border-radius:6px;">
+                                {% else %}
+                                <div class="avatar-placeholder" style="background:linear-gradient(135deg,#f6d365,#fda085);"><i class="fas fa-utensils"></i></div>
+                                {% endif %}
+                                <span class="item-name">{{ product.name }}</span>
+                            </div>
+                        </td>
+                        <td style="font-weight:600;color:#ee0979;">{{ product.order_count }}</td>
+                        <td class="price">{{ product.price|floatformat:0 }}đ</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" style="text-align:center;padding:1.5rem;color:#adb5bd;">Chưa có dữ liệu</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 

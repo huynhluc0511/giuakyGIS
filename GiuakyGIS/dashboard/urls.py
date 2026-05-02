@@ -88,4 +88,34 @@ urlpatterns = [
     
     # Manage stores (full-featured page)
     path('manage/', views.manage_stores_view, name='manage_stores'),
+    
+    # About/Introduction Management
+    path('about/', views.about_list, name='about_list'),
+    path('about/create/', views.about_create, name='about_create'),
+    path('about/<int:pk>/', views.about_detail, name='about_detail'),
+    path('about/<int:pk>/edit/', views.about_edit, name='about_edit'),
+    path('about/<int:pk>/delete/', views.about_delete, name='about_delete'),
+    path('about/import/', views.about_import, name='about_import'),
+    
+    # Customer Profile Management
+    path('customers/', views.customer_profile_list, name='customer_profile_list'),
+    path('customers/<int:pk>/', views.customer_profile_detail, name='customer_profile_detail'),
+    path('customers/<int:pk>/edit/', views.customer_profile_edit, name='customer_profile_edit'),
+    path('customers/<int:pk>/delete/', views.customer_profile_delete, name='customer_profile_delete'),
+    path('customers/<int:pk>/toggle-verification/', views.customer_profile_toggle_verification, name='customer_profile_toggle_verification'),
+    
+    # News Management
+    path('news/', views.news_list, name='news_list'),
+    path('news/create/', views.news_create, name='news_create'),
+    path('news/<int:pk>/edit/', views.news_edit, name='news_edit'),
+    path('news/<int:pk>/delete/', views.news_delete, name='news_delete'),
+    path('news/<int:pk>/toggle-status/', views.news_toggle_status, name='news_toggle_status'),
+    path('news/<int:pk>/toggle-featured/', views.news_toggle_featured, name='news_toggle_featured'),
+    
+    # Review Management
+    path('reviews/', views.review_list, name='review_list'),
+    path('reviews/<int:pk>/', views.review_detail, name='review_detail'),
+    path('reviews/<int:pk>/approve/', views.review_approve, name='review_approve'),
+    path('reviews/<int:pk>/reject/', views.review_reject, name='review_reject'),
+    path('reviews/<int:pk>/delete/', views.review_delete, name='review_delete'),
 ]

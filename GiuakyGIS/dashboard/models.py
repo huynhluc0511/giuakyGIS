@@ -175,3 +175,294 @@ class WarehouseBatchItem(models.Model):
 
     class Meta:
         verbose_name_plural = "Chi Tiết Phiếu Nhập/Xuất"
+
+
+# 11. Giới thiệu - Bài viết trang giới thiệu
+class About(models.Model):
+    STATUS_CHOICES = (
+        ('draft', 'Bản nháp'),
+        ('published', 'Đã xuất bản'),
+        ('archived', 'Lưu trữ'),
+    )
+    
+    title = models.CharField(max_length=200, verbose_name="Tiêu đề bài viết")
+    slug = models.SlugField(unique=True, verbose_name="Slug")
+    content = models.TextField(verbose_name="Nội dung bài viết")
+    excerpt = models.TextField(max_length=300, blank=True, verbose_name="Tóm tắt")
+    featured_image = models.ImageField(upload_to='about/', null=True, blank=True, verbose_name="Hình ảnh nổi bật")
+    external_link = models.URLField(blank=True, verbose_name="Liên kết bài viết bên ngoài")
+    source_type = models.CharField(
+        max_length=20, 
+        choices=[
+            ('manual', 'Tự viết'),
+            ('word', 'Từ Word'),
+            ('external', 'Từ liên kết')
+        ], 
+        default='manual', 
+        verbose_name="Nguồn bài viết"
+    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft', verbose_name="Trạng thái")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Ngày tạo")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Ngày cập nhật")
+    author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, verbose_name="Tác giả")
+    order = models.PositiveIntegerField(default=0, verbose_name="Thứ tự hiển thị")
+    is_active = models.BooleanField(default=True, verbose_name="Kích hoạt")
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name_plural = "Bài viết trang giới thiệu"
+        ordering = ['order', '-created_at']
+
+
+# 12. Thông tin cá nhân khách hàng
+class CustomerProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile', verbose_name="Người dùng")
+    
+    # Basic Information
+    phone = models.CharField(max_length=15, blank=True, verbose_name="Số điện thoại")
+    address = models.TextField(blank=True, verbose_name="Địa chỉ")
+    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True, verbose_name="Ảnh đại diện")
+    birth_date = models.DateField(null=True, blank=True, verbose_name="Ngày sinh")
+    gender = models.CharField(
+        max_length=10,
+        choices=[
+            ('male', 'Nam'),
+            ('female', 'Nữ'),
+            ('other', 'Khác'),
+        ],
+        blank=True,
+        verbose_name="Giới tính"
+    )
+    
+    # Extended Information
+    bio = models.TextField(max_length=500, blank=True, verbose_name="Tiểu sử")
+    website = models.URLField(blank=True, verbose_name="Website cá nhân")
+    facebook = models.URLField(blank=True, verbose_name="Facebook")
+    instagram = models.URLField(blank=True, verbose_name="Instagram")
+    twitter = models.URLField(blank=True, verbose_name="Twitter")
+    linkedin = models.URLField(blank=True, verbose_name="LinkedIn")
+    
+    # Status and Verification
+    is_verified = models.BooleanField(default=False, verbose_name="Đã xác thực")
+    is_premium = models.BooleanField(default=False, verbose_name="Khách hàng VIP")
+    loyalty_points = models.IntegerField(default=0, verbose_name="Điểm tích lũy")
+    
+    # Preferences
+    preferred_language = models.CharField(
+        max_length=10,
+        choices=[
+            ('vi', 'Tiếng Việt'),
+            ('en', 'English'),
+        ],
+        default='vi',
+        verbose_name="Ngôn ngữ ưu tiên"
+    )
+    email_notifications = models.BooleanField(default=True, verbose_name="Thông báo email")
+    sms_notifications = models.BooleanField(default=False, verbose_name="Thông báo SMS")
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Ngày tạo")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Cập nhật lần cuối")
+    last_login_ip = models.GenericIPAddressField(null=True, blank=True, verbose_name="IP đăng nhập cuối")
+    
+    def __str__(self):
+        return f"Profile của {self.user.username}"
+
+    class Meta:
+        verbose_name = "Thông tin khách hàng"
+        verbose_name_plural = "Thông tin khách hàng"
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user']),
+            models.Index(fields=['is_verified']),
+            models.Index(fields=['created_at']),
+        ]
+
+    @property
+    def full_name(self):
+        """Get full name of the user"""
+        return f"{self.user.first_name} {self.user.last_name}".strip() or self.user.username
+
+    @property
+    def display_name(self):
+        """Get display name for UI"""
+        return self.user.first_name or self.user.username
+
+    @property
+    def age(self):
+        """Calculate age from birth date"""
+        if self.birth_date:
+            from datetime import date
+            today = date.today()
+            return today.year - self.birth_date.year - ((today.month, today.day) < (self.birth_date.month, self.birth_date.day))
+        return None
+
+    @property
+    def social_links(self):
+        """Get all social media links as dictionary"""
+        return {
+            'website': self.website,
+            'facebook': self.facebook,
+            'instagram': self.instagram,
+            'twitter': self.twitter,
+            'linkedin': self.linkedin
+        }
+
+    def update_last_login_ip(self, ip_address):
+        """Update last login IP address"""
+        self.last_login_ip = ip_address
+        self.save(update_fields=['last_login_ip'])
+
+    def add_loyalty_points(self, points):
+        """Add loyalty points to customer"""
+        self.loyalty_points += points
+        self.save(update_fields=['loyalty_points'])
+
+    def get_completion_percentage(self):
+        """Calculate profile completion percentage"""
+        fields = [
+            self.phone, self.address, self.avatar, self.birth_date, self.gender,
+            self.bio, self.website, self.facebook, self.instagram, self.twitter, self.linkedin
+        ]
+        filled_fields = sum(1 for field in fields if field)
+        return round((filled_fields / len(fields)) * 100, 1)
+
+
+# 6. Tin tức (News)
+class News(models.Model):
+    STATUS_CHOICES = (
+        ('draft', 'Bản nháp'),
+        ('published', 'Đã xuất bản'),
+        ('archived', 'Đã lưu trữ'),
+    )
+
+    CATEGORY_CHOICES = (
+        ('promotion', 'Khuyến mãi'),
+        ('event', 'Sự kiện'),
+        ('product', 'Sản phẩm mới'),
+        ('company', 'Tin công ty'),
+        ('other', 'Khác'),
+    )
+
+    title = models.CharField(max_length=255, verbose_name="Tiêu đề")
+    slug = models.SlugField(unique=True, max_length=255, verbose_name="Slug")
+    summary = models.TextField(max_length=500, blank=True, verbose_name="Tóm tắt")
+    content = models.TextField(verbose_name="Nội dung")
+    image = models.ImageField(upload_to='news/', null=True, blank=True, verbose_name="Hình ảnh")
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='other', verbose_name="Danh mục")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft', verbose_name="Trạng thái")
+    is_featured = models.BooleanField(default=False, verbose_name="Tin nổi bật")
+    views_count = models.PositiveIntegerField(default=0, verbose_name="Lượt xem")
+    author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Tác giả")
+    published_at = models.DateTimeField(null=True, blank=True, verbose_name="Ngày xuất bản")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Ngày tạo")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Cập nhật lần cuối")
+    meta_description = models.CharField(max_length=255, blank=True, verbose_name="Meta Description")
+    meta_keywords = models.CharField(max_length=255, blank=True, verbose_name="Meta Keywords")
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name_plural = "Tin tức"
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['slug']),
+            models.Index(fields=['status']),
+            models.Index(fields=['category']),
+            models.Index(fields=['is_featured']),
+            models.Index(fields=['created_at']),
+            models.Index(fields=['published_at']),
+        ]
+
+    @property
+    def is_published(self):
+        """Check if news is published"""
+        return self.status == 'published'
+
+    @property
+    def display_category(self):
+        """Get display name for category"""
+        category_map = dict(self.CATEGORY_CHOICES)
+        return category_map.get(self.category, self.category)
+
+    @property
+    def display_status(self):
+        """Get display name for status"""
+        status_map = dict(self.STATUS_CHOICES)
+        return status_map.get(self.status, self.status)
+
+    def increment_views(self):
+        """Increment view count"""
+        self.views_count += 1
+        self.save(update_fields=['views_count'])
+
+
+# 7. Đánh giá sản phẩm (Reviews)
+class Review(models.Model):
+    STATUS_CHOICES = (
+        ('pending', 'Chờ duyệt'),
+        ('approved', 'Đã duyệt'),
+        ('rejected', 'Từ chối'),
+    )
+    
+    # Mỗi đánh giá gắn với 1 OrderItem (1 món trong đơn hàng)
+    order_item = models.ForeignKey(OrderItem, on_delete=models.CASCADE, related_name='reviews', verbose_name="Món trong đơn hàng")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews', verbose_name="Khách hàng")
+    
+    # Điểm đánh giá (1-5 sao)
+    rating = models.IntegerField(verbose_name="Điểm đánh giá", choices=[(i, f"{i} sao") for i in range(1, 6)])
+    
+    # Nội dung đánh giá
+    content = models.TextField(verbose_name="Nội dung đánh giá")
+    
+    # Trạng thái duyệt
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', verbose_name="Trạng thái")
+    
+    # Thời gian
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Ngày đánh giá")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Cập nhật lần cuối")
+    
+    # Phản hồi từ admin
+    admin_reply = models.TextField(blank=True, verbose_name="Phản hồi của cửa hàng")
+    admin_reply_at = models.DateTimeField(null=True, blank=True, verbose_name="Ngày phản hồi")
+    
+    class Meta:
+        verbose_name_plural = "Đánh giá"
+        # Ràng buộc: Mỗi user chỉ được đánh giá 1 lần cho mỗi order_item
+        unique_together = ['order_item', 'user']
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'order_item']),
+            models.Index(fields=['status']),
+            models.Index(fields=['rating']),
+            models.Index(fields=['created_at']),
+        ]
+    
+    def __str__(self):
+        return f"Đánh giá #{self.id} - {self.user.username} - {self.order_item.product.name} ({self.rating} sao)"
+    
+    @property
+    def is_approved(self):
+        return self.status == 'approved'
+    
+    @property
+    def display_status(self):
+        status_map = dict(self.STATUS_CHOICES)
+        return status_map.get(self.status, self.status)
+
+
+# 8. Hình ảnh đánh giá
+class ReviewImage(models.Model):
+    review = models.ForeignKey(Review, on_delete=models.CASCADE, related_name='images', verbose_name="Đánh giá")
+    image = models.ImageField(upload_to='reviews/', verbose_name="Hình ảnh")
+    uploaded_at = models.DateTimeField(auto_now_add=True, verbose_name="Ngày tải lên")
+    
+    class Meta:
+        verbose_name_plural = "Hình ảnh đánh giá"
+        ordering = ['uploaded_at']
+    
+    def __str__(self):
+        return f"Ảnh đánh giá #{self.id} - {self.review.id}"

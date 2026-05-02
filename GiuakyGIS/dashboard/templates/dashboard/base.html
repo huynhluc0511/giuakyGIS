@@ -389,6 +389,15 @@
             </a>
 
             <div class="nav-section-title">DỮ LIỆU</div>
+            <a href="{% url 'dashboard:about_list' %}" class="nav-link {% if 'about' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="fas fa-info-circle"></i> Trang Giới Thiệu
+            </a>
+            <a href="{% url 'dashboard:news_list' %}" class="nav-link {% if 'news' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="fas fa-newspaper"></i> Quản Lý Tin Tức
+            </a>
+            <a href="{% url 'dashboard:review_list' %}" class="nav-link {% if 'review' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="fas fa-star"></i> Quản Lý Đánh Giá
+            </a>
             <a href="{% url 'dashboard:stores_list' %}" class="nav-link {% if 'stores' in request.resolver_match.url_name %}active{% endif %}">
                 <i class="fas fa-store"></i> Cửa Hàng
             </a>
@@ -403,6 +412,9 @@
             </a>
             <a href="{% url 'dashboard:users_list' %}" class="nav-link {% if 'users' in request.resolver_match.url_name %}active{% endif %}">
                 <i class="fas fa-users"></i> Người Dùng
+            </a>
+            <a href="{% url 'dashboard:customer_profile_list' %}" class="nav-link {% if 'customer_profile' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="fas fa-user-circle"></i> Thông Tin Khách Hàng
             </a>
             <a href="{% url 'dashboard:warehouse_list' %}" class="nav-link {% if 'warehouse' in request.resolver_match.url_name %}active{% endif %}">
                 <i class="fas fa-warehouse"></i> Quản Lý Kho
