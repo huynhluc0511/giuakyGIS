@@ -52,6 +52,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'home.middleware.AdminProtectionMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
@@ -80,12 +81,8 @@ WSGI_APPLICATION = 'GiuakyGIS.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'thucannhanh',
-        'USER': 'myuser',
-        'PASSWORD': '123456',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
@@ -128,6 +125,19 @@ STATIC_URL = 'static/'
 
 DEBUG = True  # ✅ PHẢI LÀ True để development server phục vụ media files
 ALLOWED_HOSTS = ['*'] # Cho phép mọi host để chạy local
+
+# CSRF trusted origins for browser preview
+CSRF_TRUSTED_ORIGINS = [
+    'http://127.0.0.1:8080',
+    'http://127.0.0.1:59669',  # Browser preview port
+    'http://localhost:8080',
+    'http://localhost:59669',
+]
+
+# Authentication settings
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/profile/'
+LOGOUT_REDIRECT_URL = '/'
 
 # Media files (User uploads)
 MEDIA_URL = '/media/'
