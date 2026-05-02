@@ -94,6 +94,16 @@
                 </div>
 
                 <div class="input-group">
+                    <label>Số điện thoại</label>
+                    <input type="tel" id="reg-phone" placeholder="0901234567" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Địa chỉ giao hàng mặc định</label>
+                    <input type="text" id="reg-address" placeholder="Số nhà, đường, phường, quận..." required>
+                </div>
+
+                <div class="input-group">
                     <label>Email</label>
                     <input type="email" id="reg-email" placeholder="example@mail.com" required>
                 </div>
@@ -216,6 +226,8 @@
             e.preventDefault();
             
             const name = document.getElementById('reg-name').value.trim();
+            const phone = document.getElementById('reg-phone').value.trim();
+            const address = document.getElementById('reg-address').value.trim();
             const email = document.getElementById('reg-email').value.trim();
             const pass = document.getElementById('pass').value;
             const repass = document.getElementById('repass').value;
@@ -246,10 +258,12 @@
             // Chuẩn bị dữ liệu gửi đến Django
             const formData = new FormData();
             formData.append('hoten', name);
+            formData.append('phone', phone);
+            formData.append('address', address);
             formData.append('email', email);
             formData.append('matkhau', pass);
             formData.append('xacnhan_matkhau', repass);
-            formData.append('vaitro', role); // Thêm vai trò nếu backend cần
+            formData.append('vaitro', role);
             formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
 
             fetch("{% url 'register' %}", {
