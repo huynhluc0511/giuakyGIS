@@ -274,6 +274,244 @@
         .swiper-button-next, .swiper-button-prev { color: var(--yellow) !important; }
         .swiper-pagination-bullet-active { background: var(--yellow) !important; }
 
+        /* --- NEWS TICKER (TIN TỨC TỰ LƯỚT) --- */
+        .news-ticker-section { 
+            background: linear-gradient(135deg, #667eea, #764ba2); 
+            padding: 12px 0; 
+            overflow: hidden;
+            position: relative;
+        }
+        .news-ticker-wrapper {
+            display: flex;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        .news-ticker-label {
+            background: var(--yellow);
+            color: #333;
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            margin-right: 20px;
+            flex-shrink: 0;
+        }
+        .news-ticker-container {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+        .news-ticker-track {
+            display: flex;
+            animation: ticker 30s linear infinite;
+        }
+        .news-ticker-track:hover {
+            animation-play-state: paused;
+        }
+        .news-ticker-item {
+            white-space: nowrap;
+            padding: 0 30px;
+            color: white;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .news-ticker-item a {
+            color: white;
+            font-weight: 600;
+        }
+        .news-ticker-item a:hover {
+            color: var(--yellow);
+        }
+        .news-ticker-item i {
+            color: var(--yellow);
+        }
+        @keyframes ticker {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* --- MAIN 3 SLIDES (MENU, NEWS, ABOUT) --- */
+        .main-slides-section { 
+            padding: 60px 0; 
+            background: linear-gradient(180deg, #f8f9fa 0%, #fff 100%);
+        }
+        .main-slides-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        .main-slides-swiper {
+            width: 100%;
+            height: 500px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+        .main-slide {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .main-slide-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(0.4);
+        }
+        .main-slide-content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            color: white;
+            padding: 40px;
+            max-width: 700px;
+        }
+        .main-slide-content h2 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+        .main-slide-content p {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        .main-slide-btn {
+            display: inline-block;
+            background: var(--yellow);
+            color: #333;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1rem;
+            transition: all 0.3s;
+            box-shadow: 0 10px 30px rgba(255, 183, 3, 0.4);
+        }
+        .main-slide-btn:hover {
+            transform: scale(1.05);
+            background: white;
+            color: var(--red);
+        }
+
+        /* Menu Items Grid trong slide */
+        .menu-preview-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .menu-preview-item {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .menu-preview-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .menu-preview-item img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 10px;
+        }
+        .menu-preview-item h4 {
+            color: #333;
+            font-size: 0.85rem;
+            margin: 0;
+        }
+        .menu-preview-item span {
+            color: var(--red);
+            font-weight: 700;
+            font-size: 0.8rem;
+        }
+
+        /* News Cards trong slide */
+        .news-preview-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .news-preview-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            overflow: hidden;
+            text-align: left;
+            transition: all 0.3s;
+        }
+        .news-preview-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .news-preview-card img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+        }
+        .news-preview-card-content {
+            padding: 15px;
+        }
+        .news-preview-card h4 {
+            color: #333;
+            font-size: 0.9rem;
+            margin: 0 0 8px 0;
+            line-height: 1.3;
+        }
+        .news-preview-card span {
+            color: #888;
+            font-size: 0.75rem;
+        }
+
+        /* About Content trong slide */
+        .about-preview-content {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 40px;
+            margin-top: 30px;
+            color: #333;
+            text-align: left;
+        }
+        .about-preview-content h3 {
+            color: var(--red);
+            margin-bottom: 15px;
+        }
+        .about-preview-content p {
+            color: #555;
+            margin-bottom: 20px;
+            font-size: 1rem;
+        }
+        .about-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            text-align: center;
+        }
+        .about-stat-item h4 {
+            color: var(--red);
+            font-size: 2rem;
+            margin: 0;
+        }
+        .about-stat-item p {
+            color: #888;
+            font-size: 0.9rem;
+            margin: 5px 0 0 0;
+        }
+
         /* Menu Categories */
         .section-title { text-align: center; font-size: 2.2rem; font-weight: 700; color: var(--red); margin-bottom: 40px; position: relative; }
         .section-title::after { content: ''; width: 60px; height: 4px; background: var(--yellow); position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); }
@@ -307,6 +545,42 @@
 </head>
 <body>
 
+<!-- TIN TỨC TỰ LƯỚT -->
+<section class="news-ticker-section">
+    <div class="news-ticker-wrapper">
+        <div class="news-ticker-label">
+            <i class="fas fa-bullhorn"></i> TIN MỚI
+        </div>
+        <div class="news-ticker-container">
+            <div class="news-ticker-track">
+                {% for news in featured_news %}
+                <div class="news-ticker-item">
+                    <i class="fas fa-newspaper"></i>
+                    <a href="{% url 'news_detail' news.slug %}">{{ news.title }}</a>
+                </div>
+                {% empty %}
+                <div class="news-ticker-item">
+                    <i class="fas fa-star"></i>
+                    <a href="{% url 'news_list' %}">Chào mừng đến với FastFood Universe - Nơi hương vị tuyệt hảo!</a>
+                </div>
+                {% endfor %}
+                <!-- Duplicate for seamless loop -->
+                {% for news in featured_news %}
+                <div class="news-ticker-item">
+                    <i class="fas fa-newspaper"></i>
+                    <a href="{% url 'news_detail' news.slug %}">{{ news.title }}</a>
+                </div>
+                {% empty %}
+                <div class="news-ticker-item">
+                    <i class="fas fa-star"></i>
+                    <a href="{% url 'news_list' %}">Chào mừng đến với FastFood Universe - Nơi hương vị tuyệt hảo!</a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+
 <header>
     <div class="container">
         <h1>🍔 FastFood Universe</h1>
@@ -321,17 +595,15 @@
         <div class="nav-left" id="navLeft">
             <ul class="nav-links">
                 <li><a href="{% url 'home' %}" style="color: #d62828;"><i class="fa-solid fa-house"></i> Trang chủ</a></li>
+                <li><a href="#main-slides"><i class="fa-solid fa-utensils"></i> Thực đơn</a></li>
                 <li class="dropdown">
-                    <a href="#"><i class="fa-solid fa-utensils"></i> Thực đơn ▼</a>
+                    <a href="#"><i class="fa-solid fa-users"></i> Về chúng tôi ▼</a>
                     <ul class="dropdown-content">
-                        <li><a href="{% url 'pizza' %}">🍕 Pizza</a></li>
-                        <li><a href="{% url 'hamburger' %}">🍔 Hamburger</a></li>
-                        <li><a href="{% url 'ga_chien' %}">🍗 Gà Chiên</a></li>
-                        <li><a href="{% url 'khoai_tay' %}">🍟 Khoai Tây</a></li>
-                        <li><a href="{% url 'do_uong' %}">🥤 Nước Ngọt</a></li>
+                        <li><a href="{% url 'gioi_thieu' %}"><i class="fa-solid fa-info-circle"></i> Giới thiệu</a></li>
+                        <li><a href="{% url 'news_list' %}"><i class="fa-solid fa-newspaper"></i> Tin tức</a></li>
+                        <li><a href="{% url 'lien_he' %}"><i class="fa-solid fa-address-book"></i> Liên hệ</a></li>
                     </ul>
                 </li>
-                <li><a href="{% url 'lien_he' %}"><i class="fa-solid fa-address-book"></i> Liên hệ</a></li>
                 <li><a href="{% url 'tim_duong' %}"><i class="fa-solid fa-map-location-dot"></i> Tìm đường</a></li>
                 <li><a href="{% url 'tinh_trang' %}"><i class="fa-solid fa-truck-fast"></i> Tình trạng</a></li>
             </ul>
@@ -344,7 +616,7 @@
             </a>
             <div class="auth-buttons" id="auth-container" style="display: flex; align-items: center; gap: 15px;">
                 {% if request.user.is_authenticated %}
-                    <span class="user-greeting">👤 <strong>{{ request.user.username }}</strong></span>
+                    <a href="{% url 'customer_profile' %}" class="user-greeting" style="text-decoration: none; color: #333; font-weight: 700; transition: all 0.3s ease;" onmouseover="this.style.color='#d62828'; this.style.transform='translateY(-2px)'" onmouseout="this.style.color='#333'; this.style.transform='translateY(0)'">👤 <strong>{{ request.user.username }}</strong></a>
                     <a href="{% url 'logout' %}" class="btn-logout" style="padding: 9px 22px; border-radius: 25px; font-weight: 650; background: #d62828; color: white; border: none; cursor: pointer; font-size: 0.92rem; transition: all 0.3s ease; display: inline-block; box-shadow: 0 4px 12px rgba(214, 40, 40, 0.3);" onmouseover="this.style.background='#b01a1a'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 18px rgba(214, 40, 40, 0.5)'" onmouseout="this.style.background='#d62828'; this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(214, 40, 40, 0.3)'">Thoát</a>
                 {% else %}
                     <a href="{% url 'login' %}" class="btn-auth login" style="padding: 9px 22px; border-radius: 50px; font-weight: 700; color: #d62828; background: transparent; border: 2px solid #d62828; cursor: pointer;">Đăng Nhập</a>
@@ -356,40 +628,127 @@
 </nav>
 
 <main>
-    <section class="swiper hero-swiper">
-        <div class="swiper-wrapper">
-            <div class="swiper-slide hero-slide">
-                <img src="https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1920&q=80">
-                <div class="hero-content">
-                    <h2 class="ml11">Thế Giới Đồ Ăn Nhanh</h2>
-                    <p>Hương vị tuyệt hảo, giao hàng thần tốc trong 15 phút!</p>
-                    <a href="#menu" class="btn-cta">Đặt Món Ngay</a>
+    <!-- 3 SLIDE CHÍNH: MENU | TIN TỨC | GIỚI THIỆU -->
+    <section class="main-slides-section" id="main-slides">
+        <div class="main-slides-container">
+            <div class="swiper main-slides-swiper">
+                <div class="swiper-wrapper">
+                    
+                    <!-- SLIDE 1: THỰC ĐƠN -->
+                    <div class="swiper-slide main-slide">
+                        <img src="https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1920&q=80" class="main-slide-bg">
+                        <div class="main-slide-content">
+                            <h2><i class="fas fa-utensils"></i> Thực Đơn</h2>
+                            <p>Khám phá thế giới đồ ăn nhanh đa dạng với hơn 50+ món ngon</p>
+                            
+                            <div class="menu-preview-grid">
+                                <a href="{% url 'pizza' %}" class="menu-preview-item">
+                                    <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=200&q=80" alt="Pizza">
+                                    <h4>Pizza</h4>
+                                    <span>Xem →</span>
+                                </a>
+                                <a href="{% url 'hamburger' %}" class="menu-preview-item">
+                                    <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=200&q=80" alt="Burger">
+                                    <h4>Burger</h4>
+                                    <span>Xem →</span>
+                                </a>
+                                <a href="{% url 'ga_chien' %}" class="menu-preview-item">
+                                    <img src="https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=200&q=80" alt="Gà">
+                                    <h4>Gà Chiên</h4>
+                                    <span>Xem →</span>
+                                </a>
+                                <a href="{% url 'khoai_tay' %}" class="menu-preview-item">
+                                    <img src="https://images.unsplash.com/photo-1576107232684-1279f390859f?auto=format&fit=crop&w=200&q=80" alt="Khoai">
+                                    <h4>Khoai Tây</h4>
+                                    <span>Xem →</span>
+                                </a>
+                                <a href="{% url 'do_uong' %}" class="menu-preview-item">
+                                    <img src="https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=200&q=80" alt="Nước">
+                                    <h4>Đồ Uống</h4>
+                                    <span>Xem →</span>
+                                </a>
+                            </div>
+                            
+                            <a href="#menu-full" class="main-slide-btn" style="margin-top: 30px;">
+                                <i class="fas fa-book-open"></i> Xem Full Menu
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- SLIDE 2: TIN TỨC -->
+                    <div class="swiper-slide main-slide">
+                        <img src="https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1920&q=80" class="main-slide-bg">
+                        <div class="main-slide-content">
+                            <h2><i class="fas fa-newspaper"></i> Tin Tức</h2>
+                            <p>Cập nhật tin tức mới nhất từ FastFood Universe</p>
+                            
+                            <div class="news-preview-grid">
+                                {% for news in recent_news|slice:":3" %}
+                                <a href="{% url 'news_detail' news.slug %}" class="news-preview-card">
+                                    <img src="{% if news.image %}{{ news.image.url }}{% else %}https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=400&q=80{% endif %}" alt="{{ news.title }}">
+                                    <div class="news-preview-card-content">
+                                        <h4>{{ news.title|truncatechars:50 }}</h4>
+                                        <span><i class="fas fa-calendar"></i> {{ news.published_at|date:"d/m/Y" }}</span>
+                                    </div>
+                                </a>
+                                {% empty %}
+                                <div class="news-preview-card" style="grid-column: span 3; text-align: center; padding: 40px;">
+                                    <h4>Chưa có tin tức nào</h4>
+                                    <p style="color: #888; font-size: 0.9rem;">Hãy quay lại sau!</p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <a href="{% url 'news_list' %}" class="main-slide-btn" style="margin-top: 30px;">
+                                <i class="fas fa-arrow-right"></i> Xem Tất Cả Tin
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- SLIDE 3: GIỚI THIỆU -->
+                    <div class="swiper-slide main-slide">
+                        <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1920&q=80" class="main-slide-bg">
+                        <div class="main-slide-content">
+                            <h2><i class="fas fa-info-circle"></i> Giới Thiệu</h2>
+                            <p>FastFood Universe - Nơi hương vị gặp gỡ đam mê</p>
+                            
+                            <div class="about-preview-content">
+                                <h3>🍔 Về Chúng Tôi</h3>
+                                <p>FastFood Universe được thành lập với sứ mệnh mang đến những bữa ăn ngon, nhanh chóng và chất lượng. Với hơn 10 năm kinh nghiệm, chúng tôi tự hào phục vụ hàng ngàn khách hàng mỗi ngày.</p>
+                                
+                                <div class="about-stats">
+                                    <div class="about-stat-item">
+                                        <h4>50+</h4>
+                                        <p>Món Ăn</p>
+                                    </div>
+                                    <div class="about-stat-item">
+                                        <h4>10+</h4>
+                                        <p>Chi Nhánh</p>
+                                    </div>
+                                    <div class="about-stat-item">
+                                        <h4>100K+</h4>
+                                        <p>Khách Hàng</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <a href="{% url 'gioi_thieu' %}" class="main-slide-btn" style="margin-top: 30px;">
+                                <i class="fas fa-users"></i> Tìm Hiểu Thêm
+                            </a>
+                        </div>
+                    </div>
+                    
                 </div>
-            </div>
-            <div class="swiper-slide hero-slide">
-                <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=1920&q=80">
-                <div class="hero-content">
-                    <h2>Pizza Chuẩn Ý</h2>
-                    <p>Phô mai tan chảy cùng đế bánh giòn rụm nóng hổi.</p>
-                    <a href="{% url 'pizza' %}" class="btn-cta">Xem Menu Pizza</a>
-                </div>
-            </div>
-            <div class="swiper-slide hero-slide">
-                <img src="https://images.unsplash.com/photo-1561758033-d89a9ad46330?auto=format&fit=crop&w=1920&q=80">
-                <div class="hero-content">
-                    <h2>Combo Tiết Kiệm</h2>
-                    <p>Thưởng thức bữa ăn trọn vẹn với mức giá cực hời.</p>
-                    <a href="#menu" class="btn-cta">Săn Deal Ngay</a>
-                </div>
+                <div class="swiper-button-next"></div>
+                <div class="swiper-button-prev"></div>
+                <div class="swiper-pagination"></div>
             </div>
         </div>
-        <div class="swiper-button-next"></div>
-        <div class="swiper-button-prev"></div>
-        <div class="swiper-pagination"></div>
     </section>
 
-    <section class="container" id="menu">
-        <h2 class="section-title" data-aos="fade-up">Khám Phá Thực Đơn</h2>
+    <!-- MENU CHI TIẾT (DƯỚI SLIDE) -->
+    <section class="container" id="menu-full" style="padding: 60px 0;">
+        <h2 class="section-title" data-aos="fade-up">Khám Phá Thực Đơn Chi Tiết</h2>
         
         <div class="category-grid">
             <div class="category-card" data-aos="fade-up" data-aos-delay="100">
@@ -397,7 +756,8 @@
                     <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80" alt="Pizza">
                 </div>
                 <div class="card-body">
-                    <h3>Pizza</h3>
+                    <h3>🍕 Pizza</h3>
+                    <p style="color: #666; font-size: 0.9rem; margin: 10px 0;">Đế giòn, phô mai tan chảy</p>
                     <a href="{% url 'pizza' %}" class="btn-view">Xem Menu</a>
                 </div>
             </div>
@@ -407,7 +767,8 @@
                     <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=80" alt="Hamburger">
                 </div>
                 <div class="card-body">
-                    <h3>Hamburger</h3>
+                    <h3>🍔 Hamburger</h3>
+                    <p style="color: #666; font-size: 0.9rem; margin: 10px 0;">Burger Mỹ chuẩn vị</p>
                     <a href="{% url 'hamburger' %}" class="btn-view">Xem Menu</a>
                 </div>
             </div>
@@ -417,7 +778,8 @@
                     <img src="https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=600&q=80" alt="Gà Chiên">
                 </div>
                 <div class="card-body">
-                    <h3>Gà Chiên</h3>
+                    <h3>🍗 Gà Chiên</h3>
+                    <p style="color: #666; font-size: 0.9rem; margin: 10px 0;">Giòn rụm, đậm đà</p>
                     <a href="{% url 'ga_chien' %}" class="btn-view">Xem Menu</a>
                 </div>
             </div>
@@ -427,7 +789,8 @@
                     <img src="https://images.unsplash.com/photo-1576107232684-1279f390859f?auto=format&fit=crop&w=600&q=80" alt="Khoai Tây">
                 </div>
                 <div class="card-body">
-                    <h3>Khoai Tây</h3>
+                    <h3>🍟 Khoai Tây</h3>
+                    <p style="color: #666; font-size: 0.9rem; margin: 10px 0;">Vàng giòn, ngon ngọt</p>
                     <a href="{% url 'khoai_tay' %}" class="btn-view">Xem Menu</a>
                 </div>
             </div>
@@ -437,7 +800,8 @@
                     <img src="https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=600&q=80" alt="Nước Ngọt">
                 </div>
                 <div class="card-body">
-                    <h3>Nước Ngọt</h3>
+                    <h3>🥤 Đồ Uống</h3>
+                    <p style="color: #666; font-size: 0.9rem; margin: 10px 0;">Mát lạnh, sảng khoái</p>
                     <a href="{% url 'do_uong' %}" class="btn-view">Xem Menu</a>
                 </div>
             </div>
@@ -461,16 +825,21 @@
     // 1. Khởi tạo AOS (Cuộn trang)
     AOS.init({ duration: 1000, once: true, offset: 100 });
 
-    // 2. Khởi tạo Swiper (Lướt ảnh thủ công + Nút bấm)
-    const swiper = new Swiper('.hero-swiper', {
+    // 2. Khởi tạo Main Slides Swiper (3 slides: Menu, News, About)
+    const mainSwiper = new Swiper('.main-slides-swiper', {
         loop: true,
         grabCursor: true, 
-        autoplay: { delay: 4000, disableOnInteraction: false },
+        autoplay: { delay: 6000, disableOnInteraction: false },
+        effect: 'fade',
+        fadeEffect: { crossFade: true },
         navigation: {
             nextEl: '.swiper-button-next',
             prevEl: '.swiper-button-prev',
         },
-        pagination: { el: '.swiper-pagination', clickable: true },
+        pagination: { 
+            el: '.swiper-pagination', 
+            clickable: true
+        },
     });
 
     // Mobile Menu Toggle

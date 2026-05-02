@@ -45,6 +45,53 @@
         .btn-location:hover { background: #218838; transform: translateY(-2px); }
         .btn-clear { padding: 10px 20px; background: #6c757d; color: white; border: none; cursor: pointer; border-radius: 8px; font-weight: 600; transition: 0.3s; display: none; }
         .btn-clear:hover { background: #5a6268; }
+        .btn-nearby { padding: 10px 20px; background: #ff6b6b; color: white; border: none; cursor: pointer; border-radius: 8px; font-weight: 600; transition: 0.3s; }
+        .btn-nearby:hover { background: #ee5a52; transform: translateY(-2px); }
+        
+        /* Store markers and list */
+        .store-list { 
+            position: absolute; 
+            top: 10px; 
+            right: 10px; 
+            width: 300px; 
+            max-height: 400px; 
+            overflow-y: auto; 
+            background: white; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15); 
+            z-index: 1000;
+            display: none;
+        }
+        .store-list.show { display: block; }
+        .store-list-header { 
+            padding: 15px; 
+            background: linear-gradient(135deg, #667eea, #764ba2); 
+            color: white; 
+            border-radius: 12px 12px 0 0;
+            font-weight: 700;
+        }
+        .store-item { 
+            padding: 12px 15px; 
+            border-bottom: 1px solid #eee; 
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .store-item:hover { background: #f8f9fa; }
+        .store-item:last-child { border-bottom: none; border-radius: 0 0 12px 12px; }
+        .store-name { font-weight: 600; color: #333; font-size: 0.95rem; }
+        .store-address { font-size: 0.8rem; color: #666; margin-top: 4px; }
+        .store-distance { font-size: 0.75rem; color: #667eea; font-weight: 600; margin-top: 4px; }
+        
+        /* Pinned address popup */
+        .pinned-address { 
+            background: white; 
+            padding: 10px 15px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 250px;
+        }
+        .pinned-address h4 { margin: 0 0 8px 0; font-size: 0.9rem; color: #d32f2f; }
+        .pinned-address p { margin: 0; font-size: 0.8rem; color: #666; }
         
         #route-info { display: none; background: #fff3cd; color: #856404; padding: 15px; border-radius: 10px; border: 1px solid #ffeeba; margin: 15px auto 0; max-width: 500px; font-weight: 600; font-size: 1.1rem; }
         #route-info span { color: #d32f2f; font-weight: 800; }
@@ -90,7 +137,8 @@
 
                 <div class="btn-actions">
                     <button class="btn-location" onclick="getLocation()"><i class="fa-solid fa-location-crosshairs"></i> Vị trí của tôi</button>
-                    <button class="btn-clear" id="btn-clear" onclick="clearRoute()"><i class="fa-solid fa-eraser"></i> Xóa tuyến đường</button>
+                    <button class="btn-nearby" onclick="findNearbyStores()"><i class="fa-solid fa-store"></i> Tìm quán gần nhất (5km)</button>
+                    <button class="btn-clear" id="btn-clear" onclick="clearRoute()"><i class="fa-solid fa-eraser"></i> Xóa</button>
                 </div>
                 
                 <div id="route-info">
@@ -98,7 +146,15 @@
                 </div>
             </div>
 
-            <div id="map"></div>
+            <div id="map">
+                <div id="store-list" class="store-list">
+                    <div class="store-list-header">
+                        <i class="fas fa-store"></i> Cửa hàng gần bạn
+                        <span id="store-count" style="float: right; font-size: 0.8rem;"></span>
+                    </div>
+                    <div id="store-list-content"></div>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -135,9 +191,12 @@
             setTimeout(() => { toast.classList.remove('show'); }, 3500);
         }
 
-        // 3. KHỞI TẠO BẢN ĐỒ (ĐÃ SỬA LỖI 403)
-        const shopLocation = [10.7634, 106.6821]; // 227 Nguyễn Văn Cừ
-        let map = L.map('map').setView(shopLocation, 15);
+        // 3. KHỞI TẠO BẢN ĐỒ
+        let map = L.map('map').setView([10.7769, 106.7009], 13);
+        let stores = []; // Store data from database
+        let storeMarkers = []; // Store markers on map
+        let userMarker = null;
+        let pinnedMarker = null;
 
         // Sử dụng TileLayer của CartoDB (Voyager) - Ổn định và sạch đẹp hơn
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
@@ -146,34 +205,190 @@
             maxZoom: 20
         }).addTo(map);
 
-        // Custom Icon cho Quán
-        let shopMarker = L.marker(shopLocation).addTo(map)
-            .bindPopup('<b style="color:#d32f2f;">🍔 FastFood Universe</b><br>227 Nguyễn Văn Cừ, Quận 5').openPopup();
+        // Custom Icons
+        const storeIcon = L.divIcon({
+            className: 'custom-store-marker',
+            html: '<div style="background: linear-gradient(135deg, #d32f2f, #ff6b6b); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; border: 3px solid white; box-shadow: 0 3px 10px rgba(0,0,0,0.3);"><i class="fas fa-store"></i></div>',
+            iconSize: [36, 36],
+            iconAnchor: [18, 18]
+        });
+        
+        const userIcon = L.divIcon({
+            className: 'custom-user-marker',
+            html: '<div style="background: linear-gradient(135deg, #2196F3, #03A9F4); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; border: 3px solid white; box-shadow: 0 3px 10px rgba(0,0,0,0.3);"><i class="fas fa-user"></i></div>',
+            iconSize: [40, 40],
+            iconAnchor: [20, 20]
+        });
+        
+        const pinIcon = L.divIcon({
+            className: 'custom-pin-marker',
+            html: '<div style="background: linear-gradient(135deg, #FF9800, #FFC107); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; border: 3px solid white; box-shadow: 0 3px 10px rgba(0,0,0,0.3);"><i class="fas fa-map-pin"></i></div>',
+            iconSize: [36, 36],
+            iconAnchor: [18, 18]
+        });
+        
+        // Load stores from API
+        async function loadStores() {
+            try {
+                const res = await fetch('/api/stores/');
+                stores = await res.json();
+                displayStores(stores);
+            } catch (e) {
+                console.error('Error loading stores:', e);
+                showToast("Không thể tải danh sách cửa hàng", "error");
+            }
+        }
+        
+        // Display stores on map
+        function displayStores(storeList) {
+            // Clear existing markers
+            storeMarkers.forEach(m => map.removeLayer(m));
+            storeMarkers = [];
+            
+            storeList.forEach(store => {
+                const marker = L.marker([store.latitude, store.longitude], { icon: storeIcon })
+                    .addTo(map)
+                    .bindPopup(`
+                        <div style="min-width: 200px;">
+                            <h4 style="margin: 0 0 8px 0; color: #d32f2f; font-size: 1rem;"><i class="fas fa-store"></i> ${store.name}</h4>
+                            <p style="margin: 0 0 8px 0; font-size: 0.85rem; color: #555;"><i class="fas fa-map-marker-alt"></i> ${store.address}</p>
+                            <p style="margin: 0; font-size: 0.8rem; color: #888;"><i class="fas fa-clock"></i> ${store.opening_hours || '9:00 - 22:00'}</p>
+                            <button onclick="drawRoute(${store.latitude}, ${store.longitude}, '${store.name}')" 
+                                    style="margin-top: 10px; padding: 6px 12px; background: #d32f2f; color: white; border: none; border-radius: 5px; font-size: 0.8rem; cursor: pointer;">
+                                <i class="fas fa-directions"></i> Chỉ đường
+                            </button>
+                        </div>
+                    `);
+                storeMarkers.push(marker);
+            });
+        }
+        
+        // Calculate distance between two points (Haversine formula)
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Earth's radius in km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+        
+        // Find nearby stores within 5km
+        async function findNearbyStores() {
+            showToast("Đang tìm cửa hàng gần bạn...", "info");
+            
+            if (!navigator.geolocation) {
+                showToast("Trình duyệt không hỗ trợ định vị", "error");
+                return;
+            }
+            
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const userLat = position.coords.latitude;
+                    const userLon = position.coords.longitude;
+                    
+                    // Add user marker
+                    if (userMarker) map.removeLayer(userMarker);
+                    userMarker = L.marker([userLat, userLon], { icon: userIcon })
+                        .addTo(map)
+                        .bindPopup('<b><i class="fas fa-user"></i> Vị trí của bạn</b>').openPopup();
+                    
+                    // Find stores within 5km
+                    const nearbyStores = stores.map(store => {
+                        const distance = calculateDistance(userLat, userLon, store.latitude, store.longitude);
+                        return { ...store, distance };
+                    }).filter(store => store.distance <= 5).sort((a, b) => a.distance - b.distance);
+                    
+                    if (nearbyStores.length === 0) {
+                        showToast("Không tìm thấy cửa hàng nào trong bán kính 5km", "error");
+                        return;
+                    }
+                    
+                    // Show store list
+                    const storeListEl = document.getElementById('store-list');
+                    const storeContentEl = document.getElementById('store-list-content');
+                    const storeCountEl = document.getElementById('store-count');
+                    
+                    storeCountEl.textContent = `${nearbyStores.length} quán`;
+                    storeContentEl.innerHTML = nearbyStores.map(store => `
+                        <div class="store-item" onclick="selectStore(${userLat}, ${userLon}, ${store.latitude}, ${store.longitude}, '${store.name.replace(/'/g, "\\'")}')">
+                            <div class="store-name"><i class="fas fa-store" style="color: #d32f2f;"></i> ${store.name}</div>
+                            <div class="store-address">${store.address}</div>
+                            <div class="store-distance"><i class="fas fa-walking"></i> ${store.distance.toFixed(2)} km</div>
+                        </div>
+                    `).join('');
+                    
+                    storeListEl.classList.add('show');
+                    
+                    // Fit bounds to show all nearby stores
+                    const bounds = L.latLngBounds([[userLat, userLon]]);
+                    nearbyStores.forEach(s => bounds.extend([s.latitude, s.longitude]));
+                    map.fitBounds(bounds, { padding: [50, 50] });
+                    
+                    showToast(`Tìm thấy ${nearbyStores.length} cửa hàng gần bạn!`, "success");
+                },
+                (error) => {
+                    showToast("Vui lòng cho phép quyền truy cập vị trí!", "error");
+                }
+            );
+        }
+        
+        // Select store and draw route
+        function selectStore(userLat, userLon, storeLat, storeLon, name) {
+            drawRoute(userLat, userLon, `📍 Vị trí của bạn`, storeLat, storeLon);
+            document.getElementById('store-list').classList.remove('show');
+            showToast(`Đang chỉ đường đến ${name}...`, "info");
+        }
+        
+        // Close store list when clicking outside
+        document.addEventListener('click', (e) => {
+            const storeList = document.getElementById('store-list');
+            if (!storeList.contains(e.target) && !e.target.closest('.btn-nearby')) {
+                storeList.classList.remove('show');
+            }
+        });
+        
+        // Initialize
+        loadStores();
 
         let routingControl = null;
 
         // 4. Xóa tuyến đường
         function clearRoute() {
             if (routingControl) { map.removeControl(routingControl); routingControl = null; }
-            map.setView(shopLocation, 15);
-            shopMarker.openPopup();
+            map.setView([10.7769, 106.7009], 13);
+            if (userMarker) { userMarker.closePopup(); }
+            if (pinnedMarker) { pinnedMarker.closePopup(); }
             document.getElementById('btn-clear').style.display = 'none';
             document.getElementById('route-info').style.display = 'none';
+            document.getElementById('store-list').classList.remove('show');
             document.getElementById('address-input').value = '';
             showToast("Đã xóa tuyến đường", "info");
         }
 
         // 5. Vẽ đường đi (Sử dụng Routing Machine)
-        function drawRoute(userLat, userLon, popupText = '📍 Vị trí của bạn') {
+        function drawRoute(userLat, userLon, popupText = '📍 Vị trí của bạn', destLat = null, destLon = null) {
             if (routingControl) { map.removeControl(routingControl); }
+            
+            // If destination not provided, use the first store or default
+            let destination;
+            if (destLat && destLon) {
+                destination = L.latLng(destLat, destLon);
+            } else if (stores.length > 0) {
+                destination = L.latLng(stores[0].latitude, stores[0].longitude);
+            } else {
+                destination = L.latLng(10.7769, 106.7009); // Default: Ho Chi Minh City center
+            }
 
             routingControl = L.Routing.control({
-                waypoints: [ L.latLng(userLat, userLon), L.latLng(shopLocation[0], shopLocation[1]) ],
+                waypoints: [ L.latLng(userLat, userLon), destination ],
                 routeWhileDragging: true,
                 show: false,
                 createMarker: function(i, wp, nWps) {
-                    if (i === 0) return L.marker(wp.latLng, {draggable: true}).bindPopup(popupText).openPopup();
-                    return L.marker(wp.latLng, {draggable: false}).bindPopup('🍔 FastFood Universe');
+                    if (i === 0) return L.marker(wp.latLng, { icon: userIcon, draggable: true}).bindPopup(popupText).openPopup();
+                    return L.marker(wp.latLng, { icon: storeIcon, draggable: false}).bindPopup('<b><i class="fas fa-store"></i> ' + (stores[0]?.name || 'FastFood Universe') + '</b>');
                 },
                 lineOptions: { styles: [{color: '#d32f2f', opacity: 0.8, weight: 6}] }
             }).addTo(map);
@@ -222,9 +437,51 @@
             }
         }
 
-        // 8. Click trên Map
-        map.on('click', e => {
-            drawRoute(e.latlng.lat, e.latlng.lng, '📍 Điểm đã chọn');
+        // 8. Click trên Map - Show pinned address
+        map.on('click', async (e) => {
+            const lat = e.latlng.lat;
+            const lng = e.latlng.lng;
+            
+            // Remove old pinned marker
+            if (pinnedMarker) map.removeLayer(pinnedMarker);
+            
+            // Add new pinned marker
+            pinnedMarker = L.marker([lat, lng], { icon: pinIcon })
+                .addTo(map)
+                .bindPopup('<div class="pinned-address"><h4><i class="fas fa-map-pin"></i> Đang tải...</h4></div>')
+                .openPopup();
+            
+            // Reverse geocode to get address
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+                const data = await res.json();
+                const address = data.display_name || 'Không xác định được địa chỉ';
+                const shortAddress = address.split(',').slice(0, 3).join(',');
+                
+                pinnedMarker.bindPopup(`
+                    <div class="pinned-address">
+                        <h4><i class="fas fa-map-pin"></i> Vị trí đã ghim</h4>
+                        <p>${shortAddress}</p>
+                        <button onclick="drawRoute(${lat}, ${lng}, 'Vị trí đã ghim')" 
+                                style="margin-top: 8px; padding: 5px 10px; background: #d32f2f; color: white; border: none; border-radius: 4px; font-size: 0.75rem; cursor: pointer;">
+                            <i class="fas fa-directions"></i> Chỉ đường
+                        </button>
+                    </div>
+                `).openPopup();
+                
+                showToast(`Đã ghim: ${shortAddress.substring(0, 50)}...`, "success");
+            } catch (err) {
+                pinnedMarker.bindPopup(`
+                    <div class="pinned-address">
+                        <h4><i class="fas fa-map-pin"></i> Vị trí đã ghim</h4>
+                        <p>Vĩ độ: ${lat.toFixed(6)}<br>Kinh độ: ${lng.toFixed(6)}</p>
+                        <button onclick="drawRoute(${lat}, ${lng}, 'Vị trí đã ghim')" 
+                                style="margin-top: 8px; padding: 5px 10px; background: #d32f2f; color: white; border: none; border-radius: 4px; font-size: 0.75rem; cursor: pointer;">
+                            <i class="fas fa-directions"></i> Chỉ đường
+                        </button>
+                    </div>
+                `).openPopup();
+            }
         });
     </script>
 </body>
