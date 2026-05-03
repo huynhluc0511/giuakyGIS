@@ -49,11 +49,6 @@ class Order(models.Model):
     # Các trường GIS cho vị trí người dùng
     lat = models.FloatField(null=True, blank=True, verbose_name="Vĩ độ người dùng")
     lng = models.FloatField(null=True, blank=True, verbose_name="Kinh độ người dùng")
-    
-    # Thông tin giao hàng
-    shipper = models.ForeignKey('Shipper', on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_orders', verbose_name="Shipper giao hàng")
-    delivery_notes = models.TextField(blank=True, verbose_name="Ghi chú giao hàng")
-    estimated_delivery_time = models.DateTimeField(null=True, blank=True, verbose_name="Thời gian giao hàng dự kiến")
 
     def __str__(self):
         return f"Đơn hàng #{self.id} - {self.full_name}"

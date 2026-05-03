@@ -7,7 +7,7 @@ from django.db import models
 from django.http import HttpResponse
 from django.utils import timezone
 
-from dashboard.models import Store, Product, Order, OrderItem, Category, About, CustomerProfile, News, Review, ReviewImage, OrderReview, Shipper, DeliveryStatus
+from dashboard.models import Store, Product, Order, OrderItem, Category, About, CustomerProfile, News, Review, ReviewImage, OrderReview
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -287,22 +287,10 @@ def orders_create(request):
 @admin_required
 def orders_detail(request, pk):
     order = get_object_or_404(
-        Order.objects.select_related('shipper__user', 'user', 'user__profile'), 
+        Order.objects.select_related('user', 'user__profile'), 
         pk=pk
     )
     items = order.items.select_related('product', 'product__category').all()
-    
-    # Get or create delivery status
-    delivery, created = DeliveryStatus.objects.get_or_create(
-        order=order,
-        defaults={'status': 'pending'}
-    )
-    
-    # Get available shippers for assignment
-    available_shippers = Shipper.objects.filter(
-        status='available', 
-        is_active=True
-    ).order_by('user__username')
     
     total_quantity = sum(item.quantity for item in items)
     
@@ -310,45 +298,18 @@ def orders_detail(request, pk):
         'order': order, 
         'items': items, 
         'total_quantity': total_quantity,
-        'delivery': delivery,
-        'available_shippers': available_shippers,
         'page_title': f'Đơn Hàng #{order.id}',
     })
 
 @admin_required
 def orders_edit(request, pk):
     order = get_object_or_404(Order, pk=pk)
-    old_status = order.status  # Lưu trạng thái cũ
     
     if request.method == 'POST':
         form = OrderForm(request.POST, instance=order)
         if form.is_valid():
             updated_order = form.save()
-            new_status = updated_order.status
-            
-            # Kiểm tra nếu trạng thái thay đổi thành "Shipped" (đang giao hàng)
-            if old_status != new_status and new_status == 'Shipped':
-                # Tự động gửi thông báo cho tất cả shipper
-                try:
-                    delivery, created = DeliveryStatus.objects.get_or_create(
-                        order=updated_order,
-                        defaults={'status': 'pending'}
-                    )
-                    
-                    # Đánh dấu là đã thông báo
-                    delivery.is_notified = True
-                    delivery.notification_sent_at = timezone.now()
-                    delivery.shipper = None  # Chưa gán shipper cụ thể
-                    delivery.status = 'pending'
-                    delivery.save()
-                    
-                    messages.success(request, f'Đơn hàng #{updated_order.id} đã được cập nhật và thông báo cho tất cả shipper!')
-                    
-                except Exception as e:
-                    messages.warning(request, f'Đơn hàng đã được cập nhật nhưng có lỗi khi gửi thông báo: {str(e)}')
-            else:
-                messages.success(request, 'Đơn hàng đã được cập nhật!')
-            
+            messages.success(request, 'Đơn hàng đã được cập nhật!')
             return redirect('dashboard:orders_detail', pk=updated_order.pk)
     else:
         form = OrderForm(instance=order)
@@ -367,96 +328,7 @@ def orders_delete(request, pk):
     return redirect('dashboard:orders_list')
 
 
-@admin_required
-def orders_assign_shipper(request, pk):
-    """Assign shipper to order"""
-    order = get_object_or_404(
-        Order.objects.select_related('shipper__user', 'user'), 
-        pk=pk
-    )
-    
-    # Get or create delivery status
-    delivery, created = DeliveryStatus.objects.get_or_create(
-        order=order,
-        defaults={'status': 'pending'}
-    )
-    
-    if request.method == 'POST':
-        shipper_id = request.POST.get('shipper')
-        if shipper_id:
-            shipper = get_object_or_404(Shipper, pk=shipper_id)
-            
-            # Update delivery
-            delivery.shipper = shipper
-            delivery.assigned_at = timezone.now()
-            delivery.status = 'pending'
-            delivery.save()
-            
-            # Update order
-            order.shipper = shipper
-            order.save()
-            
-            # Update shipper status to busy
-            shipper.status = 'busy'
-            shipper.save()
-            
-            messages.success(request, f'Đã gán shipper {shipper.user.get_full_name() or shipper.user.username} cho đơn hàng #{order.id}!')
-        else:
-            messages.error(request, 'Vui lòng chọn shipper!')
-        
-        return redirect('dashboard:orders_detail', pk=pk)
-    
-    # Get available shippers
-    available_shippers = Shipper.objects.filter(
-        status='available', 
-        is_active=True
-    ).order_by('user__username')
-    
-    context = {
-        'order': order,
-        'delivery': delivery,
-        'available_shippers': available_shippers,
-        'page_title': f'Gán Shipper cho đơn hàng #{order.id}',
-    }
-    return render(request, 'dashboard/orders/assign_shipper.html', context)
 
-
-@admin_required
-def orders_notify_shippers(request, pk):
-    """Notify all shippers about available order"""
-    order = get_object_or_404(
-        Order.objects.select_related('user'), 
-        pk=pk
-    )
-    
-    # Get or create delivery status
-    delivery, created = DeliveryStatus.objects.get_or_create(
-        order=order,
-        defaults={'status': 'pending'}
-    )
-    
-    if request.method == 'POST':
-        # Mark as notified
-        delivery.is_notified = True
-        delivery.notification_sent_at = timezone.now()
-        delivery.shipper = None  # Ensure no shipper is assigned yet
-        delivery.status = 'pending'
-        delivery.save()
-        
-        # Update order status to indicate ready for pickup
-        if order.status == 'Processing':
-            order.status = 'Shipped'
-            order.save()
-        
-        messages.success(request, f'Đã gửi thông báo đơn hàng #{order.id} cho tất cả shipper!')
-        return redirect('dashboard:orders_detail', pk=pk)
-    
-    context = {
-        'order': order,
-        'delivery': delivery,
-        'page_title': f'Gửi thông báo đơn hàng #{order.id}',
-    }
-    return render(request, 'dashboard/orders/notify_shippers.html', context)
 
 
 # ==================== USERS ====================
@@ -2024,185 +1896,6 @@ def order_review_delete(request, pk):
     }
     return render(request, 'dashboard/order_reviews/delete.html', context)
 
-
-# ==================== SHIPPER MANAGEMENT ====================
-@admin_required
-def shippers_list(request):
-    """List all shippers"""
-    shippers = Shipper.objects.select_related('user').all().order_by('-created_at')
-    
-    # Filters
-    status_filter = request.GET.get('status')
-    if status_filter:
-        shippers = shippers.filter(status=status_filter)
-    
-    active_filter = request.GET.get('is_active')
-    if active_filter:
-        shippers = shippers.filter(is_active=active_filter == '1')
-    
-    # Search
-    search_query = request.GET.get('q')
-    if search_query:
-        shippers = shippers.filter(
-            models.Q(user__username__icontains=search_query) |
-            models.Q(user__first_name__icontains=search_query) |
-            models.Q(user__last_name__icontains=search_query) |
-            models.Q(phone__icontains=search_query) |
-            models.Q(license_plate__icontains=search_query)
-        )
-    
-    # Pagination
-    page_obj, paginator = paginate_queryset(shippers, request.GET.get('page'), 10)
-    
-    # Stats
-    stats = {
-        'total': Shipper.objects.count(),
-        'available': Shipper.objects.filter(status='available', is_active=True).count(),
-        'busy': Shipper.objects.filter(status='busy', is_active=True).count(),
-        'offline': Shipper.objects.filter(status='offline').count() + Shipper.objects.filter(is_active=False).count(),
-    }
-    
-    context = {
-        'shippers': page_obj,
-        'paginator': paginator,
-        'stats': stats,
-        'page_title': 'Quản lý Shipper',
-        'status_filter': status_filter,
-        'active_filter': active_filter,
-        'search_query': search_query,
-    }
-    return render(request, 'dashboard/shippers/list.html', context)
-
-
-@admin_required
-def shipper_detail(request, pk):
-    """View shipper details"""
-    shipper = get_object_or_404(
-        Shipper.objects.select_related('user'), 
-        pk=pk
-    )
-    
-    # Get delivery statistics
-    active_deliveries = shipper.get_active_deliveries()
-    completed_today = shipper.get_completed_deliveries_today()
-    recent_deliveries = shipper.deliveries.select_related('order').order_by('-created_at')[:10]
-    
-    context = {
-        'shipper': shipper,
-        'active_deliveries': active_deliveries,
-        'completed_today': completed_today,
-        'recent_deliveries': recent_deliveries,
-        'page_title': f'Chi tiết Shipper: {shipper.user.get_full_name() or shipper.user.username}',
-    }
-    return render(request, 'dashboard/shippers/detail.html', context)
-
-
-@admin_required
-def shipper_create(request):
-    """Create new shipper"""
-    if request.method == 'POST':
-        # Get user data
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        first_name = request.POST.get('first_name', '')
-        last_name = request.POST.get('last_name', '')
-        email = request.POST.get('email', '')
-        
-        # Shipper data
-        phone = request.POST.get('phone')
-        license_plate = request.POST.get('license_plate')
-        vehicle_type = request.POST.get('vehicle_type')
-        
-        try:
-            # Create user
-            user = User.objects.create_user(
-                username=username,
-                password=password,
-                email=email,
-                first_name=first_name,
-                last_name=last_name
-            )
-            
-            # Create shipper
-            shipper = Shipper.objects.create(
-                user=user,
-                phone=phone,
-                license_plate=license_plate,
-                vehicle_type=vehicle_type
-            )
-            
-            messages.success(request, f'Đã tạo shipper {user.get_full_name() or user.username}!')
-            return redirect('dashboard:shippers_list')
-            
-        except Exception as e:
-            messages.error(request, f'Lỗi: {str(e)}')
-    
-    context = {
-        'page_title': 'Thêm Shipper mới',
-    }
-    return render(request, 'dashboard/shippers/form.html', context)
-
-
-@admin_required
-def shipper_edit(request, pk):
-    """Edit shipper"""
-    shipper = get_object_or_404(Shipper.objects.select_related('user'), pk=pk)
-    
-    if request.method == 'POST':
-        # Update user data
-        user = shipper.user
-        user.first_name = request.POST.get('first_name', user.first_name)
-        user.last_name = request.POST.get('last_name', user.last_name)
-        user.email = request.POST.get('email', user.email)
-        
-        password = request.POST.get('password')
-        if password:
-            user.set_password(password)
-        
-        user.save()
-        
-        # Update shipper data
-        shipper.phone = request.POST.get('phone', shipper.phone)
-        shipper.license_plate = request.POST.get('license_plate', shipper.license_plate)
-        shipper.vehicle_type = request.POST.get('vehicle_type', shipper.vehicle_type)
-        shipper.status = request.POST.get('status', shipper.status)
-        shipper.is_active = request.POST.get('is_active') == 'on'
-        shipper.save()
-        
-        messages.success(request, f'Đã cập nhật thông tin shipper!')
-        return redirect('dashboard:shipper_detail', pk=pk)
-    
-    context = {
-        'shipper': shipper,
-        'page_title': f'Chỉnh sửa Shipper: {shipper.user.get_full_name() or shipper.user.username}',
-    }
-    return render(request, 'dashboard/shippers/form.html', context)
-
-
-@admin_required
-@require_http_methods(["POST"])
-def shipper_delete(request, pk):
-    """Delete shipper"""
-    shipper = get_object_or_404(Shipper, pk=pk)
-    name = shipper.user.get_full_name() or shipper.user.username
-    
-    # Delete user (cascade will delete shipper)
-    shipper.user.delete()
-    
-    messages.success(request, f'Shipper "{name}" đã được xóa!')
-    return redirect('dashboard:shippers_list')
-
-
-@admin_required
-def shipper_toggle_status(request, pk):
-    """Toggle shipper active status"""
-    shipper = get_object_or_404(Shipper, pk=pk)
-    shipper.is_active = not shipper.is_active
-    shipper.save()
-    
-    status = "kích hoạt" if shipper.is_active else "vô hiệu hóa"
-    messages.success(request, f'Đã {status} shipper {shipper.user.get_full_name() or shipper.user.username}!')
-    return redirect('dashboard:shippers_list')
 
 
 # ==================== DELIVERY STATUS MANAGEMENT ====================
