@@ -139,8 +139,8 @@
     <a href="{% url 'dashboard:news_create' %}" class="quick-action-btn">
         <i class="fas fa-newspaper" style="color: #fc4a1a;"></i> Tin Tức
     </a>
-    <a href="{% url 'dashboard:customer_profile_list' %}" class="quick-action-btn">
-        <i class="fas fa-users" style="color: #2193b0;"></i> Khách Hàng
+    <a href="{% url 'dashboard:users_list' %}" class="quick-action-btn">
+        <i class="fas fa-users" style="color: #2193b0;"></i> Người Dùng
     </a>
     <a href="{% url 'dashboard:review_list' %}" class="quick-action-btn">
         <i class="fas fa-star" style="color: #f39c12;"></i> Đánh Giá
@@ -208,21 +208,21 @@
     <div class="stat-card-compact">
         <div class="stat-icon indigo"><i class="fas fa-users"></i></div>
         <div class="stat-info">
-            <div class="stat-label-compact">Khách Hàng</div>
+            <div class="stat-label-compact">Người Dùng</div>
             <div class="stat-value-compact">{{ stats.total_customers }}</div>
         </div>
     </div>
     <div class="stat-card-compact">
         <div class="stat-icon purple"><i class="fas fa-user-check"></i></div>
         <div class="stat-info">
-            <div class="stat-label-compact">Đã Xác Thực</div>
+            <div class="stat-label-compact">Đã Kích Hoạt</div>
             <div class="stat-value-compact">{{ stats.verified_customers }}</div>
         </div>
     </div>
     <div class="stat-card-compact">
         <div class="stat-icon orange"><i class="fas fa-crown"></i></div>
         <div class="stat-info">
-            <div class="stat-label-compact">VIP</div>
+            <div class="stat-label-compact">Quản Trị</div>
             <div class="stat-value-compact">{{ stats.vip_customers }}</div>
         </div>
     </div>
@@ -248,7 +248,8 @@
                 <thead>
                     <tr>
                         <th>Mã</th>
-                        <th>Khách Hàng</th>
+                        <th>Người Dùng</th>
+                        <th style="text-align:center;">Món</th>
                         <th>Giá</th>
                         <th>Trạng Thái</th>
                     </tr>
@@ -261,13 +262,14 @@
                             <div class="item-name">{{ order.full_name }}</div>
                             <div class="item-meta">{{ order.created_at|date:'d/m H:i' }}</div>
                         </td>
+                        <td style="text-align:center;font-weight:600;">{{ order.items.count }}</td>
                         <td class="price">{{ order.total_price|floatformat:0 }}đ</td>
                         <td>
                             <span class="badge {% if order.status == 'Pending' %}badge-pending{% elif order.status == 'Processing' %}badge-processing{% elif order.status == 'Shipped' %}badge-shipped{% elif order.status == 'Delivered' %}badge-delivered{% else %}badge-cancelled{% endif %}">{{ order.get_status_display }}</span>
                         </td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="4" style="text-align:center;padding:1.5rem;color:#adb5bd;">Chưa có đơn hàng</td></tr>
+                    <tr><td colspan="5" style="text-align:center;padding:1.5rem;color:#adb5bd;">Chưa có đơn hàng</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -304,37 +306,33 @@
         </div>
     </div>
 
-    <!-- Top Khách Hàng -->
+    <!-- Top Người Dùng -->
     <div class="table-card">
         <div class="table-card-header">
-            <h3><i class="fas fa-trophy" style="color:#f7b733;margin-right:8px;"></i>Top Khách Hàng</h3>
-            <a href="{% url 'dashboard:customer_profile_list' %}">Xem tất cả →</a>
+            <h3><i class="fas fa-trophy" style="color:#f7b733;margin-right:8px;"></i>Top Người Dùng</h3>
+            <a href="{% url 'dashboard:users_list' %}">Xem tất cả →</a>
         </div>
         <div class="table-card-body">
             <table class="mini-table">
                 <thead>
                     <tr>
-                        <th>Khách Hàng</th>
+                        <th>Người Dùng</th>
                         <th>Đơn</th>
                         <th>Trạng Thái</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for customer in top_customers %}
+                    {% for user in top_customers %}
                     <tr>
                         <td>
                             <div style="display:flex;align-items:center;gap:0.5rem;">
-                                {% if customer.avatar %}
-                                <img src="{{ customer.avatar.url }}" class="avatar-sm">
-                                {% else %}
                                 <div class="avatar-placeholder" style="background:linear-gradient(135deg,#667eea,#764ba2);"><i class="fas fa-user"></i></div>
-                                {% endif %}
-                                <span class="item-name">{{ customer.display_name }}</span>
+                                <span class="item-name">{{ user.get_full_name|default:user.username }}</span>
                             </div>
                         </td>
-                        <td class="price">{{ customer.order_count }}</td>
+                        <td class="price">{{ user.order_count }}</td>
                         <td>
-                            {% if customer.is_verified %}
+                            {% if user.is_active %}
                             <span class="badge badge-delivered" style="font-size:0.65rem;"><i class="fas fa-check"></i></span>
                             {% else %}
                             <span class="badge badge-pending" style="font-size:0.65rem;"><i class="fas fa-clock"></i></span>
