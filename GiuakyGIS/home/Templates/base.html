@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FastFood Universe{% endblock %}</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    {% load static %}
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+    
+    {% block css %}
+<style>
+:root { --red: #d62828; --yellow: #ffb703; --dark: #333; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Poppins', sans-serif; background-color: #fcfcfc; color: var(--dark); }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+a { text-decoration: none; transition: 0.3s; }
+ul { list-style: none; }
+
+.nav-wrapper {
+    background: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    margin-bottom: 0;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+nav { 
+    background: var(--yellow); 
+    position: sticky; 
+    top: 0; 
+    z-index: 1000; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    width: 100%;
+    border-radius: 0 0 15px 15px;
+}
+nav .container { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    height: 70px;
+    padding: 0 20px;
+}
+
+.nav-links { display: flex; gap: 20px; align-items: center; }
+.nav-links a { color: #333; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 5px; }
+.nav-links a:hover { color: var(--red); transform: translateY(-2px); }
+
+.dropdown { position: relative; }
+.dropdown-content {
+    display: none; position: absolute; top: 100%; left: 0;
+    background: white; min-width: 180px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15); border-radius: 0 0 10px 10px;
+    border-top: 4px solid var(--red); overflow: hidden;
+}
+.dropdown-content li a { display: block; padding: 12px 20px; border-bottom: 1px solid #eee; color: #333; }
+.dropdown-content li a:hover { background: #fff8e1; color: var(--red); }
+.dropdown:hover .dropdown-content { display: block; }
+
+.nav-right { display: flex; align-items: center; gap: 20px; }
+.cart-icon { position: relative; font-size: 1.6rem; color: #333; transition: 0.3s; }
+.cart-icon:hover { color: var(--red); }
+.cart-badge {
+    position: absolute; top: -5px; right: -10px; background: var(--red); color: white;
+    font-size: 0.7rem; width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; border: 2px solid var(--yellow); visibility: hidden;
+}
+.btn-auth { padding: 9px 22px; border-radius: 50px; font-weight: 700; font-size: 0.85rem; border: 2px solid var(--red); cursor: pointer; transition: 0.3s; }
+.login { color: var(--red); background: transparent; }
+.login:hover { background: var(--red); color: white; }
+.register { background: var(--red); color: white; }
+.user-greeting { 
+    font-weight: 700; color: #333; font-size: 1.05rem; display: flex; align-items: center; gap: 8px;
+    background: linear-gradient(135deg, rgba(255, 183, 3, 0.12), rgba(214, 40, 40, 0.08));
+    padding: 10px 18px; border-radius: 25px; border: 1.5px solid rgba(255, 183, 3, 0.4);
+}
+
+footer { background: #1a1a1a; color: #fff; text-align: center; padding: 60px 0; border-top: 5px solid var(--yellow); }
+</style>
+{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <div class="nav-wrapper">
+        <nav>
+            <div class="container">
+                <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="nav-left" id="navLeft">
+                    <ul class="nav-links">
+                        <li><a href="{% url 'home' %}" style="color: #d62828;"><i class="fa-solid fa-house"></i> Trang chủ</a></li>
+                        <li><a href="#main-slides"><i class="fa-solid fa-utensils"></i> Thực đơn</a></li>
+                        <li class="dropdown">
+                            <a href="#"><i class="fa-solid fa-users"></i> Về chúng tôi ▼</a>
+                            <ul class="dropdown-content">
+                                <li><a href="{% url 'gioi_thieu' %}"><i class="fa-solid fa-info-circle"></i> Giới thiệu</a></li>
+                                <li><a href="{% url 'news_list' %}"><i class="fa-solid fa-newspaper"></i> Tin tức</a></li>
+                                <li><a href="{% url 'lien_he' %}"><i class="fa-solid fa-address-book"></i> Liên hệ</a></li>
+                            </ul>
+                        </li>
+                        <li><a href="{% url 'tim_duong' %}"><i class="fa-solid fa-map-location-dot"></i> Tìm đường</a></li>
+                        <li><a href="{% url 'tinh_trang' %}"><i class="fa-solid fa-truck-fast"></i> Tình trạng</a></li>
+                        <!-- Shipper Orders Button - Only show for shippers and admin -->
+                        {% if request.user.is_authenticated %}
+                            {% if request.user.username == 'shipper1' or request.user.username == 'shipper2' or request.user.username == 'shipper3' or request.user.is_staff %}
+                                <li>
+                                    <a href="{% url 'home:shipper_workspace' %}" class="nav-shipper-orders" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 8px 16px; border-radius: 20px; font-weight: 650; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);" onmouseover="this.style.background='linear-gradient(135deg, #5a6fd8, #6a4190)'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 15px rgba(102, 126, 234, 0.5)'" onmouseout="this.style.background='linear-gradient(135deg, #667eea, #764ba2)'; this.style.transform='translateY(0)'; this.style.boxShadow='0 3px 10px rgba(102, 126, 234, 0.3)'">
+                                        <i class="fa-solid fa-motorcycle"></i> Đơn hàng
+                                    </a>
+                                </li>
+                            {% endif %}
+                        {% endif %}
+                    </ul>
+                </div>
+
+                <div class="nav-right">
+                    <a href="{% url 'gio_hang' %}" class="cart-icon">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                        <span class="cart-badge" id="main-cart-badge">0</span> 
+                    </a>
+                    <div class="auth-buttons" id="auth-container" style="display: flex; align-items: center; gap: 15px;">
+                        {% if request.user.is_authenticated %}
+                            <a href="{% url 'customer_profile' %}" class="user-greeting" style="text-decoration: none; color: #333; font-weight: 700; transition: all 0.3s ease;" onmouseover="this.style.color='#d62828'; this.style.transform='translateY(-2px)'" onmouseout="this.style.color='#333'; this.style.transform='translateY(0)'">👤 <strong>{{ request.user.username }}</strong></a>
+                            <a href="{% url 'logout' %}" class="btn-logout" style="padding: 9px 22px; border-radius: 25px; font-weight: 650; background: #d62828; color: white; border: none; cursor: pointer; font-size: 0.92rem; transition: all 0.3s ease; display: inline-block; box-shadow: 0 4px 12px rgba(214, 40, 40, 0.3);" onmouseover="this.style.background='#b01a1a'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 18px rgba(214, 40, 40, 0.5)'" onmouseout="this.style.background='#d62828'; this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(214, 40, 40, 0.3)'">Thoát</a>
+                        {% else %}
+                            <a href="{% url 'login' %}" class="btn-auth login" style="padding: 9px 22px; border-radius: 50px; font-weight: 700; color: #d62828; background: transparent; border: 2px solid #d62828; cursor: pointer;">Đăng Nhập</a>
+                            <a href="{% url 'register' %}" class="btn-auth register" style="padding: 9px 22px; border-radius: 50px; font-weight: 700; background: #d62828; color: white; border: none; cursor: pointer;">Đăng Ký</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        <div class="container mt-3">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    {% block content %}{% endblock %}
+
+    <!-- Footer -->
+    <footer class="mt-5">
+        <div class="container text-center py-4">
+            <p>&copy; 2024 FastFood Universe. All rights reserved.</p>
+            <p>Phát triển bởi: Dương Đan Huy & Huỳnh Tấn Lực</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    {% block js %}{% endblock %}
+</body>
+</html>
