@@ -328,21 +328,43 @@
             }))
         };
         
+        // Get CSRF token more reliably
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        const csrfToken = getCookie('csrftoken') || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        console.log('DEBUG: Using CSRF token:', csrfToken ? 'found' : 'missing');
+        
         try {
-            // Gọi API lưu đơn hàng
             const response = await fetch("{% url 'api_create_order' %}", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
+                    'X-CSRFToken': csrfToken
                 },
                 body: JSON.stringify(orderData)
             });
             
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
             const result = await response.json();
+            console.log('API response:', result);
             
             if (result.success) {
-                // Lưu vào localStorage để backup
                 localStorage.setItem('current_order', JSON.stringify({
                     customerName: name,
                     customerAddress: address,
@@ -351,20 +373,18 @@
                     orderDate: new Date().toLocaleString(),
                     orderId: result.order_id
                 }));
-                localStorage.removeItem('cart_data'); // Xóa giỏ hàng
-                
-                // Chuyển sang trang Tình trạng với order_id
+                localStorage.removeItem('cart_data');
+                FastFoodCart.showNotification('✅ Đơn hàng đã được tạo thành công!');
                 window.location.href = result.redirect_url;
             } else {
-                alert("Có lỗi xảy ra: " + (result.error || "Không thể tạo đơn hàng"));
-                btn.innerHTML = '<i class="fa-solid fa-check"></i> ĐẶT HÀNG NGAY';
-                btn.disabled = false;
-                btn.style.background = "#2a9d8f";
+                FastFoodCart.showNotification(`❌ Lỗi: ${result.error || 'Không rõ'}`, 5000);
+                throw new Error(result.error);
             }
         } catch (error) {
-            console.error('Error:', error);
-            alert("Lỗi kết nối máy chủ. Vui lòng thử lại!");
-            btn.innerHTML = '<i class="fa-solid fa-check"></i> ĐẶT HÀNG NGAY';
+            console.error('Submit error:', error);
+            FastFoodCart.showNotification(`❌ Lỗi kết nối: ${error.message}. Kiểm tra Console F12.`, 6000);
+        } finally {
+            btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> XÁC NHẬN ĐẶT HÀNG';
             btn.disabled = false;
             btn.style.background = "#2a9d8f";
         }
