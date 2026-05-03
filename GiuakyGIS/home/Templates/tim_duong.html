@@ -335,9 +335,33 @@
             );
         }
         
+        // Find the nearest store to a given lat/lng
+        function findNearestStore(lat, lng) {
+            if (stores.length === 0) return null;
+            let nearest = null;
+            let minDist = Infinity;
+            stores.forEach(store => {
+                const d = calculateDistance(lat, lng, store.latitude, store.longitude);
+                if (d < minDist) { minDist = d; nearest = store; }
+            });
+            return { store: nearest, distance: minDist };
+        }
+
+        // Route to nearest store from a location
+        function routeToNearestStore(lat, lng, label) {
+            const result = findNearestStore(lat, lng);
+            if (!result || !result.store) {
+                showToast("Không tìm thấy cửa hàng nào!", "error");
+                return;
+            }
+            const store = result.store;
+            drawRoute(lat, lng, label, store.latitude, store.longitude, store.name);
+            showToast(`Chỉ đường đến quán gần nhất: ${store.name} (${result.distance.toFixed(2)} km)`, "success");
+        }
+
         // Select store and draw route
         function selectStore(userLat, userLon, storeLat, storeLon, name) {
-            drawRoute(userLat, userLon, `📍 Vị trí của bạn`, storeLat, storeLon);
+            drawRoute(userLat, userLon, `📍 Vị trí của bạn`, storeLat, storeLon, name);
             document.getElementById('store-list').classList.remove('show');
             showToast(`Đang chỉ đường đến ${name}...`, "info");
         }
@@ -369,18 +393,26 @@
         }
 
         // 5. Vẽ đường đi (Sử dụng Routing Machine)
-        function drawRoute(userLat, userLon, popupText = '📍 Vị trí của bạn', destLat = null, destLon = null) {
+        let currentDestName = '';
+        function drawRoute(userLat, userLon, popupText = '📍 Vị trí của bạn', destLat = null, destLon = null, destName = null) {
             if (routingControl) { map.removeControl(routingControl); }
             
-            // If destination not provided, use the first store or default
+            // If destination not provided, find nearest store
             let destination;
+            let storeName = destName;
             if (destLat && destLon) {
                 destination = L.latLng(destLat, destLon);
-            } else if (stores.length > 0) {
-                destination = L.latLng(stores[0].latitude, stores[0].longitude);
             } else {
-                destination = L.latLng(10.7769, 106.7009); // Default: Ho Chi Minh City center
+                const result = findNearestStore(userLat, userLon);
+                if (result && result.store) {
+                    destination = L.latLng(result.store.latitude, result.store.longitude);
+                    storeName = result.store.name;
+                } else {
+                    destination = L.latLng(10.7769, 106.7009);
+                    storeName = 'FastFood Universe';
+                }
             }
+            currentDestName = storeName || 'FastFood Universe';
 
             routingControl = L.Routing.control({
                 waypoints: [ L.latLng(userLat, userLon), destination ],
@@ -388,7 +420,7 @@
                 show: false,
                 createMarker: function(i, wp, nWps) {
                     if (i === 0) return L.marker(wp.latLng, { icon: userIcon, draggable: true}).bindPopup(popupText).openPopup();
-                    return L.marker(wp.latLng, { icon: storeIcon, draggable: false}).bindPopup('<b><i class="fas fa-store"></i> ' + (stores[0]?.name || 'FastFood Universe') + '</b>');
+                    return L.marker(wp.latLng, { icon: storeIcon, draggable: false}).bindPopup('<b><i class="fas fa-store"></i> ' + currentDestName + '</b>');
                 },
                 lineOptions: { styles: [{color: '#d32f2f', opacity: 0.8, weight: 6}] }
             }).addTo(map);
@@ -413,8 +445,16 @@
                 let res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&countrycodes=vn`);
                 let data = await res.json();
                 if (data && data.length > 0) {
-                    drawRoute(parseFloat(data[0].lat), parseFloat(data[0].lon), '📍 ' + address);
-                    showToast("Đã tìm thấy địa chỉ!", "success");
+                    const lat = parseFloat(data[0].lat);
+                    const lon = parseFloat(data[0].lon);
+                    // Add pinned marker for searched address
+                    if (pinnedMarker) map.removeLayer(pinnedMarker);
+                    pinnedMarker = L.marker([lat, lon], { icon: pinIcon })
+                        .addTo(map)
+                        .bindPopup('<b>📍 ' + address + '</b>').openPopup();
+                    // Route to nearest store from searched address
+                    routeToNearestStore(lat, lon, '📍 ' + address);
+                    showToast("Đã tìm thấy địa chỉ! Đang chỉ đường đến quán gần nhất...", "success");
                 } else {
                     showToast("Không tìm thấy địa chỉ này!", "error");
                 }
@@ -429,8 +469,16 @@
                 showToast("Đang lấy tọa độ GPS...", "info");
                 navigator.geolocation.getCurrentPosition(
                     p => {
-                        drawRoute(p.coords.latitude, p.coords.longitude, '📍 Vị trí GPS của bạn');
-                        showToast("Vẽ tuyến đường thành công!", "success");
+                        const lat = p.coords.latitude;
+                        const lon = p.coords.longitude;
+                        // Add user marker
+                        if (userMarker) map.removeLayer(userMarker);
+                        userMarker = L.marker([lat, lon], { icon: userIcon })
+                            .addTo(map)
+                            .bindPopup('<b><i class="fas fa-user"></i> Vị trí GPS của bạn</b>').openPopup();
+                        // Route to nearest store
+                        routeToNearestStore(lat, lon, '📍 Vị trí GPS của bạn');
+                        showToast("Đã xác định vị trí! Đang chỉ đường đến quán gần nhất...", "success");
                     },
                     e => showToast("Vui lòng cho phép quyền truy cập vị trí!", "error")
                 );
@@ -458,29 +506,37 @@
                 const address = data.display_name || 'Không xác định được địa chỉ';
                 const shortAddress = address.split(',').slice(0, 3).join(',');
                 
+                const nearest = findNearestStore(lat, lng);
+                const nearestInfo = nearest ? `<div style="margin-top:6px;font-size:0.75rem;color:#d32f2f;font-weight:600;"><i class="fas fa-store"></i> Gần nhất: ${nearest.store.name} (${nearest.distance.toFixed(2)} km)</div>` : '';
+                
                 pinnedMarker.bindPopup(`
                     <div class="pinned-address">
                         <h4><i class="fas fa-map-pin"></i> Vị trí đã ghim</h4>
                         <p>${shortAddress}</p>
-                        <button onclick="drawRoute(${lat}, ${lng}, 'Vị trí đã ghim')" 
+                        ${nearestInfo}
+                        <button onclick="routeToNearestStore(${lat}, ${lng}, 'Vị trí đã ghim')" 
                                 style="margin-top: 8px; padding: 5px 10px; background: #d32f2f; color: white; border: none; border-radius: 4px; font-size: 0.75rem; cursor: pointer;">
-                            <i class="fas fa-directions"></i> Chỉ đường
+                            <i class="fas fa-directions"></i> Chỉ đường đến quán gần nhất
                         </button>
                     </div>
                 `).openPopup();
                 
-                showToast(`Đã ghim: ${shortAddress.substring(0, 50)}...`, "success");
+                // Auto-route to nearest store
+                routeToNearestStore(lat, lng, 'Vị trí đã ghim');
+                showToast(`Đã ghim! Đang chỉ đường đến quán gần nhất...`, "success");
             } catch (err) {
                 pinnedMarker.bindPopup(`
                     <div class="pinned-address">
                         <h4><i class="fas fa-map-pin"></i> Vị trí đã ghim</h4>
                         <p>Vĩ độ: ${lat.toFixed(6)}<br>Kinh độ: ${lng.toFixed(6)}</p>
-                        <button onclick="drawRoute(${lat}, ${lng}, 'Vị trí đã ghim')" 
+                        <button onclick="routeToNearestStore(${lat}, ${lng}, 'Vị trí đã ghim')" 
                                 style="margin-top: 8px; padding: 5px 10px; background: #d32f2f; color: white; border: none; border-radius: 4px; font-size: 0.75rem; cursor: pointer;">
-                            <i class="fas fa-directions"></i> Chỉ đường
+                            <i class="fas fa-directions"></i> Chỉ đường đến quán gần nhất
                         </button>
                     </div>
                 `).openPopup();
+                // Auto-route to nearest store
+                routeToNearestStore(lat, lng, 'Vị trí đã ghim');
             }
         });
     </script>
