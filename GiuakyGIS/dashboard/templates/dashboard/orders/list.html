@@ -49,8 +49,17 @@
                         <a href="{% url 'dashboard:orders_detail' order.pk %}" style="color:#667eea;text-decoration:none;">#{{ order.id }}</a>
                     </td>
                     <td>
-                        <div style="font-weight:600;color:#32325d;">{{ order.full_name }}</div>
-                        {% if order.user %}<div style="font-size:0.75rem;color:#adb5bd;">@{{ order.user.username }}</div>{% endif %}
+                        <div style="display:flex;align-items:center;gap:0.5rem;">
+                            {% if order.user and order.user.profile.avatar %}
+                            <img src="{{ order.user.profile.avatar.url }}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">
+                            {% else %}
+                            <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;color:white;font-size:0.7rem;"><i class="fas fa-user"></i></div>
+                            {% endif %}
+                            <div>
+                                <div style="font-weight:600;color:#32325d;">{{ order.full_name }}</div>
+                                {% if order.user %}<div style="font-size:0.75rem;color:#adb5bd;">@{{ order.user.username }}</div>{% endif %}
+                            </div>
+                        </div>
                     </td>
                     <td style="color:#525f7f;">{{ order.phone }}</td>
                     <td style="color:#8898aa;font-size:0.82rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ order.address }}</td>

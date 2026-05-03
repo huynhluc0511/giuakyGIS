@@ -442,8 +442,12 @@
                 <span style="font-size:0.85rem;color:#8898aa;font-weight:600;">
                     {{ request.user.get_full_name|default:request.user.username }}
                 </span>
+                {% if request.user.profile.avatar %}
+                <img src="{{ request.user.profile.avatar.url }}" alt="avatar" style="width:38px;height:38px;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.12);object-fit:cover;">
+                {% else %}
                 <img src="https://api.dicebear.com/7.x/avataaars/svg?seed={{ request.user.username }}"
                      alt="avatar" style="width:38px;height:38px;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.12);">
+                {% endif %}
             </div>
         </div>
 

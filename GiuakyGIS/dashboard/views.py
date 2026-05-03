@@ -23,11 +23,11 @@ from .utils import admin_required, search_items, paginate_queryset, get_stats
 @admin_required
 def dashboard_index(request):
     stats = get_stats()
-    recent_orders = Order.objects.prefetch_related('items').all().order_by('-created_at')[:5]
+    recent_orders = Order.objects.select_related('user', 'user__profile').prefetch_related('items').all().order_by('-created_at')[:5]
     recent_products = Product.objects.all().order_by('-id')[:5]
     
     # Get top users by order count
-    top_customers = User.objects.annotate(
+    top_customers = User.objects.select_related('profile').annotate(
         order_count=models.Count('order')
     ).filter(order_count__gt=0).order_by('-order_count')[:5]
     
@@ -252,7 +252,7 @@ def products_delete(request, pk):
 # ==================== ORDERS ====================
 @admin_required
 def orders_list(request):
-    orders = Order.objects.select_related('user').annotate(
+    orders = Order.objects.select_related('user', 'user__profile').annotate(
         items_count=models.Count('items')
     ).order_by('-created_at')
     search_form = SearchForm(request.GET or None)
@@ -287,7 +287,7 @@ def orders_create(request):
 @admin_required
 def orders_detail(request, pk):
     order = get_object_or_404(
-        Order.objects.select_related('shipper__user', 'user'), 
+        Order.objects.select_related('shipper__user', 'user', 'user__profile'), 
         pk=pk
     )
     items = order.items.select_related('product', 'product__category').all()

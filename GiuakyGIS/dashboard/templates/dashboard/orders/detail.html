@@ -315,6 +315,19 @@
                     <i class="fas fa-user" style="color:#667eea;"></i> Thông Tin Người Dùng
                 </div>
                 <div class="detail-card-body">
+                    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;">
+                        {% if order.user and order.user.profile.avatar %}
+                        <img src="{{ order.user.profile.avatar.url }}" alt="{{ order.full_name }}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:3px solid #667eea;">
+                        {% elif order.user %}
+                        <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;color:white;font-size:1.5rem;"><i class="fas fa-user"></i></div>
+                        {% else %}
+                        <div style="width:60px;height:60px;border-radius:50%;background:#e9ecef;display:flex;align-items:center;justify-content:center;color:#adb5bd;font-size:1.5rem;"><i class="fas fa-user-slash"></i></div>
+                        {% endif %}
+                        <div>
+                            <div style="font-weight:700;font-size:1.1rem;color:#32325d;">{{ order.full_name }}</div>
+                            <div style="font-size:0.85rem;color:#8898aa;">{% if order.user %}@{{ order.user.username }}{% else %}Khách vãng lai{% endif %}</div>
+                        </div>
+                    </div>
                     <div class="customer-grid">
                         <div>
                             <div class="info-label">Họ tên</div>
