@@ -7,7 +7,7 @@ from django.db import models
 from django.http import HttpResponse
 from django.utils import timezone
 
-from dashboard.models import Store, Product, Order, OrderItem, Category, About, CustomerProfile, News, Review, ReviewImage
+from dashboard.models import Store, Product, Order, OrderItem, Category, About, CustomerProfile, News, Review, ReviewImage, OrderReview, Shipper, DeliveryStatus
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -23,13 +23,13 @@ from .utils import admin_required, search_items, paginate_queryset, get_stats
 @admin_required
 def dashboard_index(request):
     stats = get_stats()
-    recent_orders = Order.objects.all().order_by('-created_at')[:5]
+    recent_orders = Order.objects.prefetch_related('items').all().order_by('-created_at')[:5]
     recent_products = Product.objects.all().order_by('-id')[:5]
     
-    # Get top customers by order count
-    top_customers = CustomerProfile.objects.select_related('user').annotate(
-        order_count=models.Count('user__order')
-    ).order_by('-order_count')[:5]
+    # Get top users by order count
+    top_customers = User.objects.annotate(
+        order_count=models.Count('order')
+    ).filter(order_count__gt=0).order_by('-order_count')[:5]
     
     # Get popular products (most ordered)
     popular_products = Product.objects.annotate(
@@ -44,8 +44,8 @@ def dashboard_index(request):
         sold_count=models.Count('orderitem')
     ).order_by('sold_count')[:5]
     
-    # Get recent customers
-    recent_customers = CustomerProfile.objects.select_related('user').order_by('-created_at')[:5]
+    # Get recent users
+    recent_customers = User.objects.order_by('-date_joined')[:5]
     
     # Get published news
     recent_news = News.objects.filter(status='published').order_by('-published_at')[:5]
@@ -252,7 +252,9 @@ def products_delete(request, pk):
 # ==================== ORDERS ====================
 @admin_required
 def orders_list(request):
-    orders = Order.objects.select_related('user').all().order_by('-created_at')
+    orders = Order.objects.select_related('user').annotate(
+        items_count=models.Count('items')
+    ).order_by('-created_at')
     search_form = SearchForm(request.GET or None)
     if search_form.is_valid() and search_form.cleaned_data.get('q'):
         q = search_form.cleaned_data['q']
@@ -284,23 +286,73 @@ def orders_create(request):
 
 @admin_required
 def orders_detail(request, pk):
-    order = get_object_or_404(Order, pk=pk)
-    items = order.items.select_related('product').all()
+    order = get_object_or_404(
+        Order.objects.select_related('shipper__user', 'user'), 
+        pk=pk
+    )
+    items = order.items.select_related('product', 'product__category').all()
+    
+    # Get or create delivery status
+    delivery, created = DeliveryStatus.objects.get_or_create(
+        order=order,
+        defaults={'status': 'pending'}
+    )
+    
+    # Get available shippers for assignment
+    available_shippers = Shipper.objects.filter(
+        status='available', 
+        is_active=True
+    ).order_by('user__username')
+    
+    total_quantity = sum(item.quantity for item in items)
+    
     return render(request, 'dashboard/orders/detail.html', {
-        'order': order, 'items': items, 'page_title': f'Đơn Hàng #{order.id}',
+        'order': order, 
+        'items': items, 
+        'total_quantity': total_quantity,
+        'delivery': delivery,
+        'available_shippers': available_shippers,
+        'page_title': f'Đơn Hàng #{order.id}',
     })
 
 @admin_required
 def orders_edit(request, pk):
     order = get_object_or_404(Order, pk=pk)
+    old_status = order.status  # Lưu trạng thái cũ
+    
     if request.method == 'POST':
         form = OrderForm(request.POST, instance=order)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Đơn hàng đã được cập nhật!')
-            return redirect('dashboard:orders_detail', pk=order.pk)
+            updated_order = form.save()
+            new_status = updated_order.status
+            
+            # Kiểm tra nếu trạng thái thay đổi thành "Shipped" (đang giao hàng)
+            if old_status != new_status and new_status == 'Shipped':
+                # Tự động gửi thông báo cho tất cả shipper
+                try:
+                    delivery, created = DeliveryStatus.objects.get_or_create(
+                        order=updated_order,
+                        defaults={'status': 'pending'}
+                    )
+                    
+                    # Đánh dấu là đã thông báo
+                    delivery.is_notified = True
+                    delivery.notification_sent_at = timezone.now()
+                    delivery.shipper = None  # Chưa gán shipper cụ thể
+                    delivery.status = 'pending'
+                    delivery.save()
+                    
+                    messages.success(request, f'Đơn hàng #{updated_order.id} đã được cập nhật và thông báo cho tất cả shipper!')
+                    
+                except Exception as e:
+                    messages.warning(request, f'Đơn hàng đã được cập nhật nhưng có lỗi khi gửi thông báo: {str(e)}')
+            else:
+                messages.success(request, 'Đơn hàng đã được cập nhật!')
+            
+            return redirect('dashboard:orders_detail', pk=updated_order.pk)
     else:
         form = OrderForm(instance=order)
+    
     return render(request, 'dashboard/orders/form.html', {
         'form': form, 'order': order,
         'page_title': f'Chỉnh sửa Đơn #{order.id}', 'is_edit': True,
@@ -313,6 +365,98 @@ def orders_delete(request, pk):
     order.delete()
     messages.success(request, f'Đơn hàng #{pk} đã được xóa!')
     return redirect('dashboard:orders_list')
+
+
+@admin_required
+def orders_assign_shipper(request, pk):
+    """Assign shipper to order"""
+    order = get_object_or_404(
+        Order.objects.select_related('shipper__user', 'user'), 
+        pk=pk
+    )
+    
+    # Get or create delivery status
+    delivery, created = DeliveryStatus.objects.get_or_create(
+        order=order,
+        defaults={'status': 'pending'}
+    )
+    
+    if request.method == 'POST':
+        shipper_id = request.POST.get('shipper')
+        if shipper_id:
+            shipper = get_object_or_404(Shipper, pk=shipper_id)
+            
+            # Update delivery
+            delivery.shipper = shipper
+            delivery.assigned_at = timezone.now()
+            delivery.status = 'pending'
+            delivery.save()
+            
+            # Update order
+            order.shipper = shipper
+            order.save()
+            
+            # Update shipper status to busy
+            shipper.status = 'busy'
+            shipper.save()
+            
+            messages.success(request, f'Đã gán shipper {shipper.user.get_full_name() or shipper.user.username} cho đơn hàng #{order.id}!')
+        else:
+            messages.error(request, 'Vui lòng chọn shipper!')
+        
+        return redirect('dashboard:orders_detail', pk=pk)
+    
+    # Get available shippers
+    available_shippers = Shipper.objects.filter(
+        status='available', 
+        is_active=True
+    ).order_by('user__username')
+    
+    context = {
+        'order': order,
+        'delivery': delivery,
+        'available_shippers': available_shippers,
+        'page_title': f'Gán Shipper cho đơn hàng #{order.id}',
+    }
+    return render(request, 'dashboard/orders/assign_shipper.html', context)
+
+
+@admin_required
+def orders_notify_shippers(request, pk):
+    """Notify all shippers about available order"""
+    order = get_object_or_404(
+        Order.objects.select_related('user'), 
+        pk=pk
+    )
+    
+    # Get or create delivery status
+    delivery, created = DeliveryStatus.objects.get_or_create(
+        order=order,
+        defaults={'status': 'pending'}
+    )
+    
+    if request.method == 'POST':
+        # Mark as notified
+        delivery.is_notified = True
+        delivery.notification_sent_at = timezone.now()
+        delivery.shipper = None  # Ensure no shipper is assigned yet
+        delivery.status = 'pending'
+        delivery.save()
+        
+        # Update order status to indicate ready for pickup
+        if order.status == 'Processing':
+            order.status = 'Shipped'
+            order.save()
+        
+        messages.success(request, f'Đã gửi thông báo đơn hàng #{order.id} cho tất cả shipper!')
+        return redirect('dashboard:orders_detail', pk=pk)
+    
+    context = {
+        'order': order,
+        'delivery': delivery,
+        'page_title': f'Gửi thông báo đơn hàng #{order.id}',
+    }
+    return render(request, 'dashboard/orders/notify_shippers.html', context)
 
 
 # ==================== USERS ====================
@@ -1393,7 +1537,7 @@ def customer_profile_list(request):
     
     context = {
         'profiles': paginated_profiles,
-        'page_title': 'Quản Lý Thông Tin Khách Hàng',
+        'page_title': 'Quản Lý Thông Tin Người Dùng',
         'search_query': search_query,
         'verified_filter': verified_filter,
         'status_filter': status_filter,
@@ -1479,7 +1623,7 @@ def customer_profile_edit(request, pk):
             
             profile_form.save()
             user_form.save()
-            messages.success(request, f'✅ Thông tin khách hàng {profile.display_name} đã được cập nhật thành công!')
+            messages.success(request, f'✅ Thông tin người dùng {profile.display_name} đã được cập nhật thành công!')
             return redirect('dashboard:customer_profile_detail', pk=profile.pk)
         else:
             messages.error(request, '❌ Vui lòng sửa các lỗi bên dưới.')
@@ -1506,7 +1650,7 @@ def customer_profile_delete(request, pk):
         username = profile.display_name
         profile.delete()
         user.delete()
-        messages.success(request, f'✅ Khách hàng {username} đã được xóa thành công!')
+        messages.success(request, f'✅ Người dùng {username} đã được xóa thành công!')
         return redirect('dashboard:customer_profile_list')
     
     context = {
@@ -1770,3 +1914,388 @@ def review_delete(request, pk):
         'page_title': 'Xóa đánh giá',
     }
     return render(request, 'dashboard/reviews/delete.html', context)
+
+
+# ==================== ORDER REVIEWS ====================
+@admin_required
+def order_review_list(request):
+    """List all order reviews"""
+    order_reviews = OrderReview.objects.select_related('order', 'user').all().order_by('-created_at')
+    
+    # Filters
+    status_filter = request.GET.get('status')
+    if status_filter:
+        order_reviews = order_reviews.filter(status=status_filter)
+    
+    rating_filter = request.GET.get('rating')
+    if rating_filter:
+        order_reviews = order_reviews.filter(overall_rating=rating_filter)
+    
+    # Search
+    search_query = request.GET.get('q')
+    if search_query:
+        order_reviews = order_reviews.filter(
+            models.Q(order__id__icontains=search_query) |
+            models.Q(user__username__icontains=search_query) |
+            models.Q(content__icontains=search_query)
+        )
+    
+    # Pagination
+    page_obj, paginator = paginate_queryset(order_reviews, request.GET.get('page'), 10)
+    
+    # Stats
+    stats = {
+        'total': OrderReview.objects.count(),
+        'pending': OrderReview.objects.filter(status='pending').count(),
+        'approved': OrderReview.objects.filter(status='approved').count(),
+        'rejected': OrderReview.objects.filter(status='rejected').count(),
+        'avg_rating': OrderReview.objects.filter(status='approved').aggregate(avg=models.Avg('overall_rating'))['avg'] or 0,
+    }
+    
+    context = {
+        'order_reviews': page_obj,
+        'paginator': paginator,
+        'stats': stats,
+        'page_title': 'Quản lý Đánh giá Đơn hàng',
+        'status_filter': status_filter,
+        'rating_filter': rating_filter,
+        'search_query': search_query,
+    }
+    return render(request, 'dashboard/order_reviews/list.html', context)
+
+
+@admin_required
+def order_review_detail(request, pk):
+    """View order review details"""
+    order_review = get_object_or_404(
+        OrderReview.objects.select_related('order', 'user'), 
+        pk=pk
+    )
+    
+    if request.method == 'POST':
+        # Handle admin reply
+        reply_content = request.POST.get('admin_reply')
+        if reply_content:
+            order_review.admin_reply = reply_content
+            order_review.admin_reply_at = timezone.now()
+            order_review.save()
+            messages.success(request, '✅ Đã gửi phản hồi!')
+            return redirect('dashboard:order_review_detail', pk=pk)
+    
+    context = {
+        'order_review': order_review,
+        'page_title': f'Đánh giá Đơn hàng #{order_review.order.id}',
+    }
+    return render(request, 'dashboard/order_reviews/detail.html', context)
+
+
+@admin_required
+def order_review_approve(request, pk):
+    """Approve an order review"""
+    order_review = get_object_or_404(OrderReview, pk=pk)
+    order_review.status = 'approved'
+    order_review.save()
+    messages.success(request, f'✅ Đã duyệt đánh giá đơn hàng #{order_review.order.id}!')
+    return redirect('dashboard:order_review_list')
+
+
+@admin_required
+def order_review_reject(request, pk):
+    """Reject an order review"""
+    order_review = get_object_or_404(OrderReview, pk=pk)
+    order_review.status = 'rejected'
+    order_review.save()
+    messages.success(request, f'✅ Đã từ chối đánh giá đơn hàng #{order_review.order.id}!')
+    return redirect('dashboard:order_review_list')
+
+
+@admin_required
+def order_review_delete(request, pk):
+    """Delete an order review"""
+    order_review = get_object_or_404(OrderReview, pk=pk)
+    if request.method == 'POST':
+        order_review.delete()
+        messages.success(request, '✅ Đã xóa đánh giá đơn hàng!')
+        return redirect('dashboard:order_review_list')
+    
+    context = {
+        'order_review': order_review,
+        'page_title': 'Xóa đánh giá đơn hàng',
+    }
+    return render(request, 'dashboard/order_reviews/delete.html', context)
+
+
+# ==================== SHIPPER MANAGEMENT ====================
+@admin_required
+def shippers_list(request):
+    """List all shippers"""
+    shippers = Shipper.objects.select_related('user').all().order_by('-created_at')
+    
+    # Filters
+    status_filter = request.GET.get('status')
+    if status_filter:
+        shippers = shippers.filter(status=status_filter)
+    
+    active_filter = request.GET.get('is_active')
+    if active_filter:
+        shippers = shippers.filter(is_active=active_filter == '1')
+    
+    # Search
+    search_query = request.GET.get('q')
+    if search_query:
+        shippers = shippers.filter(
+            models.Q(user__username__icontains=search_query) |
+            models.Q(user__first_name__icontains=search_query) |
+            models.Q(user__last_name__icontains=search_query) |
+            models.Q(phone__icontains=search_query) |
+            models.Q(license_plate__icontains=search_query)
+        )
+    
+    # Pagination
+    page_obj, paginator = paginate_queryset(shippers, request.GET.get('page'), 10)
+    
+    # Stats
+    stats = {
+        'total': Shipper.objects.count(),
+        'available': Shipper.objects.filter(status='available', is_active=True).count(),
+        'busy': Shipper.objects.filter(status='busy', is_active=True).count(),
+        'offline': Shipper.objects.filter(status='offline').count() + Shipper.objects.filter(is_active=False).count(),
+    }
+    
+    context = {
+        'shippers': page_obj,
+        'paginator': paginator,
+        'stats': stats,
+        'page_title': 'Quản lý Shipper',
+        'status_filter': status_filter,
+        'active_filter': active_filter,
+        'search_query': search_query,
+    }
+    return render(request, 'dashboard/shippers/list.html', context)
+
+
+@admin_required
+def shipper_detail(request, pk):
+    """View shipper details"""
+    shipper = get_object_or_404(
+        Shipper.objects.select_related('user'), 
+        pk=pk
+    )
+    
+    # Get delivery statistics
+    active_deliveries = shipper.get_active_deliveries()
+    completed_today = shipper.get_completed_deliveries_today()
+    recent_deliveries = shipper.deliveries.select_related('order').order_by('-created_at')[:10]
+    
+    context = {
+        'shipper': shipper,
+        'active_deliveries': active_deliveries,
+        'completed_today': completed_today,
+        'recent_deliveries': recent_deliveries,
+        'page_title': f'Chi tiết Shipper: {shipper.user.get_full_name() or shipper.user.username}',
+    }
+    return render(request, 'dashboard/shippers/detail.html', context)
+
+
+@admin_required
+def shipper_create(request):
+    """Create new shipper"""
+    if request.method == 'POST':
+        # Get user data
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        first_name = request.POST.get('first_name', '')
+        last_name = request.POST.get('last_name', '')
+        email = request.POST.get('email', '')
+        
+        # Shipper data
+        phone = request.POST.get('phone')
+        license_plate = request.POST.get('license_plate')
+        vehicle_type = request.POST.get('vehicle_type')
+        
+        try:
+            # Create user
+            user = User.objects.create_user(
+                username=username,
+                password=password,
+                email=email,
+                first_name=first_name,
+                last_name=last_name
+            )
+            
+            # Create shipper
+            shipper = Shipper.objects.create(
+                user=user,
+                phone=phone,
+                license_plate=license_plate,
+                vehicle_type=vehicle_type
+            )
+            
+            messages.success(request, f'Đã tạo shipper {user.get_full_name() or user.username}!')
+            return redirect('dashboard:shippers_list')
+            
+        except Exception as e:
+            messages.error(request, f'Lỗi: {str(e)}')
+    
+    context = {
+        'page_title': 'Thêm Shipper mới',
+    }
+    return render(request, 'dashboard/shippers/form.html', context)
+
+
+@admin_required
+def shipper_edit(request, pk):
+    """Edit shipper"""
+    shipper = get_object_or_404(Shipper.objects.select_related('user'), pk=pk)
+    
+    if request.method == 'POST':
+        # Update user data
+        user = shipper.user
+        user.first_name = request.POST.get('first_name', user.first_name)
+        user.last_name = request.POST.get('last_name', user.last_name)
+        user.email = request.POST.get('email', user.email)
+        
+        password = request.POST.get('password')
+        if password:
+            user.set_password(password)
+        
+        user.save()
+        
+        # Update shipper data
+        shipper.phone = request.POST.get('phone', shipper.phone)
+        shipper.license_plate = request.POST.get('license_plate', shipper.license_plate)
+        shipper.vehicle_type = request.POST.get('vehicle_type', shipper.vehicle_type)
+        shipper.status = request.POST.get('status', shipper.status)
+        shipper.is_active = request.POST.get('is_active') == 'on'
+        shipper.save()
+        
+        messages.success(request, f'Đã cập nhật thông tin shipper!')
+        return redirect('dashboard:shipper_detail', pk=pk)
+    
+    context = {
+        'shipper': shipper,
+        'page_title': f'Chỉnh sửa Shipper: {shipper.user.get_full_name() or shipper.user.username}',
+    }
+    return render(request, 'dashboard/shippers/form.html', context)
+
+
+@admin_required
+@require_http_methods(["POST"])
+def shipper_delete(request, pk):
+    """Delete shipper"""
+    shipper = get_object_or_404(Shipper, pk=pk)
+    name = shipper.user.get_full_name() or shipper.user.username
+    
+    # Delete user (cascade will delete shipper)
+    shipper.user.delete()
+    
+    messages.success(request, f'Shipper "{name}" đã được xóa!')
+    return redirect('dashboard:shippers_list')
+
+
+@admin_required
+def shipper_toggle_status(request, pk):
+    """Toggle shipper active status"""
+    shipper = get_object_or_404(Shipper, pk=pk)
+    shipper.is_active = not shipper.is_active
+    shipper.save()
+    
+    status = "kích hoạt" if shipper.is_active else "vô hiệu hóa"
+    messages.success(request, f'Đã {status} shipper {shipper.user.get_full_name() or shipper.user.username}!')
+    return redirect('dashboard:shippers_list')
+
+
+# ==================== DELIVERY STATUS MANAGEMENT ====================
+@admin_required
+def delivery_status_list(request):
+    """List all delivery statuses"""
+    deliveries = DeliveryStatus.objects.select_related('order', 'shipper__user').all().order_by('-created_at')
+    
+    # Filters
+    status_filter = request.GET.get('status')
+    if status_filter:
+        deliveries = deliveries.filter(status=status_filter)
+    
+    shipper_filter = request.GET.get('shipper')
+    if shipper_filter:
+        deliveries = deliveries.filter(shipper_id=shipper_filter)
+    
+    # Search
+    search_query = request.GET.get('q')
+    if search_query:
+        deliveries = deliveries.filter(
+            models.Q(order__id__icontains=search_query) |
+            models.Q(shipper__user__username__icontains=search_query) |
+            models.Q(pickup_notes__icontains=search_query) |
+            models.Q(delivery_notes__icontains=search_query)
+        )
+    
+    # Pagination
+    page_obj, paginator = paginate_queryset(deliveries, request.GET.get('page'), 10)
+    
+    # Get available shippers for filter
+    shippers = Shipper.objects.filter(is_active=True).order_by('user__username')
+    
+    context = {
+        'deliveries': page_obj,
+        'paginator': paginator,
+        'shippers': shippers,
+        'page_title': 'Quản lý Trạng thái Giao hàng',
+        'status_filter': status_filter,
+        'shipper_filter': shipper_filter,
+        'search_query': search_query,
+    }
+    return render(request, 'dashboard/delivery_status/list.html', context)
+
+
+@admin_required
+def delivery_status_detail(request, pk):
+    """View delivery status details"""
+    delivery = get_object_or_404(
+        DeliveryStatus.objects.select_related('order', 'shipper__user', 'order__user'), 
+        pk=pk
+    )
+    
+    context = {
+        'delivery': delivery,
+        'page_title': f'Chi tiết Giao hàng #{delivery.order.id}',
+    }
+    return render(request, 'dashboard/delivery_status/detail.html', context)
+
+
+@admin_required
+def delivery_status_assign(request, pk):
+    """Assign shipper to delivery"""
+    delivery = get_object_or_404(DeliveryStatus, pk=pk)
+    
+    if request.method == 'POST':
+        shipper_id = request.POST.get('shipper')
+        if shipper_id:
+            shipper = get_object_or_404(Shipper, pk=shipper_id)
+            delivery.shipper = shipper
+            delivery.assigned_at = timezone.now()
+            delivery.status = 'pending'  # Reset to pending
+            delivery.save()
+            
+            # Update order
+            delivery.order.shipper = shipper
+            delivery.order.save()
+            
+            messages.success(request, f'Đã gán shipper {shipper.user.get_full_name() or shipper.user.username} cho đơn hàng #{delivery.order.id}!')
+        else:
+            messages.error(request, 'Vui lòng chọn shipper!')
+        
+        return redirect('dashboard:delivery_status_detail', pk=pk)
+    
+    # Get available shippers
+    available_shippers = Shipper.objects.filter(
+        status='available', 
+        is_active=True
+    ).order_by('user__username')
+    
+    context = {
+        'delivery': delivery,
+        'available_shippers': available_shippers,
+        'page_title': f'Gán Shipper cho đơn hàng #{delivery.order.id}',
+    }
+    return render(request, 'dashboard/delivery_status/assign.html', context)

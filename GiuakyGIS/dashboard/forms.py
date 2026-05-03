@@ -534,7 +534,7 @@ class ReviewReplyForm(forms.Form):
         widget=forms.Textarea(attrs={
             'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500',
             'rows': 3,
-            'placeholder': 'Nhập phản hồi cho khách hàng...'
+            'placeholder': 'Nhập phản hồi cho người dùng...'
         }),
         label='Phản hồi của cửa hàng',
         required=True

@@ -38,7 +38,7 @@ class Order(models.Model):
         ('Cancelled', 'Đã hủy'),
     )
 
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Khách hàng")
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Người dùng")
     full_name = models.CharField(max_length=200, verbose_name="Họ tên người nhận")
     phone = models.CharField(max_length=15, verbose_name="Số điện thoại")
     address = models.TextField(verbose_name="Địa chỉ giao hàng")
@@ -46,9 +46,14 @@ class Order(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending', verbose_name="Trạng thái")
     total_price = models.FloatField(default=0, verbose_name="Tổng tiền")
     
-    # Các trường GIS cho vị trí khách hàng
-    lat = models.FloatField(null=True, blank=True, verbose_name="Vĩ độ khách hàng")
-    lng = models.FloatField(null=True, blank=True, verbose_name="Kinh độ khách hàng")
+    # Các trường GIS cho vị trí người dùng
+    lat = models.FloatField(null=True, blank=True, verbose_name="Vĩ độ người dùng")
+    lng = models.FloatField(null=True, blank=True, verbose_name="Kinh độ người dùng")
+    
+    # Thông tin giao hàng
+    shipper = models.ForeignKey('Shipper', on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_orders', verbose_name="Shipper giao hàng")
+    delivery_notes = models.TextField(blank=True, verbose_name="Ghi chú giao hàng")
+    estimated_delivery_time = models.DateTimeField(null=True, blank=True, verbose_name="Thời gian giao hàng dự kiến")
 
     def __str__(self):
         return f"Đơn hàng #{self.id} - {self.full_name}"
@@ -65,6 +70,10 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.quantity} x {self.product.name}"
+
+    @property
+    def total_price(self):
+        return self.quantity * self.price
 
 # 5. Cửa hàng (Được đưa ra ngoài làm class riêng biệt)
 class Store(models.Model):
@@ -216,7 +225,7 @@ class About(models.Model):
         ordering = ['order', '-created_at']
 
 
-# 12. Thông tin cá nhân khách hàng
+# 12. Thông tin cá nhân người dùng
 class CustomerProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile', verbose_name="Người dùng")
     
@@ -246,7 +255,7 @@ class CustomerProfile(models.Model):
     
     # Status and Verification
     is_verified = models.BooleanField(default=False, verbose_name="Đã xác thực")
-    is_premium = models.BooleanField(default=False, verbose_name="Khách hàng VIP")
+    is_premium = models.BooleanField(default=False, verbose_name="Người dùng VIP")
     loyalty_points = models.IntegerField(default=0, verbose_name="Điểm tích lũy")
     
     # Preferences
@@ -271,8 +280,8 @@ class CustomerProfile(models.Model):
         return f"Profile của {self.user.username}"
 
     class Meta:
-        verbose_name = "Thông tin khách hàng"
-        verbose_name_plural = "Thông tin khách hàng"
+        verbose_name = "Thông tin người dùng"
+        verbose_name_plural = "Thông tin người dùng"
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['user']),
@@ -410,7 +419,7 @@ class Review(models.Model):
     
     # Mỗi đánh giá gắn với 1 OrderItem (1 món trong đơn hàng)
     order_item = models.ForeignKey(OrderItem, on_delete=models.CASCADE, related_name='reviews', verbose_name="Món trong đơn hàng")
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews', verbose_name="Khách hàng")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews', verbose_name="Người dùng")
     
     # Điểm đánh giá (1-5 sao)
     rating = models.IntegerField(verbose_name="Điểm đánh giá", choices=[(i, f"{i} sao") for i in range(1, 6)])
@@ -466,3 +475,278 @@ class ReviewImage(models.Model):
     
     def __str__(self):
         return f"Ảnh đánh giá #{self.id} - {self.review.id}"
+
+
+# 9. Đánh giá đơn hàng (OrderReview)
+class OrderReview(models.Model):
+    STATUS_CHOICES = (
+        ('pending', 'Chờ duyệt'),
+        ('approved', 'Đã duyệt'),
+        ('rejected', 'Từ chối'),
+    )
+    
+    # Đánh giá gắn với 1 đơn hàng
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='order_reviews', verbose_name="Đơn hàng")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='order_reviews', verbose_name="Người dùng")
+    
+    # Điểm đánh giá tổng thể (1-5 sao)
+    overall_rating = models.IntegerField(verbose_name="Đánh giá tổng thể", choices=[(i, f"{i} sao") for i in range(1, 6)])
+    
+    # Đánh giá chi tiết
+    food_quality = models.IntegerField(verbose_name="Chất lượng món ăn", choices=[(i, f"{i} sao") for i in range(1, 6)], null=True, blank=True)
+    service_quality = models.IntegerField(verbose_name="Chất lượng dịch vụ", choices=[(i, f"{i} sao") for i in range(1, 6)], null=True, blank=True)
+    delivery_speed = models.IntegerField(verbose_name="Tốc độ giao hàng", choices=[(i, f"{i} sao") for i in range(1, 6)], null=True, blank=True)
+    packaging_quality = models.IntegerField(verbose_name="Chất lượng đóng gói", choices=[(i, f"{i} sao") for i in range(1, 6)], null=True, blank=True)
+    
+    # Nội dung đánh giá
+    content = models.TextField(verbose_name="Nội dung đánh giá", blank=True)
+    
+    # Trạng thái duyệt
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', verbose_name="Trạng thái")
+    
+    # Thời gian
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Ngày đánh giá")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Cập nhật lần cuối")
+    
+    # Phản hồi từ admin
+    admin_reply = models.TextField(blank=True, verbose_name="Phản hồi của cửa hàng")
+    admin_reply_at = models.DateTimeField(null=True, blank=True, verbose_name="Ngày phản hồi")
+    
+    class Meta:
+        verbose_name_plural = "Đánh giá đơn hàng"
+        # Ràng buộc: Mỗi user chỉ được đánh giá 1 lần cho mỗi đơn hàng
+        unique_together = ['order', 'user']
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['order', 'user']),
+            models.Index(fields=['status']),
+            models.Index(fields=['overall_rating']),
+            models.Index(fields=['created_at']),
+        ]
+    
+    def __str__(self):
+        return f"Đánh giá đơn hàng #{self.order.id} - {self.user.username} ({self.overall_rating} sao)"
+    
+    @property
+    def is_approved(self):
+        return self.status == 'approved'
+    
+    @property
+    def display_status(self):
+        status_map = dict(self.STATUS_CHOICES)
+        return status_map.get(self.status, self.status)
+    
+    def can_review(self):
+        """Kiểm tra xem đơn hàng có thể đánh giá được không (chỉ khi đã giao hàng)"""
+        return self.order.status == 'Delivered'
+    
+    def get_average_rating(self):
+        """Tính điểm trung bình của các tiêu chí chi tiết"""
+        ratings = []
+        if self.food_quality:
+            ratings.append(self.food_quality)
+        if self.service_quality:
+            ratings.append(self.service_quality)
+        if self.delivery_speed:
+            ratings.append(self.delivery_speed)
+        if self.packaging_quality:
+            ratings.append(self.packaging_quality)
+        
+        if ratings:
+            return sum(ratings) / len(ratings)
+        return self.overall_rating
+
+
+# 10. Shipper (Người giao hàng)
+class Shipper(models.Model):
+    STATUS_CHOICES = (
+        ('available', 'Sẵn sàng'),
+        ('busy', 'Bận'),
+        ('offline', 'Ngoại tuyến'),
+    )
+    
+    # Thông tin cơ bản
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='shipper_profile', verbose_name="Tài khoản")
+    phone = models.CharField(max_length=15, verbose_name="Số điện thoại")
+    license_plate = models.CharField(max_length=20, unique=True, verbose_name="Biển số xe")
+    vehicle_type = models.CharField(max_length=50, verbose_name="Loại xe")
+    
+    # Trạng thái
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='available', verbose_name="Trạng thái")
+    is_active = models.BooleanField(default=True, verbose_name="Đang hoạt động")
+    
+    # Thông tin vị trí
+    current_latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True, verbose_name="Vĩ độ hiện tại")
+    current_longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True, verbose_name="Kinh độ hiện tại")
+    last_location_update = models.DateTimeField(null=True, blank=True, verbose_name="Cập nhật vị trí lần cuối")
+    
+    # Thời gian
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Ngày tạo")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Cập nhật lần cuối")
+    
+    class Meta:
+        verbose_name_plural = "Shipper"
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['status', 'is_active']),
+            models.Index(fields=['license_plate']),
+            models.Index(fields=['last_location_update']),
+        ]
+    
+    def __str__(self):
+        return f"{self.user.get_full_name() or self.user.username} - {self.license_plate}"
+    
+    @property
+    def display_status(self):
+        status_map = dict(self.STATUS_CHOICES)
+        return status_map.get(self.status, self.status)
+    
+    def get_active_deliveries(self):
+        """Lấy các đơn hàng đang giao"""
+        return self.deliveries.filter(status__in=['picked_up', 'delivering'])
+    
+    def get_completed_deliveries_today(self):
+        """Lấy số đơn hàng đã hoàn thành hôm nay"""
+        from django.utils import timezone
+        today = timezone.now().date()
+        return self.deliveries.filter(
+            status='delivered',
+            delivered_at__date=today
+        ).count()
+    
+    def update_location(self, lat, lng):
+        """Cập nhật vị trí hiện tại của shipper"""
+        self.current_latitude = lat
+        self.current_longitude = lng
+        self.last_location_update = timezone.now()
+        self.save()
+
+
+# 11. Delivery Status (Trạng thái giao hàng)
+class DeliveryStatus(models.Model):
+    STATUS_CHOICES = (
+        ('pending', 'Chờ nhận hàng'),
+        ('picked_up', 'Đã lấy hàng'),
+        ('delivering', 'Đang giao hàng'),
+        ('delivered', 'Đã giao hàng'),
+        ('failed', 'Giao hàng thất bại'),
+        ('cancelled', 'Đã hủy'),
+    )
+    
+    # Liên kết
+    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='delivery', verbose_name="Đơn hàng")
+    shipper = models.ForeignKey(Shipper, on_delete=models.SET_NULL, null=True, blank=True, related_name='deliveries', verbose_name="Shipper")
+    
+    # Trạng thái
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', verbose_name="Trạng thái giao hàng")
+    is_notified = models.BooleanField(default=False, verbose_name="Đã thông báo cho shipper")
+    notification_sent_at = models.DateTimeField(null=True, blank=True, verbose_name="Thời gian gửi thông báo")
+    
+    # Thời gian
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Ngày tạo")
+    
+    # Thời gian quan trọng
+    assigned_at = models.DateTimeField(null=True, blank=True, verbose_name="Thời gian giao cho shipper")
+    picked_up_at = models.DateTimeField(null=True, blank=True, verbose_name="Thời gian lấy hàng")
+    delivered_at = models.DateTimeField(null=True, blank=True, verbose_name="Thời gian giao hàng")
+    
+    # Ghi chú
+    pickup_notes = models.TextField(blank=True, verbose_name="Ghi chú lấy hàng")
+    delivery_notes = models.TextField(blank=True, verbose_name="Ghi chú giao hàng")
+    failure_reason = models.TextField(blank=True, verbose_name="Lý do thất bại")
+    
+    # Bằng chứng
+    pickup_photo = models.ImageField(upload_to='delivery/pickup/', null=True, blank=True, verbose_name="Ảnh lấy hàng")
+    delivery_photo = models.ImageField(upload_to='delivery/delivery/', null=True, blank=True, verbose_name="Ảnh giao hàng")
+    customer_signature = models.ImageField(upload_to='delivery/signature/', null=True, blank=True, verbose_name="Chữ ký người dùng")
+    
+    # Đánh giá từ shipper
+    shipper_rating = models.IntegerField(null=True, blank=True, verbose_name="Đánh giá của shipper", 
+                                       choices=[(i, f"{i} sao") for i in range(1, 6)])
+    shipper_notes = models.TextField(blank=True, verbose_name="Ghi chú của shipper")
+    
+    class Meta:
+        verbose_name_plural = "Trạng thái giao hàng"
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['status', 'shipper']),
+            models.Index(fields=['order']),
+            models.Index(fields=['assigned_at']),
+            models.Index(fields=['delivered_at']),
+        ]
+    
+    def __str__(self):
+        return f"Giao hàng #{self.order.id} - {self.get_status_display()}"
+    
+    @property
+    def display_status(self):
+        status_map = dict(self.STATUS_CHOICES)
+        return status_map.get(self.status, self.status)
+    
+    def can_update_status(self, new_status):
+        """Kiểm tra xem có thể cập nhật trạng thái không"""
+        status_flow = {
+            'pending': ['picked_up', 'cancelled'],
+            'picked_up': ['delivering', 'failed', 'cancelled'],
+            'delivering': ['delivered', 'failed', 'cancelled'],
+            'delivered': [],  # Final state
+            'failed': ['picked_up', 'cancelled'],  # Can retry or cancel
+            'cancelled': [],  # Final state
+        }
+        return new_status in status_flow.get(self.status, [])
+    
+    def update_status(self, new_status, notes="", photo=None):
+        """Cập nhật trạng thái giao hàng"""
+        if not self.can_update_status(new_status):
+            raise ValueError(f"Không thể chuyển từ {self.status} sang {new_status}")
+        
+        old_status = self.status
+        self.status = new_status
+        
+        # Cập nhật thời gian tương ứng
+        from django.utils import timezone
+        now = timezone.now()
+        
+        if new_status == 'picked_up' and not self.picked_up_at:
+            self.picked_up_at = now
+            if notes:
+                self.pickup_notes = notes
+            if photo:
+                self.pickup_photo = photo
+                
+        elif new_status == 'delivered' and not self.delivered_at:
+            self.delivered_at = now
+            if notes:
+                self.delivery_notes = notes
+            if photo:
+                self.delivery_photo = photo
+            # Cập nhật trạng thái đơn hàng
+            self.order.status = 'Delivered'
+            self.order.save()
+            
+        elif new_status == 'failed':
+            if notes:
+                self.failure_reason = notes
+                
+        elif new_status == 'cancelled':
+            # Có thể cần cập nhật lại trạng thái đơn hàng
+            if old_status in ['picked_up', 'delivering']:
+                self.order.status = 'Processing'  # Hoặc trạng thái phù hợp khác
+                self.order.save()
+        
+        self.save()
+        
+        # Gửi notification cho người dùng (nếu cần)
+        if new_status in ['picked_up', 'delivering', 'delivered']:
+            self.send_customer_notification(new_status)
+    
+    def send_customer_notification(self, status):
+        """Gửi thông báo cho người dùng (placeholder)"""
+        # TODO: Implement notification system
+        pass
+    
+    def get_delivery_duration(self):
+        """Tính thời gian giao hàng"""
+        if self.picked_up_at and self.delivered_at:
+            return self.delivered_at - self.picked_up_at
+        return None

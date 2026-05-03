@@ -61,12 +61,12 @@ def get_stats():
         'delivered_orders': Order.objects.filter(status='Delivered').count(),
         'cancelled_orders': Order.objects.filter(status='Cancelled').count(),
         'shipped_orders': Order.objects.filter(status='Shipped').count(),
-        # Customer stats
-        'total_customers': CustomerProfile.objects.count(),
-        'verified_customers': CustomerProfile.objects.filter(is_verified=True).count(),
-        'vip_customers': CustomerProfile.objects.filter(is_premium=True).count(),
-        'new_customers_this_month': CustomerProfile.objects.filter(
-            created_at__date__gte=first_day_of_month
+        # User stats
+        'total_customers': User.objects.count(),
+        'verified_customers': User.objects.filter(is_active=True).count(),
+        'vip_customers': User.objects.filter(is_staff=True).count(),
+        'new_customers_this_month': User.objects.filter(
+            date_joined__date__gte=first_day_of_month
         ).count(),
         # Content stats
         'total_news': News.objects.filter(status='published').count(),

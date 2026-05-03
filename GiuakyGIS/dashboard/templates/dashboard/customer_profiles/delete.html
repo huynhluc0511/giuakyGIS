@@ -26,7 +26,7 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-8">
-                    <p class="mb-3">Bạn đang chuẩn bị <strong>xóa vĩnh viễn</strong> tài khoản và tất cả dữ liệu liên quan của khách hàng:</p>
+                    <p class="mb-3">Bạn đang chuẩn bị <strong>xóa vĩnh viễn</strong> tài khoản và tất cả dữ liệu liên quan của người dùng:</p>
                     
                     <div class="alert alert-info">
                         <div class="d-flex align-items-center">
@@ -82,7 +82,7 @@
                         <div class="card-body text-center">
                             <i class="fas fa-trash-alt fa-3x text-danger mb-3"></i>
                             <h6 class="text-danger">Xác nhận xóa</h6>
-                            <p class="small">Nhập tên khách hàng để xác nhận:</p>
+                            <p class="small">Nhập tên người dùng để xác nhận:</p>
                             <input type="text" class="form-control mb-3" id="confirmName" placeholder="{{ profile.display_name }}">
                             <button type="button" class="btn btn-danger w-100" id="deleteBtn" disabled>
                                 <i class="fas fa-trash"></i> Xóa tài khoản
@@ -108,7 +108,7 @@
                     <i class="fas fa-arrow-left"></i> Quay lại chi tiết
                 </a>
                 <a href="{% url 'dashboard:customer_profile_list' %}" class="btn btn-outline-secondary">
-                    <i class="fas fa-list"></i> Danh sách khách hàng
+                    <i class="fas fa-list"></i> Danh sách người dùng
                 </a>
             </div>
         </div>
@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', function() {
     deleteForm.addEventListener('submit', function(e) {
         if (confirmNameInput.value.trim() !== profileName) {
             e.preventDefault();
-            alert('Vui lòng nhập đúng tên khách hàng để xác nhận xóa.');
+            alert('Vui lòng nhập đúng tên người dùng để xác nhận xóa.');
             return false;
         }
         

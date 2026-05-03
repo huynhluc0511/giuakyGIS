@@ -97,13 +97,6 @@ urlpatterns = [
     path('about/<int:pk>/delete/', views.about_delete, name='about_delete'),
     path('about/import/', views.about_import, name='about_import'),
     
-    # Customer Profile Management
-    path('customers/', views.customer_profile_list, name='customer_profile_list'),
-    path('customers/<int:pk>/', views.customer_profile_detail, name='customer_profile_detail'),
-    path('customers/<int:pk>/edit/', views.customer_profile_edit, name='customer_profile_edit'),
-    path('customers/<int:pk>/delete/', views.customer_profile_delete, name='customer_profile_delete'),
-    path('customers/<int:pk>/toggle-verification/', views.customer_profile_toggle_verification, name='customer_profile_toggle_verification'),
-    
     # News Management
     path('news/', views.news_list, name='news_list'),
     path('news/create/', views.news_create, name='news_create'),
@@ -118,4 +111,28 @@ urlpatterns = [
     path('reviews/<int:pk>/approve/', views.review_approve, name='review_approve'),
     path('reviews/<int:pk>/reject/', views.review_reject, name='review_reject'),
     path('reviews/<int:pk>/delete/', views.review_delete, name='review_delete'),
+    
+    # Order Review Management
+    path('order-reviews/', views.order_review_list, name='order_review_list'),
+    path('order-reviews/<int:pk>/', views.order_review_detail, name='order_review_detail'),
+    path('order-reviews/<int:pk>/approve/', views.order_review_approve, name='order_review_approve'),
+    path('order-reviews/<int:pk>/reject/', views.order_review_reject, name='order_review_reject'),
+    path('order-reviews/<int:pk>/delete/', views.order_review_delete, name='order_review_delete'),
+    
+    # Shipper Management
+    path('shippers/', views.shippers_list, name='shippers_list'),
+    path('shippers/create/', views.shipper_create, name='shipper_create'),
+    path('shippers/<int:pk>/', views.shipper_detail, name='shipper_detail'),
+    path('shippers/<int:pk>/edit/', views.shipper_edit, name='shipper_edit'),
+    path('shippers/<int:pk>/delete/', views.shipper_delete, name='shipper_delete'),
+    path('shippers/<int:pk>/toggle-status/', views.shipper_toggle_status, name='shipper_toggle_status'),
+    
+    # Delivery Status Management
+    path('delivery-status/', views.delivery_status_list, name='delivery_status_list'),
+    path('delivery-status/<int:pk>/', views.delivery_status_detail, name='delivery_status_detail'),
+    path('delivery-status/<int:pk>/assign/', views.delivery_status_assign, name='delivery_status_assign'),
+    
+    # Order Shipper Assignment
+    path('orders/<int:pk>/assign-shipper/', views.orders_assign_shipper, name='orders_assign_shipper'),
+    path('orders/<int:pk>/notify-shippers/', views.orders_notify_shippers, name='orders_notify_shippers'),
 ]
