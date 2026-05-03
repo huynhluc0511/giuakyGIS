@@ -25,8 +25,30 @@
 
         /* --- PHẦN 1: NAVBAR CŨ (ĐỎ & VÀNG) --- */
         header { background: var(--red); color: white; padding: 15px 0; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        nav { background: var(--yellow); position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        nav .container { display: flex; justify-content: space-between; align-items: center; height: 70px; }
+        .nav-wrapper {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 0;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        nav { 
+            background: var(--yellow); 
+            position: sticky; 
+            top: 0; 
+            z-index: 1000; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            border-radius: 0 0 15px 15px;
+        }
+        nav .container { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            height: 70px;
+            padding: 0;
+        }
         
         .nav-links { display: flex; gap: 20px; align-items: center; }
         .nav-links a { color: #333; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 5px; }
@@ -587,45 +609,47 @@
     </div>
 </header>
 
-<nav>
-    <div class="container">
-        <button class="mobile-menu-toggle" id="mobileMenuToggle">
-            <i class="fas fa-bars"></i>
-        </button>
-        <div class="nav-left" id="navLeft">
-            <ul class="nav-links">
-                <li><a href="{% url 'home' %}" style="color: #d62828;"><i class="fa-solid fa-house"></i> Trang chủ</a></li>
-                <li><a href="#main-slides"><i class="fa-solid fa-utensils"></i> Thực đơn</a></li>
-                <li class="dropdown">
-                    <a href="#"><i class="fa-solid fa-users"></i> Về chúng tôi ▼</a>
-                    <ul class="dropdown-content">
-                        <li><a href="{% url 'gioi_thieu' %}"><i class="fa-solid fa-info-circle"></i> Giới thiệu</a></li>
-                        <li><a href="{% url 'news_list' %}"><i class="fa-solid fa-newspaper"></i> Tin tức</a></li>
-                        <li><a href="{% url 'lien_he' %}"><i class="fa-solid fa-address-book"></i> Liên hệ</a></li>
-                    </ul>
-                </li>
-                <li><a href="{% url 'tim_duong' %}"><i class="fa-solid fa-map-location-dot"></i> Tìm đường</a></li>
-                <li><a href="{% url 'tinh_trang' %}"><i class="fa-solid fa-truck-fast"></i> Tình trạng</a></li>
-            </ul>
-        </div>
+<div class="nav-wrapper">
+    <nav>
+        <div class="container">
+            <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="nav-left" id="navLeft">
+                <ul class="nav-links">
+                    <li><a href="{% url 'home' %}" style="color: #d62828;"><i class="fa-solid fa-house"></i> Trang chủ</a></li>
+                    <li><a href="#main-slides"><i class="fa-solid fa-utensils"></i> Thực đơn</a></li>
+                    <li class="dropdown">
+                        <a href="#"><i class="fa-solid fa-users"></i> Về chúng tôi ▼</a>
+                        <ul class="dropdown-content">
+                            <li><a href="{% url 'gioi_thieu' %}"><i class="fa-solid fa-info-circle"></i> Giới thiệu</a></li>
+                            <li><a href="{% url 'news_list' %}"><i class="fa-solid fa-newspaper"></i> Tin tức</a></li>
+                            <li><a href="{% url 'lien_he' %}"><i class="fa-solid fa-address-book"></i> Liên hệ</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="{% url 'tim_duong' %}"><i class="fa-solid fa-map-location-dot"></i> Tìm đường</a></li>
+                    <li><a href="{% url 'tinh_trang' %}"><i class="fa-solid fa-truck-fast"></i> Tình trạng</a></li>
+                </ul>
+            </div>
 
-        <div class="nav-right">
-            <a href="{% url 'gio_hang' %}" class="cart-icon">
-                <i class="fa-solid fa-cart-shopping"></i>
-                <span class="cart-badge" id="main-cart-badge">0</span> 
-            </a>
-            <div class="auth-buttons" id="auth-container" style="display: flex; align-items: center; gap: 15px;">
-                {% if request.user.is_authenticated %}
-                    <a href="{% url 'customer_profile' %}" class="user-greeting" style="text-decoration: none; color: #333; font-weight: 700; transition: all 0.3s ease;" onmouseover="this.style.color='#d62828'; this.style.transform='translateY(-2px)'" onmouseout="this.style.color='#333'; this.style.transform='translateY(0)'">👤 <strong>{{ request.user.username }}</strong></a>
-                    <a href="{% url 'logout' %}" class="btn-logout" style="padding: 9px 22px; border-radius: 25px; font-weight: 650; background: #d62828; color: white; border: none; cursor: pointer; font-size: 0.92rem; transition: all 0.3s ease; display: inline-block; box-shadow: 0 4px 12px rgba(214, 40, 40, 0.3);" onmouseover="this.style.background='#b01a1a'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 18px rgba(214, 40, 40, 0.5)'" onmouseout="this.style.background='#d62828'; this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(214, 40, 40, 0.3)'">Thoát</a>
-                {% else %}
-                    <a href="{% url 'login' %}" class="btn-auth login" style="padding: 9px 22px; border-radius: 50px; font-weight: 700; color: #d62828; background: transparent; border: 2px solid #d62828; cursor: pointer;">Đăng Nhập</a>
-                    <a href="{% url 'register' %}" class="btn-auth register" style="padding: 9px 22px; border-radius: 50px; font-weight: 700; background: #d62828; color: white; border: none; cursor: pointer;">Đăng Ký</a>
-                {% endif %}
+            <div class="nav-right">
+                <a href="{% url 'gio_hang' %}" class="cart-icon">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span class="cart-badge" id="main-cart-badge">0</span> 
+                </a>
+                <div class="auth-buttons" id="auth-container" style="display: flex; align-items: center; gap: 15px;">
+                    {% if request.user.is_authenticated %}
+                        <a href="{% url 'customer_profile' %}" class="user-greeting" style="text-decoration: none; color: #333; font-weight: 700; transition: all 0.3s ease;" onmouseover="this.style.color='#d62828'; this.style.transform='translateY(-2px)'" onmouseout="this.style.color='#333'; this.style.transform='translateY(0)'">👤 <strong>{{ request.user.username }}</strong></a>
+                        <a href="{% url 'logout' %}" class="btn-logout" style="padding: 9px 22px; border-radius: 25px; font-weight: 650; background: #d62828; color: white; border: none; cursor: pointer; font-size: 0.92rem; transition: all 0.3s ease; display: inline-block; box-shadow: 0 4px 12px rgba(214, 40, 40, 0.3);" onmouseover="this.style.background='#b01a1a'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 18px rgba(214, 40, 40, 0.5)'" onmouseout="this.style.background='#d62828'; this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(214, 40, 40, 0.3)'">Thoát</a>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="btn-auth login" style="padding: 9px 22px; border-radius: 50px; font-weight: 700; color: #d62828; background: transparent; border: 2px solid #d62828; cursor: pointer;">Đăng Nhập</a>
+                        <a href="{% url 'register' %}" class="btn-auth register" style="padding: 9px 22px; border-radius: 50px; font-weight: 700; background: #d62828; color: white; border: none; cursor: pointer;">Đăng Ký</a>
+                    {% endif %}
+                </div>
             </div>
         </div>
-    </div>
-</nav>
+    </nav>
+</div>
 
 <main>
     <!-- 3 SLIDE CHÍNH: MENU | TIN TỨC | GIỚI THIỆU -->
@@ -906,5 +930,6 @@
     window.addEventListener('storage', () => { updateHomeCartBadge(); });
 </script>
 
+</div>
 </body>
 </html>

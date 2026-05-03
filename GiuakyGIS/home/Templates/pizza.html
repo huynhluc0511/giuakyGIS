@@ -23,77 +23,58 @@
         .btn-back { color: #333; text-decoration: none; font-weight: 700; font-size: 0.95rem; transition: 0.3s; }
         .btn-back:hover { color: #d62828; transform: translateX(-5px); display: inline-block; }
         .cart-link { text-decoration: none; color: #333; background: white; padding: 10px 25px; border-radius: 50px; font-weight: 700; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: inline-block; }
-        .cart-link:hover { background: #d62828; color: white; transform: translateY(-2px); }
-        .cart-link.bounce { animation: bounceCart 0.5s ease; }
+        .cart-link:hover { background: #d62828; color: white; transform: scale(1.05); }
 
-        @keyframes bounceCart {
-            0%, 100% { transform: translateY(0) scale(1); }
-            50% { transform: translateY(-5px) scale(1.1); color: #d62828; }
-        }
+        /* Header */
+        header { background: linear-gradient(135deg, #d62828, #ffb703); color: white; padding: 80px 0; text-align: center; margin-bottom: 60px; position: relative; overflow: hidden; }
+        header::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: url('https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=1920&q=80') center/cover; opacity: 0.2; z-index: 0; }
+        header .container { position: relative; z-index: 1; }
+        header h1 { font-size: 3.5rem; font-weight: 800; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        header p { font-size: 1.3rem; opacity: 0.95; max-width: 600px; margin: 0 auto; }
 
-        header { background: #d62828; color: white; padding: 70px 0; text-align: center; margin-bottom: 40px; border-radius: 0 0 50px 50px; box-shadow: 0 10px 30px rgba(214, 40, 40, 0.2); }
-        header h1 { font-size: 3rem; margin-bottom: 10px; font-weight: 800; letter-spacing: -1px; }
+        /* Grid */
+        .pizza-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 40px; margin-bottom: 80px; }
 
-        /* Pizza Grid */
-        .pizza-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); 
-            gap: 35px; 
-            margin-bottom: 60px; 
-            padding-top: 20px;
-        }
-
-        /* Pizza Card */
+        /* Pizza Cards */
         .pizza-card { 
-            background: white; border-radius: 25px; padding: 25px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #eee;
-            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; flex-direction: column;
+            background: white; border-radius: 25px; overflow: hidden; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.08); transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            position: relative; border: 1px solid #f0f0f0;
         }
-        .pizza-card:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(214, 40, 40, 0.15); border-color: #ffebeb; }
-
-        /* Style mới cho Hình ảnh Pizza */
-        .pizza-img-wrapper {
-            width: 100%;
-            height: 220px;
-            margin-bottom: 20px;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            background: #fdf2f2;
+        .pizza-card:hover { transform: translateY(-20px) scale(1.02); box-shadow: 0 25px 50px rgba(214, 40, 40, 0.15); }
+        
+        .pizza-img-wrapper { 
+            width: 100%; height: 250px; overflow: hidden; position: relative;
+            background: linear-gradient(135deg, #fff5e6, #ffe0cc);
         }
         .pizza-img-wrapper img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.5s ease;
+            width: 100%; height: 100%; object-fit: cover; transition: 0.5s ease;
         }
         .pizza-card:hover .pizza-img-wrapper img { transform: scale(1.1) rotate(2deg); }
         
-        .pizza-info h3 { font-size: 1.4rem; color: #222; margin-bottom: 10px; font-weight: 700; }
-        .pizza-info p { font-size: 0.95rem; color: #666; margin-bottom: 15px; min-height: 50px; line-height: 1.5; }
-        .price { color: #2a9d8f; font-weight: 800; font-size: 1.6rem; margin-bottom: 20px; }
-
-        /* Customization Area */
-        .order-custom {
-            max-height: 0; overflow: hidden; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0;
-            background: #fdf2f2; border-radius: 15px;
-        }
-        .order-custom.active {
-            max-height: 600px; opacity: 1; padding: 20px; margin-bottom: 15px; border: 2px dashed #ffb703;
-        }
-
-        .order-custom label { font-size: 0.85rem; font-weight: 700; color: #d62828; display: block; margin-top: 10px; margin-bottom: 5px; text-transform: uppercase; }
-        .order-custom select {
-            width: 100%; padding: 12px 15px; border: 2px solid #ddd; border-radius: 10px; font-family: inherit; outline: none; background: white; transition: 0.3s;
-        }
-        .order-custom select:focus { border-color: #d62828; }
+        .pizza-info { padding: 30px; text-align: center; }
+        .pizza-info h3 { font-size: 1.6rem; color: #d62828; font-weight: 800; margin-bottom: 15px; }
+        .pizza-info p { color: #666; font-size: 1rem; margin-bottom: 20px; line-height: 1.6; }
+        .price { color: #ffb703; font-weight: 900; font-size: 1.8rem; margin-bottom: 25px; display: block; }
 
         /* Buttons */
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 50px; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 1.05rem; }
-        .btn-add { background: #d62828; color: white; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .btn-add:hover { background: #b91d1d; box-shadow: 0 5px 15px rgba(214, 40, 40, 0.3); }
-        .btn-confirm { background: #2a9d8f; color: white; margin-top: 20px; box-shadow: 0 4px 15px rgba(42, 157, 143, 0.3); }
-        .btn-confirm:hover { background: #1e7a6e; transform: translateY(-2px); }
+        .btn { border: none; padding: 15px 30px; border-radius: 50px; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-add { background: linear-gradient(135deg, #d62828, #e63946); color: white; box-shadow: 0 8px 20px rgba(214, 40, 40, 0.3); width: 100%; margin-bottom: 20px; }
+        .btn-add:hover { background: linear-gradient(135deg, #e63946, #d62828); transform: scale(1.05); }
+        .btn-confirm { background: linear-gradient(135deg, #2a9d8f, #1e7a6e); color: white; width: 100%; }
+        .btn-confirm:hover { background: linear-gradient(135deg, #1e7a6e, #2a9d8f); transform: scale(1.02); }
+
+        /* Order Customization */
+        .order-custom { 
+            display: none; padding: 25px; background: #fff8e1; border-radius: 20px; 
+            border: 2px dashed #ffb703; margin-top: 20px; animation: slideIn 0.4s ease;
+        }
+        .order-custom.active { display: block; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .order-custom label { display: block; margin-bottom: 8px; font-weight: 700; color: #d62828; font-size: 0.95rem; }
+        .order-custom select { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #ffe0b2; border-radius: 12px; font-family: inherit; font-size: 0.95rem; outline: none; transition: 0.3s; }
+        .order-custom select:focus { border-color: #ffb703; box-shadow: 0 0 0 3px rgba(255, 183, 3, 0.1); }
 
         /* Toast Notification */
         .toast-notification {
@@ -205,6 +186,7 @@
                     <label>Đế bánh:</label>
                     <select id="crust-p3">
                         <option value="0">Đế mỏng giòn</option>
+                        <option value="0">Đế dày xốp</option>
                         <option value="30000">Viền phô mai + 30.000đ</option>
                     </select>
                     <button class="btn btn-confirm" onclick="processAddToCart('p3', 'Pizza 4 Phô Mai', 169000, 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=400&q=80')">THÊM VÀO GIỎ</button>
@@ -333,7 +315,7 @@
         const extraSize = sizeSelect ? parseInt(sizeSelect.value) : 0;
         const extraCrust = crustSelect ? parseInt(crustSelect.value) : 0;
         const finalPrice = basePrice + extraSize + extraCrust;
-
+        
         const sizeLabel = sizeSelect.options[sizeSelect.selectedIndex].text.split(' +')[0];
         const fullItemName = `${name} (${sizeLabel})`;
 

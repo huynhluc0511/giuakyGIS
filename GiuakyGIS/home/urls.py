@@ -36,6 +36,36 @@ urlpatterns = [
     path('review/delete/<int:review_id>/', views.delete_review, name='delete_review'),
     path('product/<int:product_id>/reviews/', views.product_reviews, name='product_reviews'),
     
+    # Customer Review System URLs
+    path('don-hang-cua-toi/', views.my_orders, name='my_orders'),
+    path('danh-gia-don-hang/<int:order_id>/', views.create_order_review, name='create_order_review'),
+    path('danh-gia-san-pham/<int:order_item_id>/', views.create_product_review, name='create_product_review'),
+    path('danh-gia-cua-toi/', views.my_reviews, name='my_reviews'),
+    path('chinh-sua-danh-gia-don-hang/<int:review_id>/', views.edit_order_review, name='edit_order_review'),
+    path('chinh-sua-danh-gia-san-pham/<int:review_id>/', views.edit_product_review, name='edit_product_review'),
+    
+    # New Order Rating System URLs
+    path('rate-order/<int:order_id>/', views.rate_order, name='rate_order'),
+    path('submit-review/<int:order_id>/', views.submit_order_review, name='submit_order_review'),
+    path('edit-order-review/<int:review_id>/', views.edit_order_review, name='edit_order_review'),
+    path('delete-review-image/<int:image_id>/', views.delete_review_image, name='delete_review_image'),
+    path('my-reviews/', views.my_reviews, name='my_reviews'),
+    path('order-delivered/<int:order_id>/', views.order_delivered_notification, name='order_delivered_notification'),
+    
+    # Shipper URLs
+    path('shipper/', views.shipper_dashboard, name='shipper_dashboard'),
+    path('shipper/workspace/', views.shipper_workspace, name='shipper_workspace'),
+    path('shipper/available-orders/', views.shipper_available_orders, name='shipper_available_orders'),
+    path('shipper/accept-order/<int:delivery_id>/', views.shipper_accept_order, name='shipper_accept_order'),
+    path('shipper/delivery/<int:delivery_id>/', views.shipper_delivery_detail, name='shipper_delivery_detail'),
+    path('shipper/profile/', views.shipper_profile, name='shipper_profile'),
+    path('shipper/history/', views.shipper_delivery_history, name='shipper_delivery_history'),
+    path('api/shipper/location/', views.shipper_update_location, name='shipper_update_location'),
+    path('api/shipper/toggle-status/', views.shipper_toggle_status, name='shipper_toggle_status'),
+    path('api/shipper/stats/', views.shipper_stats_api, name='shipper_stats_api'),
+    path('api/delivery/<int:delivery_id>/location/', views.delivery_location_api, name='delivery_location_api'),
+    path('api/delivery/<int:delivery_id>/details/', views.delivery_details_api, name='delivery_details_api'),
+    
     # Order API
     path('api/order/create/', views.api_create_order, name='api_create_order'),
 ]

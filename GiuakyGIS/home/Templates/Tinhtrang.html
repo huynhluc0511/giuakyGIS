@@ -45,6 +45,8 @@
         
         .btn-gps { padding: 12px 18px; background: #e0e0e0; color: #333; border: none; border-radius: 10px; cursor: pointer; transition: 0.3s; font-size: 1.1rem; }
         .btn-gps:hover { background: #d32f2f; color: white; }
+        .btn-gps-fallback { padding: 12px 18px; background: #ffb703; color: #333; border: none; border-radius: 10px; cursor: pointer; transition: 0.3s; font-size: 1.1rem; margin-left: 5px; }
+        .btn-gps-fallback:hover { background: #e0a000; color: white; }
 
         .stepper { display: flex; justify-content: space-between; margin-top: 30px; position: relative; }
         .stepper::before { content: ''; position: absolute; top: 20px; left: 10%; right: 10%; height: 3px; background: #eee; z-index: 1; }
@@ -62,6 +64,144 @@
 
         #map { height: 450px; border-radius: 15px; margin-top: 20px; border: 4px solid white; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 1; background: #e0e0e0; }
         .leaflet-routing-container { display: none !important; }
+        
+        .shipper-marker {
+            background: transparent !important;
+            border: none !important;
+        }
+
+        /* Delivery Success Notification */
+        .delivery-success-notification {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .success-content {
+            background: white;
+            border-radius: 30px;
+            padding: 50px;
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.6s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .success-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #ff6b6b, #ffd93d, #6bcf7f, #4ecdc4, #ff6b6b);
+            background-size: 200% 100%;
+            animation: rainbow 3s linear infinite;
+        }
+
+        @keyframes rainbow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .success-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-20px); }
+            60% { transform: translateY(-10px); }
+        }
+
+        .success-content h2 {
+            color: #d62828;
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .success-content p {
+            color: #333;
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+        }
+
+        .success-actions {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-review-now {
+            background: linear-gradient(135deg, #ff6b6b, #ffd93d);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-review-now:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+        }
+
+        .cute-food {
+            font-size: 1.5rem;
+            animation: bounce 2s infinite;
+        }
+
+        .btn-home {
+            background: #f5f5f5;
+            color: #666;
+            border: 2px solid #ddd;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-home:hover {
+            background: #e0e0e0;
+            border-color: #bbb;
+        }
 
         .info-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
         .info-item { background: white; padding: 20px; border-radius: 15px; border-left: 5px solid #ffb703; box-shadow: 0 5px 15px rgba(0,0,0,0.03); }
@@ -251,11 +391,28 @@
             <!-- Order from Database -->
             <div class="customer-info" id="db-customer-info">
                 <h3><i class="fa-solid fa-receipt"></i> Đơn hàng #{{ order.id }}</h3>
-                <p><i class="fa-solid fa-user"></i> <strong>{{ order.full_name }}</strong></p>
-                <p><i class="fa-solid fa-location-dot"></i> {{ order.address }}</p>
-                <p><i class="fa-solid fa-phone"></i> {{ order.phone }}</p>
-                <p><i class="fa-solid fa-calendar"></i> {{ order.created_at|date:"d/m/Y H:i" }}</p>
-                <p><i class="fa-solid fa-money-bill"></i> <strong style="color:#d32f2f;">{{ order.total_price|floatformat:0 }}đ</strong></p>
+                <p><strong>{{ order.full_name }}</strong></p>
+                <p>{{ order.address }}</p>
+                <p>{{ order.phone }}</p>
+                <p>{{ order.created_at|date:"d/m/Y H:i" }}</p>
+                <p><strong style="color:#d32f2f;">{{ order.total_price|floatformat:0 }}đ</strong></p>
+                
+                <!-- Shipper Information -->
+                {% if delivery and delivery.shipper %}
+                <div class="shipper-info" style="background: #e8f5e8; border: 1px solid #c8e6c9; padding: 15px; border-radius: 10px; margin-top: 15px;">
+                    <h4 style="color: #2e7d32; margin-bottom: 10px;">
+                        Thông tin Shipper
+                    </h4>
+                    <p><strong>{{ delivery.shipper.user.get_full_name|default:delivery.shipper.user.username }}</strong></p>
+                    <p>{{ delivery.shipper.phone }}</p>
+                    <p>{{ delivery.shipper.vehicle_type }} - {{ delivery.shipper.license_plate }}</p>
+                    <p>
+                        <span class="badge {% if delivery.shipper.status == 'available' %}bg-success{% elif delivery.shipper.status == 'busy' %}bg-warning{% else %}bg-secondary{% endif %}">
+                            {{ delivery.shipper.display_status }}
+                        </span>
+                    </p>
+                </div>
+                {% endif %}
                 
                 <div class="order-items">
                     {% for item in order_items %}
@@ -276,18 +433,30 @@
             <input type="hidden" id="db-lat" value="{{ order.lat|default:'' }}">
             <input type="hidden" id="db-lng" value="{{ order.lng|default:'' }}">
             
+            <!-- Hidden inputs for shipper tracking -->
+            {% if delivery and delivery.shipper %}
+            <input type="hidden" id="delivery-id" value="{{ delivery.id }}">
+            <input type="hidden" id="shipper-lat" value="{{ delivery.shipper.current_latitude|default:'' }}">
+            <input type="hidden" id="shipper-lng" value="{{ delivery.shipper.current_longitude|default:'' }}">
+            <input type="hidden" id="delivery-status" value="{{ delivery.status }}">
+            {% endif %}
+            
+            <!-- Order ID for redirect -->
+            <input type="hidden" id="order-id" value="{{ order.id }}">
+            
             {% else %}
             <!-- Order from localStorage (fallback) -->
             <div class="customer-info" id="customer-info-box" style="display: none;">
                 <h3 id="display-name">Đơn hàng của: Khách hàng</h3>
-                <p><i class="fa-solid fa-location-dot"></i> <span id="display-address">Đang cập nhật địa chỉ...</span></p>
-                <p><i class="fa-solid fa-phone"></i> <span id="display-phone">Đang cập nhật SĐT...</span></p>
-                <p><i class="fa-solid fa-money-bill"></i> <span id="display-total">...</span></p>
+                <p><span id="display-address">Đang cập nhật địa chỉ...</span></p>
+                <p><span id="display-phone">Đang cập nhật SĐT...</span></p>
+                <p><span id="display-total">...</span></p>
                 <button onclick="document.getElementById('manual-search-box').style.display='flex';" style="background:none; border:none; color:#d32f2f; text-decoration:underline; cursor:pointer; font-size: 0.85rem; margin-top:10px;">Thay đổi địa chỉ giao hàng</button>
             </div>
             
             <div class="search-box" id="manual-search-box">
                 <button class="btn-gps" onclick="getMyLocation()" title="Lấy vị trí GPS"><i class="fa-solid fa-location-crosshairs"></i></button>
+                <button class="btn-gps-fallback" onclick="getDefaultLocation()" title="Sử dụng vị trí mặc định (Quận 1)"><i class="fa-solid fa-location-dot"></i></button>
                 <input type="text" id="address-input" placeholder="Nhập địa chỉ nhận hàng...">
                 <button class="btn-search" onclick="processOrder()"><i class="fa-solid fa-paper-plane"></i> Theo dõi</button>
             </div>
@@ -298,10 +467,10 @@
             {% endif %}
             
             <div class="stepper" id="order-stepper">
-                <div class="step" id="s1"><div class="circle"><i class="fa-solid fa-receipt"></i></div><p>Đã nhận đơn</p></div>
-                <div class="step" id="s2"><div class="circle"><i class="fa-solid fa-fire-burner"></i></div><p>Đang làm món</p></div>
-                <div class="step" id="s3"><div class="circle"><i class="fa-solid fa-motorcycle"></i></div><p>Đang giao</p></div>
-                <div class="step" id="s4"><div class="circle"><i class="fa-solid fa-house-circle-check"></i></div><p>Hoàn thành</p></div>
+                <div class="step" id="s1"><div class="circle"><i class="fa-solid fa-clipboard-list"></i></div><p>Đã nhận đơn</p></div>
+                <div class="step" id="s2"><div class="circle"><i class="fa-solid fa-utensils"></i></div><p>Đang làm món</p></div>
+                <div class="step" id="s3"><div class="circle"><i class="fa-solid fa-truck"></i></div><p>Đang giao</p></div>
+                <div class="step" id="s4"><div class="circle"><i class="fa-solid fa-check-circle"></i></div><p>Hoàn thành</p></div>
             </div>
         </div>
 
@@ -309,11 +478,11 @@
 
         <div class="info-panel">
             <div class="info-item">
-                <small><i class="fa-solid fa-route"></i> Khoảng cách thực tế:</small>
+                <small>Khoảng cách thực tế:</small>
                 <strong id="distance-text">0.00 km</strong>
             </div>
             <div class="info-item">
-                <small><i class="fa-solid fa-clock-rotate-left"></i> Thời gian dự kiến:</small>
+                <small>Thời gian dự kiến:</small>
                 <strong id="time-text">--:--</strong>
             </div>
         </div>
@@ -326,33 +495,119 @@
         </div>
     </footer>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <!-- Leaflet and Routing Scripts -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+    
+    <!-- Anime.js for animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
 
     <script>
         // 1. KHỞI TẠO BẢN ĐỒ VỚI CARTODB (Đã sửa lỗi 403)
         const shopLoc = [10.7634, 106.6821]; 
         const preparationTimeSeconds = 5 * 60;
-        let map = L.map('map').setView(shopLoc, 14);
+        let map = null;
         let routingControl = null;
         let countdownInterval = null;
+        
+        // Debug function to check if libraries are loaded
+        function checkLibraries() {
+            console.log('=== LIBRARY CHECK ===');
+            console.log('Leaflet (L):', typeof L !== 'undefined' ? '✅ Loaded' : '❌ Not loaded');
+            console.log('Leaflet Routing Machine:', typeof L.Routing !== 'undefined' ? '✅ Loaded' : '❌ Not loaded');
+            console.log('Anime.js:', typeof anime !== 'undefined' ? '✅ Loaded' : '❌ Not loaded');
+            console.log('==================');
+        }
+        
+        // Initialize map with error handling
+        function initializeMap() {
+            try {
+                checkLibraries();
+                
+                if (typeof L === 'undefined') {
+                    throw new Error('Leaflet library not loaded');
+                }
+                
+                const mapElement = document.getElementById('map');
+                if (!mapElement) {
+                    throw new Error('Map element not found');
+                }
+                
+                console.log('Initializing map...');
+                map = L.map('map').setView(shopLoc, 14);
+                
+                // Dùng CartoDB Voyager thay cho OpenStreetMap chuẩn để tránh 403
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                    subdomains: 'abcd',
+                    maxZoom: 20
+                }).addTo(map);
 
-        // Dùng CartoDB Voyager thay cho OpenStreetMap chuẩn để tránh 403
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-            subdomains: 'abcd',
-            maxZoom: 20
-        }).addTo(map);
-
-        L.marker(shopLoc).addTo(map).bindPopup("<b>🍔 FastFood Universe</b>").openPopup();
+                L.marker(shopLoc).addTo(map).bindPopup("<b>🍔 FastFood Universe</b>").openPopup();
+                
+                console.log('✅ Map initialized successfully');
+                return true;
+                
+            } catch (error) {
+                console.error('❌ Error initializing map:', error);
+                showNotification('Lỗi khởi tạo bản đồ. Vui lòng tải lại trang!', 'error');
+                
+                // Show fallback message
+                const mapElement = document.getElementById('map');
+                if (mapElement) {
+                    mapElement.innerHTML = `
+                        <div style="display: flex; align-items: center; justify-content: center; height: 450px; background: #f8f9fa; border-radius: 15px; border: 2px solid #dee2e6;">
+                            <div style="text-align: center; padding: 20px;">
+                                <i class="fas fa-map-marked-alt" style="font-size: 3rem; color: #6c757d; margin-bottom: 15px;"></i>
+                                <h4 style="color: #495057; margin-bottom: 10px;">Bản đồ không khả dụng</h4>
+                                <p style="color: #6c757d; margin-bottom: 15px;">Không thể tải bản đồ. Vui lòng sử dụng GPS hoặc nhập địa chỉ thủ công.</p>
+                                <button onclick="location.reload()" style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer;">
+                                    <i class="fas fa-redo"></i> Tải lại trang
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+                return false;
+            }
+        }
 
         document.addEventListener("DOMContentLoaded", () => {
-            anime({ targets: '#main-container', translateY: [40, 0], opacity: [0, 1], easing: 'easeOutExpo', duration: 1000 });
+            // Initialize map first
+            const mapInitialized = initializeMap();
+            
+            if (mapInitialized) {
+                anime({ targets: '#main-container', translateY: [40, 0], opacity: [0, 1], easing: 'easeOutExpo', duration: 1000 });
+            }
             
             {% if has_order %}
             // Database order - use address from server
             updateStepperByStatus('{{ order.status }}');
+            
+            // Auto-calculate route for database orders
+            const customerLat = parseFloat('{{ order.lat|default:"" }}');
+            const customerLng = parseFloat('{{ order.lng|default:"" }}');
+            const customerAddress = '{{ order.address|default:"" }}';
+            
+            if (customerLat && customerLng) {
+                // Use coordinates directly for more accurate routing
+                calculateRoute([customerLat, customerLng], customerAddress);
+            } else if (customerAddress) {
+                // Fallback to geocoding if no coordinates
+                setTimeout(() => calculateRouteForAddress(customerAddress), 500);
+            }
+            
+            // Start shipper tracking if delivery exists
+            const deliveryId = document.getElementById('delivery-id');
+            if (deliveryId) {
+                startShipperTracking();
+                
+                // Update stepper based on delivery status
+                const deliveryStatus = document.getElementById('delivery-status').value;
+                if (deliveryStatus) {
+                    updateStepperByDeliveryStatus(deliveryStatus);
+                }
+            }
             {% else %}
             // localStorage fallback
             loadLocalStorageOrder();
@@ -379,11 +634,186 @@
             }
         }
         
-        // Auto-calculate route for database order
+        // Update stepper based on delivery status
+        function updateStepperByDeliveryStatus(deliveryStatus) {
+            const statusMap = {
+                'pending': 2,      // Đã nhận đơn, chờ shipper
+                'picked_up': 3,   // Đã lấy hàng
+                'delivering': 3,  // Đang giao
+                'delivered': 4,   // Đã giao
+                'failed': 0,      // Thất bại
+                'cancelled': 0    // Đã hủy
+            };
+            const step = statusMap[deliveryStatus] || 1;
+            if (step === 0) {
+                // Failed or cancelled
+                document.querySelectorAll('.step').forEach(s => s.className = 'step cancelled');
+            } else {
+                updateStepper(step);
+                
+                // If order is delivered, show notification and redirect to review page after delay
+                if (deliveryStatus === 'delivered') {
+                    showDeliveryCompletedNotification();
+                }
+            }
+        }
+        
+        // --- LỆNH LOẠI BỎ HOÀN TOÀN ICON TRONG THÔNG BÁO ---
+
+        function showDeliveryCompletedNotification() {
+            if (typeof locationUpdateInterval !== 'undefined' && locationUpdateInterval) {
+                clearInterval(locationUpdateInterval);
+            }
+            
+            const successDiv = document.createElement('div');
+            successDiv.className = 'delivery-success-notification';
+            successDiv.innerHTML = `
+                <div class="success-content">
+                    <h2 style="margin-top: 20px;">Đơn hàng đã giao thành công!</h2>
+                    <p>Cảm ơn bạn đã đặt hàng tại FastFood Universe!</p>
+                    
+                    <div class="success-actions">
+                        <button onclick="redirectToReview()" class="btn-review-now">
+                            <i class="fa-solid fa-circle-check"></i> Hãy đánh giá đơn hàng
+                        </button>
+                        <button onclick="redirectToHome()" class="btn-home">
+                            <i class="fas fa-home"></i> Về trang chủ
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(successDiv);
+            
+            playSuccessSound();
+            
+            setTimeout(() => {
+                if (document.body.contains(successDiv)) {
+                    redirectToReview();
+                }
+            }, 10000);
+        }
+        
+        function playSuccessSound() {
+            // Create a simple success sound using Web Audio API
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            // Play a happy melody
+            const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+            let time = audioContext.currentTime;
+            
+            notes.forEach((freq, index) => {
+                oscillator.frequency.setValueAtTime(freq, time + index * 0.15);
+                gainNode.gain.setValueAtTime(0.3, time + index * 0.15);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, time + index * 0.15 + 0.3);
+            });
+            
+            oscillator.start(time);
+            oscillator.stop(time + 0.8);
+        }
+        
+        function redirectToReview() {
+            const orderId = document.getElementById('order-id')?.value;
+            if (orderId) {
+                window.location.href = `/order-delivered/${orderId}/`;
+            } else {
+                window.location.href = '/don-hang-cua-toi/';
+            }
+        }
+        
+        function redirectToHome() {
+            window.location.href = '/';
+        }
+        
+        // Track shipper location in real-time
+        let shipperMarker = null;
+        let locationUpdateInterval = null;
+        
+        function startShipperTracking() {
+            const deliveryId = document.getElementById('delivery-id');
+            if (!deliveryId) return;
+            
+            // Update location every 10 seconds
+            locationUpdateInterval = setInterval(() => {
+                updateShipperLocation();
+            }, 10000);
+            
+            // Initial update
+            updateShipperLocation();
+        }
+        
+        async function updateShipperLocation() {
+            const deliveryId = document.getElementById('delivery-id').value;
+            try {
+                const response = await fetch(`/api/delivery/${deliveryId}/location/`);
+                const data = await response.json();
+                
+                if (data.shipper_lat && data.shipper_lng) {
+                    updateShipperMarker(data.shipper_lat, data.shipper_lng);
+                }
+                
+                // Update delivery status
+                if (data.status) {
+                    document.getElementById('delivery-status').value = data.status;
+                    updateStepperByDeliveryStatus(data.status);
+                }
+            } catch (error) {
+                console.log('Error updating shipper location:', error);
+            }
+        }
+        
+        function updateShipperMarker(lat, lng) {
+            if (!lat || !lng) return;
+            
+            const shipperLoc = [parseFloat(lat), parseFloat(lng)];
+            
+            if (shipperMarker) {
+                shipperMarker.setLatLng(shipperLoc);
+            } else {
+                shipperMarker = L.marker(shipperLoc, {
+                    icon: L.divIcon({
+                        html: '<i class="fa-solid fa-motorcycle" style="color: #d32f2f; font-size: 20px;"></i>',
+                        iconSize: [30, 30],
+                        className: 'shipper-marker'
+                    })
+                }).addTo(map);
+                shipperMarker.bindPopup("<b>🏍️ Shipper</b><br>Vị trí hiện tại").openPopup();
+            }
+            
+            // Update shipper location inputs
+            document.getElementById('shipper-lat').value = lat;
+            document.getElementById('shipper-lng').value = lng;
+        }
+        
+        // Auto-calculate route for database order and start shipper tracking
         window.addEventListener('load', () => {
             const address = document.getElementById('db-address').value;
-            if (address) {
+            const dbLat = document.getElementById('db-lat').value;
+            const dbLng = document.getElementById('db-lng').value;
+            
+            if (address && dbLat && dbLng) {
+                // Use coordinates directly if available
+                const customerLoc = [parseFloat(dbLat), parseFloat(dbLng)];
+                calculateRoute(customerLoc, address);
+            } else if (address) {
+                // Fallback to geocoding
                 setTimeout(() => calculateRouteForAddress(address), 500);
+            }
+            
+            // Start shipper tracking if delivery exists
+            const deliveryId = document.getElementById('delivery-id');
+            if (deliveryId) {
+                startShipperTracking();
+                
+                // Update stepper based on delivery status
+                const deliveryStatus = document.getElementById('delivery-status').value;
+                if (deliveryStatus) {
+                    updateStepperByDeliveryStatus(deliveryStatus);
+                }
             }
         });
         
@@ -421,69 +851,315 @@
 
         // 2. LẤY VỊ TRÍ GPS
         function getMyLocation() {
-            if (navigator.geolocation) {
-                document.getElementById('address-input').value = "Đang lấy tọa độ GPS...";
-                navigator.geolocation.getCurrentPosition((position) => {
-                    let lat = position.coords.latitude;
-                    let lon = position.coords.longitude;
-                    document.getElementById('address-input').value = "Vị trí GPS của bạn";
-                    calculateRoute([lat, lon], "Vị trí GPS của bạn");
-                }, () => {
-                    alert("Vui lòng cho phép quyền truy cập vị trí!");
-                    document.getElementById('address-input').value = "";
-                });
+            if (!navigator.geolocation) {
+                alert("Trình duyệt của bạn không hỗ trợ định vị GPS!");
+                document.getElementById('address-input').value = "";
+                return;
             }
+            
+            document.getElementById('address-input').value = "Đang lấy tọa độ GPS...";
+            
+            // Enhanced geolocation options
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 10000, // 10 seconds timeout
+                maximumAge: 0 // Don't use cached position
+            };
+            
+            navigator.geolocation.getCurrentPosition(
+                // Success callback
+                (position) => {
+                    try {
+                        let lat = position.coords.latitude;
+                        let lon = position.coords.longitude;
+                        let accuracy = position.coords.accuracy;
+                        
+                        console.log(`GPS Position: ${lat}, ${lon} (Accuracy: ${accuracy}m)`);
+                        
+                        // Check if accuracy is reasonable (within 1000 meters)
+                        if (accuracy > 1000) {
+                            console.warn(`GPS accuracy is poor: ${accuracy}m`);
+                            if (!confirm(`Vị trí GPS không chính xác (độ lệch ${Math.round(accuracy)}m). Bạn có muốn tiếp tục?`)) {
+                                document.getElementById('address-input').value = "";
+                                return;
+                            }
+                        }
+                        
+                        document.getElementById('address-input').value = "Vị trí GPS của bạn";
+                        calculateRoute([lat, lon], "Vị trí GPS của bạn");
+                        
+                        // Show success feedback
+                        showNotification("Đã lấy vị trí GPS thành công!", "success");
+                        
+                    } catch (error) {
+                        console.error('Error processing GPS position:', error);
+                        alert("Có lỗi xử lý vị trí GPS. Vui lòng thử lại!");
+                        document.getElementById('address-input').value = "";
+                    }
+                },
+                // Error callback
+                (error) => {
+                    let errorMessage = "";
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage = "Bạn đã từ chối quyền truy cập vị trí. Vui lòng bật định vị trong trình duyệt.";
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage = "Không thể lấy thông tin vị trí. Vui lòng kiểm tra kết nối GPS.";
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage = "Hết thời gian lấy vị trí. Vui lòng thử lại.";
+                            break;
+                        default:
+                            errorMessage = "Lỗi không xác định khi lấy vị trí GPS.";
+                            break;
+                    }
+                    
+                    console.error('GPS Error:', error);
+                    alert(errorMessage);
+                    document.getElementById('address-input').value = "";
+                    
+                    // Fallback: suggest manual address entry
+                    showNotification("Vui lòng nhập địa chỉ thủ công", "warning");
+                },
+                options
+            );
         }
+        
+        // Helper function to show notifications
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 8px;
+                color: white;
+                font-weight: 600;
+                z-index: 10000;
+                max-width: 300px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                animation: slideInRight 0.3s ease-out;
+            `;
+            
+            // Set background color based on type
+            switch(type) {
+                case 'success':
+                    notification.style.background = 'linear-gradient(135deg, #4caf50, #66bb6a)';
+                    break;
+                case 'warning':
+                    notification.style.background = 'linear-gradient(135deg, #ff9800, #ffa726)';
+                    break;
+                case 'error':
+                    notification.style.background = 'linear-gradient(135deg, #f44336, #ef5350)';
+                    break;
+                default:
+                    notification.style.background = 'linear-gradient(135deg, #2196f3, #42a5f5)';
+            }
+            
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.style.animation = 'slideOutRight 0.3s ease-in';
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.parentNode.removeChild(notification);
+                        }
+                    }, 300);
+                }
+            }, 3000);
+        }
+        
+        // Fallback function for default location (District 1, HCMC)
+        function getDefaultLocation() {
+            // Use District 1, Ho Chi Minh City as default location
+            const defaultLat = 10.7626; // District 1 center
+            const defaultLng = 106.6600;
+            const defaultAddress = "Quận 1, Trung tâm TP.HCM";
+            
+            console.log(`Using default location: ${defaultLat}, ${defaultLng}`);
+            
+            document.getElementById('address-input').value = defaultAddress;
+            calculateRoute([defaultLat, defaultLng], defaultAddress);
+            
+            showNotification("Đã sử dụng vị trí mặc định (Quận 1)", "success");
+        }
+        
+        // Add CSS animations for notifications
+        const notificationStyles = document.createElement('style');
+        notificationStyles.textContent = `
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOutRight {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(notificationStyles);
 
-        // 3. XỬ LÝ ĐỊA CHỈ & VẼ ĐƯỜNG
-        async function processOrder() {
-            let address = document.getElementById('address-input').value.trim();
-            if (!address) return alert("Vui lòng nhập địa chỉ!");
+        // --- CÁC HÀM XỬ LÝ ĐỊNH VỊ VÀ TÍNH THỜI GIAN ---
 
-            document.getElementById('error-message').style.display = 'none';
-            document.getElementById('time-text').innerText = "Đang tính toán...";
+        // Hàm 1: Chuyển địa chỉ văn bản thành tọa độ (Geocoding)
+        async function calculateRouteForAddress(address) {
+            const errorBox = document.getElementById('error-message');
+            const timeText = document.getElementById('time-text');
+            const distText = document.getElementById('distance-text');
 
             try {
-                let res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address + ", Ho Chi Minh, Vietnam")}&format=json&limit=1`);
-                let data = await res.json();
+                // Sử dụng Nominatim API (miễn phí) để tìm tọa độ
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`);
+                const data = await response.json();
+
                 if (data && data.length > 0) {
-                    calculateRoute([parseFloat(data[0].lat), parseFloat(data[0].lon)], address);
+                    const lat = parseFloat(data[0].lat);
+                    const lon = parseFloat(data[0].lon);
+                    
+                    if (errorBox) errorBox.style.display = 'none';
+                    // Sau khi có tọa độ, tiến hành vẽ đường đi
+                    calculateRoute([lat, lon], address);
                 } else {
-                    cancelOrder("Không tìm thấy địa chỉ này!");
+                    throw new Error("Không tìm thấy vị trí địa chỉ này.");
                 }
-            } catch (err) {
-                cancelOrder("Lỗi kết nối máy chủ định vị!");
+            } catch (error) {
+                console.error("Geocoding Error:", error);
+                timeText.innerText = "Lỗi định vị";
+                timeText.style.color = "red";
+                distText.innerText = "N/A";
+                if (errorBox) {
+                    errorBox.style.display = 'block';
+                    document.getElementById('error-text').innerText = "Không thể định vị địa chỉ này trên bản đồ.";
+                }
             }
         }
 
-        function calculateRoute(customerLoc, addressName) {
-            if (routingControl) map.removeControl(routingControl);
-            
+        // Hàm 2: Vẽ tuyến đường và tính khoảng cách/thời gian thực tế
+        function calculateRoute(destinationCoords, addressName) {
+            if (!map) return;
+
+            // Xóa tuyến đường cũ nếu đã có
+            if (routingControl) {
+                map.removeControl(routingControl);
+            }
+
             routingControl = L.Routing.control({
-                waypoints: [ L.latLng(shopLoc[0], shopLoc[1]), L.latLng(customerLoc[0], customerLoc[1]) ],
-                routeWhileDragging: true,
-                show: false,
-                createMarker: function(i, wp) {
-                    if (i === 0) return L.marker(wp.latLng).bindPopup("<b>🍔 Shop</b>");
-                    return L.marker(wp.latLng, {draggable: true}).bindPopup(`<b>🏠 Giao đến:</b><br>${addressName}`).openPopup();
+                waypoints: [
+                    L.latLng(shopLoc[0], shopLoc[1]), // Điểm đi: Cửa hàng
+                    L.latLng(destinationCoords[0], destinationCoords[1]) // Điểm đến: Khách hàng
+                ],
+                lineOptions: {
+                    styles: [{ color: '#d32f2f', weight: 6, opacity: 0.8 }]
                 },
-                lineOptions: { styles: [{color: '#d32f2f', opacity: 0.7, weight: 6}] }
+                addWaypoints: false,
+                draggableWaypoints: false,
+                fitSelectedRoutes: true,
+                show: false, // Ẩn bảng chỉ dẫn chi tiết của Leaflet
+                createMarker: function(i, waypoint, n) {
+                    const icon = i === 0 
+                        ? L.icon({iconUrl: 'https://cdn-icons-png.flaticon.com/512/616/616430.png', iconSize: [35, 35]}) // Icon Shop
+                        : L.icon({iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png', iconSize: [25, 41], iconAnchor: [12, 41]}); // Icon mặc định Leaflet
+                    return L.marker(waypoint.latLng, { icon: icon }).bindPopup(i === 0 ? "Cửa hàng" : "Vị trí giao hàng");
+                }
             }).addTo(map);
 
+            // Lắng nghe sự kiện khi tìm thấy tuyến đường
             routingControl.on('routesfound', function(e) {
-                let summary = e.routes[0].summary;
-                let km = parseFloat((summary.totalDistance / 1000).toFixed(2));
-                document.getElementById('distance-text').innerText = km + " km";
+                const routes = e.routes;
+                const summary = routes[0].summary;
                 
-                if (countdownInterval) clearInterval(countdownInterval);
+                // 1. Cập nhật khoảng cách (từ mét sang km)
+                const distanceKm = (summary.totalDistance / 1000).toFixed(2);
+                document.getElementById('distance-text').innerText = distanceKm + " km";
 
-                if (km > 10) {
-                    cancelOrder(`Khoảng cách quá xa (${km}km). Shop chỉ giao dưới 10km!`);
-                } else {
-                    document.getElementById('error-message').style.display = 'none';
-                    startDelivery(summary.totalTime);
-                }
+                // 2. Cập nhật thời gian dự kiến (giây -> phút) + thời gian chuẩn bị món (5p)
+                const travelTimeMin = Math.round(summary.totalTime / 60);
+                const totalTime = travelTimeMin + 5; 
+                
+                const timeDisplay = document.getElementById('time-text');
+                timeDisplay.innerText = totalTime + " phút";
+                timeDisplay.style.color = "#2e7d32"; // Đổi màu xanh nếu thành công
+                
+                console.log(`Distance: ${distanceKm}km, Time: ${totalTime}min`);
             });
+
+            routingControl.on('routingerror', function() {
+                document.getElementById('time-text').innerText = "Lỗi tìm đường";
+                document.getElementById('distance-text').innerText = "N/A";
+            });
+        }
+
+        // Hàm 3: Xử lý nút "Theo dõi" cho khách hàng vãng lai (localStorage)
+        function processOrder() {
+            const address = document.getElementById('address-input').value;
+            if (!address) {
+                alert("Vui lòng nhập địa chỉ!");
+                return;
+            }
+            // Lưu vào localStorage để giả lập đơn hàng
+            localStorage.setItem('lastAddress', address);
+            document.getElementById('display-address').innerText = address;
+            document.getElementById('customer-info-box').style.display = 'block';
+            document.getElementById('manual-search-box').style.display = 'none';
+            
+            calculateRouteForAddress(address);
+        }
+
+        // Hàm lấy vị trí hiện tại (GPS) - Cập nhật với reverse geocoding
+        function getMyLocation() {
+            if (navigator.geolocation) {
+                document.getElementById('address-input').value = "Đang lấy tọa độ GPS...";
+                navigator.geolocation.getCurrentPosition(position => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    // Chuyển tọa độ ngược lại thành tên địa chỉ (Reverse Geocoding)
+                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            document.getElementById('address-input').value = data.display_name || "Vị trí GPS của bạn";
+                            // Tự động tính toán đường đi sau khi có GPS
+                            calculateRoute([lat, lon], data.display_name || "Vị trí GPS của bạn");
+                        })
+                        .catch(error => {
+                            console.error('Reverse geocoding error:', error);
+                            document.getElementById('address-input').value = "Vị trí GPS của bạn";
+                            calculateRoute([lat, lon], "Vị trí GPS của bạn");
+                        });
+                }, () => {
+                    alert("Không thể truy cập GPS của bạn.");
+                    document.getElementById('address-input').value = "";
+                });
+            } else {
+                alert("Trình duyệt không hỗ trợ GPS!");
+            }
+        }
+        
+        function showEstimatedTime(deliverySeconds) {
+            // Ensure deliverySeconds is a valid number
+            if (!deliverySeconds || deliverySeconds <= 0) {
+                deliverySeconds = 15 * 60; // Default 15 minutes if invalid
+            }
+            
+            let totalSeconds = preparationTimeSeconds + deliverySeconds;
+            let mins = Math.floor(totalSeconds / 60);
+            let secs = Math.floor(totalSeconds % 60);
+            
+            // Update time display with better formatting
+            const timeElement = document.getElementById('time-text');
+            if (timeElement) {
+                timeElement.innerText = `${mins}p ${secs}s`;
+                timeElement.style.color = '#d32f2f';
+                timeElement.style.fontWeight = 'bold';
+            }
+            
+            // Also update distance if available
+            console.log(`Estimated time: ${mins}p ${secs}s (Prep: ${preparationTimeSeconds/60}p, Delivery: ${deliverySeconds/60}p)`);
         }
 
         function cancelOrder(msg) {
