@@ -52,20 +52,6 @@ urlpatterns = [
     path('my-reviews/', views.my_reviews, name='my_reviews'),
     path('order-delivered/<int:order_id>/', views.order_delivered_notification, name='order_delivered_notification'),
     
-    # Shipper URLs
-    path('shipper/', views.shipper_dashboard, name='shipper_dashboard'),
-    path('shipper/workspace/', views.shipper_workspace, name='shipper_workspace'),
-    path('shipper/available-orders/', views.shipper_available_orders, name='shipper_available_orders'),
-    path('shipper/accept-order/<int:delivery_id>/', views.shipper_accept_order, name='shipper_accept_order'),
-    path('shipper/delivery/<int:delivery_id>/', views.shipper_delivery_detail, name='shipper_delivery_detail'),
-    path('shipper/profile/', views.shipper_profile, name='shipper_profile'),
-    path('shipper/history/', views.shipper_delivery_history, name='shipper_delivery_history'),
-    path('api/shipper/location/', views.shipper_update_location, name='shipper_update_location'),
-    path('api/shipper/toggle-status/', views.shipper_toggle_status, name='shipper_toggle_status'),
-    path('api/shipper/stats/', views.shipper_stats_api, name='shipper_stats_api'),
-    path('api/delivery/<int:delivery_id>/location/', views.delivery_location_api, name='delivery_location_api'),
-    path('api/delivery/<int:delivery_id>/details/', views.delivery_details_api, name='delivery_details_api'),
-    
     # Order API
     path('api/order/create/', views.api_create_order, name='api_create_order'),
 ]
