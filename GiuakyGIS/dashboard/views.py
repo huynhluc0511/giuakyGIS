@@ -462,7 +462,7 @@ def orders_notify_shippers(request, pk):
 # ==================== USERS ====================
 @admin_required
 def users_list(request):
-    users = User.objects.all()
+    users = User.objects.select_related('profile').all()
     search_form = SearchForm(request.GET or None)
     if search_form.is_valid() and search_form.cleaned_data.get('q'):
         q = search_form.cleaned_data['q']
@@ -494,7 +494,7 @@ def users_create(request):
 
 @admin_required
 def users_detail(request, pk):
-    user = get_object_or_404(User, pk=pk)
+    user = get_object_or_404(User.objects.select_related('profile'), pk=pk)
     orders = Order.objects.filter(user=user).order_by('-created_at')[:10]
     return render(request, 'dashboard/users/detail.html', {
         'user_obj': user, 'orders': orders,
