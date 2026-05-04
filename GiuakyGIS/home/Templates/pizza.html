@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thực Đơn Pizza - FastFood Universe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    {% load static %}
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background-color: #fcfcfc; color: #333; overflow-x: hidden; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        
+        /* Nav & Header */
+        nav { background: #ffb703; padding: 15px 0; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        nav .container { display: flex; justify-content: space-between; align-items: center; }
+        .btn-back { color: #333; text-decoration: none; font-weight: 700; font-size: 0.95rem; transition: 0.3s; }
+        .btn-back:hover { color: #d62828; transform: translateX(-5px); display: inline-block; }
+        .cart-link { text-decoration: none; color: #333; background: white; padding: 10px 25px; border-radius: 50px; font-weight: 700; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: inline-block; }
+        .cart-link:hover { background: #d62828; color: white; transform: scale(1.05); }
+
+        /* Header */
+        header { background: linear-gradient(135deg, #d62828, #ffb703); color: white; padding: 80px 0; text-align: center; margin-bottom: 60px; position: relative; overflow: hidden; }
+        header::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: url('https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=1920&q=80') center/cover; opacity: 0.2; z-index: 0; }
+        header .container { position: relative; z-index: 1; }
+        header h1 { font-size: 3.5rem; font-weight: 800; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        header p { font-size: 1.3rem; opacity: 0.95; max-width: 600px; margin: 0 auto; }
+
+        /* Grid */
+        .pizza-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 40px; margin-bottom: 80px; }
+
+        /* Pizza Cards */
+        .pizza-card { 
+            background: white; border-radius: 25px; overflow: hidden; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.08); transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            position: relative; border: 1px solid #f0f0f0;
+        }
+        .pizza-card:hover { transform: translateY(-20px) scale(1.02); box-shadow: 0 25px 50px rgba(214, 40, 40, 0.15); }
+        
+        .pizza-img-wrapper { 
+            width: 100%; height: 250px; overflow: hidden; position: relative;
+            background: linear-gradient(135deg, #fff5e6, #ffe0cc);
+        }
+        .pizza-img-wrapper img {
+            width: 100%; height: 100%; object-fit: cover; transition: 0.5s ease;
+        }
+        .pizza-card:hover .pizza-img-wrapper img { transform: scale(1.1) rotate(2deg); }
+        
+        .pizza-info { padding: 30px; text-align: center; }
+        .pizza-info h3 { font-size: 1.6rem; color: #d62828; font-weight: 800; margin-bottom: 15px; }
+        .pizza-info p { color: #666; font-size: 1rem; margin-bottom: 20px; line-height: 1.6; }
+        .price { color: #ffb703; font-weight: 900; font-size: 1.8rem; margin-bottom: 25px; display: block; }
+
+        /* Buttons */
+        .btn { border: none; padding: 15px 30px; border-radius: 50px; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-add { background: linear-gradient(135deg, #d62828, #e63946); color: white; box-shadow: 0 8px 20px rgba(214, 40, 40, 0.3); width: 100%; margin-bottom: 20px; }
+        .btn-add:hover { background: linear-gradient(135deg, #e63946, #d62828); transform: scale(1.05); }
+        .btn-confirm { background: linear-gradient(135deg, #2a9d8f, #1e7a6e); color: white; width: 100%; }
+        .btn-confirm:hover { background: linear-gradient(135deg, #1e7a6e, #2a9d8f); transform: scale(1.02); }
+
+        /* Order Customization */
+        .order-custom { 
+            display: none; padding: 25px; background: #fff8e1; border-radius: 20px; 
+            border: 2px dashed #ffb703; margin-top: 20px; animation: slideIn 0.4s ease;
+        }
+        .order-custom.active { display: block; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .order-custom label { display: block; margin-bottom: 8px; font-weight: 700; color: #d62828; font-size: 0.95rem; }
+        .order-custom select { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #ffe0b2; border-radius: 12px; font-family: inherit; font-size: 0.95rem; outline: none; transition: 0.3s; }
+        .order-custom select:focus { border-color: #ffb703; box-shadow: 0 0 0 3px rgba(255, 183, 3, 0.1); }
+
+        /* Toast Notification */
+        .toast-notification {
+            position: fixed; bottom: 30px; right: -350px; background: #2a9d8f; color: white;
+            padding: 15px 25px; border-radius: 12px; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: right 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55); z-index: 1050; display: flex; align-items: center; gap: 10px;
+        }
+        .toast-notification.show { right: 30px; }
+
+        footer { background: #1a1a1a; color: #aaa; text-align: center; padding: 40px 0; margin-top: 50px; border-top: 5px solid #ffb703; }
+        footer strong { color: #ffb703; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="container">
+        <a href="{% url 'home' %}" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Trang Chủ</a>
+        
+        <a href="{% url 'gio_hang' %}" class="cart-link" id="cart-btn">
+            <i class="fa-solid fa-cart-shopping"></i> Giỏ hàng (<span id="cart-qty">0</span>)
+        </a>
+    </div>
+</nav>
+
+<header data-aos="fade-down" data-aos-duration="1000">
+    <div class="container">
+        <h1>🍕 Menu Pizza Thượng Hạng</h1>
+        <p>Thưởng thức hương vị Ý đích thực trong từng lát bánh</p>
+    </div>
+</header>
+
+<main class="container">
+    <div class="pizza-grid">
+        
+        <div class="pizza-card" id="p1" data-aos="fade-up" data-aos-delay="0">
+            <div class="pizza-img-wrapper">
+                <img src="https://images.unsplash.com/photo-1590947132387-155cc02f3212?auto=format&fit=crop&w=400&q=80" alt="Pizza Hải Sản Pesto">
+            </div>
+            <div class="pizza-info">
+                <h3>Pizza Hải Sản Pesto</h3>
+                <p>Tôm, mực tươi cùng sốt Pesto xanh thơm nồng đặc trưng.</p>
+                <div class="price">189.000đ</div>
+                <button class="btn btn-add" onclick="toggleOrder('p1')"><i class="fa-solid fa-plus"></i> Chọn Món</button>
+                
+                <div class="order-custom">
+                    <label><i class="fa-solid fa-maximize"></i> Kích cỡ:</label>
+                    <select id="size-p1">
+                        <option value="0">Size M (9 inch) - Mặc định</option>
+                        <option value="80000">Size L (12 inch) + 80.000đ</option>
+                    </select>
+                    
+                    <label><i class="fa-solid fa-bread-slice"></i> Đế bánh:</label>
+                    <select id="crust-p1">
+                        <option value="0">Đế mỏng giòn</option>
+                        <option value="0">Đế dày xốp</option>
+                        <option value="30000">Viền phô mai + 30.000đ</option>
+                    </select>
+                    
+                    <button class="btn btn-confirm" onclick="processAddToCart('p1', 'Pizza Hải Sản Pesto', 189000, 'https://images.unsplash.com/photo-1590947132387-155cc02f3212?auto=format&fit=crop&w=400&q=80')">THÊM VÀO GIỎ</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="pizza-card" id="p2" data-aos="fade-up" data-aos-delay="100">
+            <div class="pizza-img-wrapper">
+                <img src="https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=400&q=80" alt="Pizza Pepperoni Ý">
+            </div>
+            <div class="pizza-info">
+                <h3>Pizza Pepperoni Ý</h3>
+                <p>Xúc xích Ý cay nồng và lớp phô mai Mozzarella tan chảy.</p>
+                <div class="price">149.000đ</div>
+                <button class="btn btn-add" onclick="toggleOrder('p2')"><i class="fa-solid fa-plus"></i> Chọn Món</button>
+                
+                <div class="order-custom">
+                    <label><i class="fa-solid fa-maximize"></i> Kích cỡ:</label>
+                    <select id="size-p2">
+                        <option value="0">Size M (9 inch) - Mặc định</option>
+                        <option value="70000">Size L (12 inch) + 70.000đ</option>
+                    </select>
+                    
+                    <label><i class="fa-solid fa-bread-slice"></i> Đế bánh:</label>
+                    <select id="crust-p2">
+                        <option value="0">Đế mỏng giòn</option>
+                        <option value="30000">Viền phô mai + 30.000đ</option>
+                    </select>
+                    
+                    <button class="btn btn-confirm" onclick="processAddToCart('p2', 'Pizza Pepperoni Ý', 149000, 'https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=400&q=80')">THÊM VÀO GIỎ</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="pizza-card" id="p3" data-aos="fade-up" data-aos-delay="200">
+            <div class="pizza-img-wrapper">
+                <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=400&q=80" alt="Pizza 4 Loại Phô Mai">
+            </div>
+            <div class="pizza-info">
+                <h3>Pizza 4 Loại Phô Mai</h3>
+                <p>Sự kết hợp hoàn hảo giữa Mozzarella, Parmesan, Cheddar và Blue Cheese.</p>
+                <div class="price">169.000đ</div>
+                <button class="btn btn-add" onclick="toggleOrder('p3')"><i class="fa-solid fa-plus"></i> Chọn Món</button>
+                
+                <div class="order-custom">
+                    <label>Kích cỡ:</label>
+                    <select id="size-p3">
+                        <option value="0">Size M (9 inch)</option>
+                        <option value="75000">Size L (12 inch) + 75.000đ</option>
+                    </select>
+                    <label>Đế bánh:</label>
+                    <select id="crust-p3">
+                        <option value="0">Đế mỏng giòn</option>
+                        <option value="0">Đế dày xốp</option>
+                        <option value="30000">Viền phô mai + 30.000đ</option>
+                    </select>
+                    <button class="btn btn-confirm" onclick="processAddToCart('p3', 'Pizza 4 Phô Mai', 169000, 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=400&q=80')">THÊM VÀO GIỎ</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="pizza-card" id="p4" data-aos="fade-up" data-aos-delay="300">
+            <div class="pizza-img-wrapper">
+                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=400&q=80" alt="Pizza Gà BBQ">
+            </div>
+            <div class="pizza-info">
+                <h3>Pizza Gà BBQ</h3>
+                <p>Thịt gà nướng mềm phủ xốt BBQ đậm đà, hành tây và phô mai.</p>
+                <div class="price">159.000đ</div>
+                <button class="btn btn-add" onclick="toggleOrder('p4')"><i class="fa-solid fa-plus"></i> Chọn Món</button>
+                
+                <div class="order-custom">
+                    <label>Kích cỡ:</label>
+                    <select id="size-p4">
+                        <option value="0">Size M (9 inch)</option>
+                        <option value="70000">Size L (12 inch) + 70.000đ</option>
+                    </select>
+                    <label>Đế bánh:</label>
+                    <select id="crust-p4">
+                        <option value="0">Đế mỏng giòn</option>
+                        <option value="0">Đế dày xốp</option>
+                        <option value="30000">Viền phô mai + 30.000đ</option>
+                    </select>
+                    <button class="btn btn-confirm" onclick="processAddToCart('p4', 'Pizza Gà BBQ', 159000, 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=400&q=80')">THÊM VÀO GIỎ</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="pizza-card" id="p5" data-aos="fade-up" data-aos-delay="400">
+            <div class="pizza-img-wrapper">
+                <img src="https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=400&q=80" alt="Pizza Hawaiian">
+            </div>
+            <div class="pizza-info">
+                <h3>Pizza Hawaiian</h3>
+                <p>Hương vị nhiệt đới với dứa chua ngọt và thịt nguội thơm lừng.</p>
+                <div class="price">139.000đ</div>
+                <button class="btn btn-add" onclick="toggleOrder('p5')"><i class="fa-solid fa-plus"></i> Chọn Món</button>
+                
+                <div class="order-custom">
+                    <label>Kích cỡ:</label>
+                    <select id="size-p5">
+                        <option value="0">Size M (9 inch)</option>
+                        <option value="60000">Size L (12 inch) + 60.000đ</option>
+                    </select>
+                    <label>Đế bánh:</label>
+                    <select id="crust-p5">
+                        <option value="0">Đế mỏng giòn</option>
+                        <option value="30000">Viền phô mai + 30.000đ</option>
+                    </select>
+                    <button class="btn btn-confirm" onclick="processAddToCart('p5', 'Pizza Hawaiian', 139000, 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=400&q=80')">THÊM VÀO GIỎ</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="pizza-card" id="p6" data-aos="fade-up" data-aos-delay="500">
+            <div class="pizza-img-wrapper">
+                <img src="https://images.unsplash.com/photo-1585238342024-78d387f4a707?auto=format&fit=crop&w=400&q=80" alt="Pizza Rau Củ Thanh Đạm">
+            </div>
+            <div class="pizza-info">
+                <h3>Pizza Rau Củ Thanh Đạm</h3>
+                <p>Dành cho người thích sự nhẹ nhàng với nấm, hành tây, ớt chuông và cà chua.</p>
+                <div class="price">119.000đ</div>
+                <button class="btn btn-add" onclick="toggleOrder('p6')"><i class="fa-solid fa-plus"></i> Chọn Món</button>
+                
+                <div class="order-custom">
+                    <label>Kích cỡ:</label>
+                    <select id="size-p6">
+                        <option value="0">Size M (9 inch)</option>
+                        <option value="50000">Size L (12 inch) + 50.000đ</option>
+                    </select>
+                    <label>Đế bánh:</label>
+                    <select id="crust-p6">
+                        <option value="0">Đế mỏng giòn</option>
+                        <option value="0">Đế dày xốp</option>
+                        <option value="30000">Viền phô mai phô mai + 30.000đ</option>
+                    </select>
+                    <button class="btn btn-confirm" onclick="processAddToCart('p6', 'Pizza Rau Củ', 119000, 'https://images.unsplash.com/photo-1585238342024-78d387f4a707?auto=format&fit=crop&w=400&q=80')">THÊM VÀO GIỎ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div id="toast" class="toast-notification">
+    <i class="fa-solid fa-circle-check"></i> <span id="toast-msg">Đã thêm vào giỏ hàng</span>
+</div>
+
+<footer>
+    <div class="container">
+        <p>Phát triển với bởi:</p>
+        <p><strong>Dương Đan Huy</strong> (1250080068) & <strong>Huỳnh Tấn Lực</strong> (1250080110)</p>
+        <span class="footer-brand">FASTFOOD UNIVERSE</span>
+    </div>
+</footer>
+
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
+<script>
+    // Khởi tạo hiệu ứng AOS
+    AOS.init({ once: true, offset: 50 });
+
+    // Hiển thị Form tùy chỉnh
+    function toggleOrder(id) {
+        document.querySelectorAll('.order-custom').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.btn-add').forEach(el => el.style.display = 'flex');
+
+        const card = document.getElementById(id);
+        card.querySelector('.order-custom').classList.add('active');
+        card.querySelector('.btn-add').style.display = 'none';
+    }
+
+    // Logic thêm vào giỏ hàng
+    function processAddToCart(divId, name, basePrice, img) {
+        let cart = JSON.parse(localStorage.getItem('cart_data')) || [];
+        
+        const sizeSelect = document.getElementById(`size-${divId}`);
+        const crustSelect = document.getElementById(`crust-${divId}`);
+        
+        const extraSize = sizeSelect ? parseInt(sizeSelect.value) : 0;
+        const extraCrust = crustSelect ? parseInt(crustSelect.value) : 0;
+        const finalPrice = basePrice + extraSize + extraCrust;
+        
+        const sizeLabel = sizeSelect.options[sizeSelect.selectedIndex].text.split(' +')[0];
+        const fullItemName = `${name} (${sizeLabel})`;
+
+        const itemId = `${name}-${finalPrice}-${extraCrust}`;
+        const existingItem = cart.find(item => item.id === itemId);
+
+        if (existingItem) {
+            existingItem.qty += 1;
+        } else {
+            cart.push({
+                id: itemId, name: fullItemName, price: finalPrice, qty: 1, img: img
+            });
+        }
+
+        localStorage.setItem('cart_data', JSON.stringify(cart));
+        updateCartQty();
+        
+        // Hiện Toast thay vì alert
+        showToast(`Đã thêm 1 x ${name}`);
+        
+        // Đóng form
+        const card = document.getElementById(divId);
+        card.querySelector('.order-custom').classList.remove('active');
+        card.querySelector('.btn-add').style.display = 'flex';
+    }
+
+    // Hiển thị thông báo Toast & Hiệu ứng giỏ hàng
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        document.getElementById('toast-msg').innerText = msg;
+        toast.classList.add('show');
+        
+        // Hiệu ứng giật nút giỏ hàng
+        const cartBtn = document.getElementById('cart-btn');
+        cartBtn.classList.remove('bounce');
+        void cartBtn.offsetWidth; // trigger reflow
+        cartBtn.classList.add('bounce');
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
+    }
+
+    // Cập nhật badge giỏ hàng
+    function updateCartQty() {
+        const cart = JSON.parse(localStorage.getItem('cart_data')) || [];
+        const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
+        const qtyDisplay = document.getElementById('cart-qty');
+        
+        if(qtyDisplay) {
+            qtyDisplay.innerText = totalQty;
+        }
+    }
+
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'cart_data') updateCartQty();
+    });
+
+    updateCartQty();
+</script>
+
+</body>
+</html>

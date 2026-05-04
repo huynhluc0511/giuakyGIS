@@ -1,0 +1,126 @@
+<div class="product-reviews-section mt-4 pt-4 border-t border-gray-200">
+    <div class="rating-summary mb-3">
+        <div class="d-flex align-items-center">
+            <span class="fs-4 fw-bold text-warning me-2">{{ product.avg_rating|floatformat:1 }}</span>
+            <div class="star-rating me-2">
+                {% for i in "12345"|make_list %}
+                    {% if forloop.counter <= product.avg_rating %}⭐{% else %}☆{% endif %}
+                {% endfor %}
+            </div>
+            <span class="text-muted">({{ product.total_reviews }} đánh giá)</span>
+        </div>
+    </div>
+    
+    <div class="recent-reviews">
+        {% for review in product.reviews %}
+        <div class="review-item p-3 mb-3 border rounded">
+            <div class="d-flex align-items-start mb-2">
+                <div class="avatar me-3 bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center" style="width:40px;height:40px;font-weight:700;">
+                    {{ review.user.username|slice:":1"|upper }}
+                </div>
+                <div class="flex-grow-1">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h6 class="mb-1">{{ review.user.first_name|default:review.user.username }}</h6>
+                        <div class="star-rating-small">
+                            {% for i in "12345"|make_list %}
+                                {% if forloop.counter <= review.rating %}⭐{% else %}☆{% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% if review.comment %}
+                    <p class="text-muted mb-1">{{ review.comment }}</p>
+                    {% endif %}
+                    <small class="text-muted">{{ review.created_at|date:"d/m/Y" }}</small>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-center py-4 text-muted">
+            <i class="fas fa-star fs-1 opacity-50 mb-2 d-block"></i>
+            <p>Chưa có đánh giá nào</p>
+            <small>Hãy là người đầu tiên đánh giá món này!</small>
+        </div>
+        {% endfor %}
+    </div>
+    
+    {% if user.is_authenticated %}
+    <div class="submit-review mt-4 p-4 border rounded">
+        <h6 class="mb-3">Đánh giá của bạn</h6>
+        <form id="reviewForm-{{ product.id }}" class="review-form">
+            <div class="rating-input mb-3">
+                <label class="form-label">Đánh giá sao:</label>
+                <div class="star-inputs d-flex gap-2">
+                    {% for i in "12345"|make_list %}
+                    <i class="fas fa-star star-clickable fs-4 cursor-pointer text-warning" data-rating="{{ forloop.counter }}" data-product="{{ product.id }}"></i>
+                    {% endfor %}
+                </div>
+                <input type="hidden" name="rating" id="rating-{{ product.id }}" value="0">
+            </div>
+            <div class="mb-3">
+                <textarea name="comment" class="form-control" rows="3" placeholder="Chia sẻ cảm nhận của bạn... (tùy chọn)"></textarea>
+            </div>
+            <button type="submit" class="btn btn-warning">Gửi đánh giá</button>
+        </form>
+    </div>
+    {% else %}
+    <div class="text-center py-4 bg-light rounded p-3">
+        <i class="fas fa-sign-in-alt text-warning fs-3 mb-2"></i>
+        <p class="mb-1">Đăng nhập để đánh giá</p>
+        <a href="{% url 'login' %}" class="btn btn-outline-warning btn-sm">Đăng nhập</a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Star rating click
+    document.querySelectorAll('.star-clickable').forEach(star => {
+        star.addEventListener('click', function() {
+            const rating = this.dataset.rating;
+            const productId = this.dataset.product;
+            const stars = this.parentNode.querySelectorAll('.star-clickable');
+            const hiddenInput = document.getElementById('rating-' + productId);
+            
+            stars.forEach((s, index) => {
+                if (index < rating) {
+                    s.classList.add('active');
+                } else {
+                    s.classList.remove('active');
+                }
+            });
+            hiddenInput.value = rating;
+        });
+    });
+
+    // Submit review AJAX
+    document.querySelectorAll('.review-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const productId = formData.get('rating').split('-')[1] || this.querySelector('input[name=rating]').dataset.product;
+            
+            fetch('{% url "submit_product_review_api" %}', {
+                method: 'POST',
+                body: JSON.stringify({
+                    product_id: productId,
+                    rating: formData.get('rating') || 0,
+                    comment: formData.get('comment') || ''
+                }),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload(); // Reload to show new review
+                } else {
+                    alert('Lỗi: ' + data.error);
+                }
+            });
+        });
+    });
+});
+</script>

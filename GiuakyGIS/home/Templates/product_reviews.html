@@ -1,0 +1,286 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }} - FastFood Universe{% endblock %}
+
+{% block css %}
+<style>
+.reviews-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.product-header {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    margin-bottom: 40px;
+    padding: 30px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+.product-image {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.product-info h1 {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 2rem;
+}
+
+.product-info .price {
+    font-size: 1.5rem;
+    color: #e74c3c;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.rating-summary {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.stars {
+    color: #f39c12;
+    font-size: 1.2rem;
+}
+
+.avg-rating {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.total-reviews {
+    color: #666;
+}
+
+.reviews-section {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+.review-item {
+    border-bottom: 1px solid #eee;
+    padding: 20px 0;
+}
+
+.review-item:last-child {
+    border-bottom: none;
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.user-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #666;
+}
+
+.user-name {
+    font-weight: bold;
+    color: #333;
+}
+
+.review-date {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.review-rating {
+    color: #f39c12;
+    margin-bottom: 10px;
+}
+
+.review-content {
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+.review-images {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.review-image {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+
+.review-image:hover {
+    transform: scale(1.05);
+}
+
+.empty-reviews {
+    text-align: center;
+    padding: 60px 20px;
+    color: #666;
+}
+
+.empty-reviews i {
+    font-size: 4rem;
+    color: #ddd;
+    margin-bottom: 20px;
+}
+
+.back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: #3498db;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    transition: background 0.3s;
+}
+
+.back-button:hover {
+    background: #2980b9;
+}
+
+@media (max-width: 768px) {
+    .product-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .review-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .user-info {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="reviews-container">
+    <a href="{% url 'home' %}" class="back-button">
+        <i class="fas fa-arrow-left"></i>
+        Quay lại trang chủ
+    </a>
+    
+    <div class="product-header">
+        {% if product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-image">
+        {% else %}
+            <div class="product-image" style="background: #f8f9fa; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-utensils" style="font-size: 3rem; color: #ddd;"></i>
+            </div>
+        {% endif %}
+        
+        <div class="product-info">
+            <h1>{{ product.name }}</h1>
+            <div class="price">{{ product.price|floatformat:0 }} VNĐ</div>
+            
+            <div class="rating-summary">
+                <div class="avg-rating">{{ avg_rating }}</div>
+                <div class="stars">
+                    {% for i in "12345" %}
+                        {% if i <= avg_rating %}
+                            <i class="fas fa-star"></i>
+                        {% else %}
+                            <i class="far fa-star"></i>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <div class="total-reviews">({{ total_reviews }} đánh giá)</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="reviews-section">
+        <h2 style="margin-bottom: 30px; color: #333;">Đánh giá từ khách hàng</h2>
+        
+        {% if reviews %}
+            {% for review in reviews %}
+            <div class="review-item">
+                <div class="review-header">
+                    <div class="user-info">
+                        <div class="user-avatar">
+                            {% if review.user.profile.avatar %}
+                                <img src="{{ review.user.profile.avatar.url }}" alt="{{ review.user.username }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                            {% else %}
+                                {{ review.user.username|first|upper }}
+                            {% endif %}
+                        </div>
+                        <div>
+                            <div class="user-name">{{ review.user.first_name|default:review.user.username }}</div>
+                            <div class="review-date">{{ review.created_at|date:"d/m/Y H:i" }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="review-rating">
+                        {% for i in "12345" %}
+                            {% if i <= review.rating %}
+                                <i class="fas fa-star"></i>
+                            {% else %}
+                                <i class="far fa-star"></i>
+                            {% endif %}
+                        {% endfor %}
+                        {{ review.rating }}/5
+                    </div>
+                </div>
+                
+                <div class="review-content">{{ review.content }}</div>
+                
+                {% if review.images.all %}
+                <div class="review-images">
+                    {% for image in review.images.all %}
+                        <img src="{{ image.image.url }}" alt="Review image" class="review-image">
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-reviews">
+                <i class="fas fa-star"></i>
+                <h3>Chưa có đánh giá nào</h3>
+                <p>Hãy là người đầu tiên đánh giá sản phẩm này!</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

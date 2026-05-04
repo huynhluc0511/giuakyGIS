@@ -1,0 +1,789 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Chi tiết Đánh giá #{{ review.id }} - FastFood Universe{% endblock %}
+
+{% block css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: #2d3748;
+}
+
+.review-detail-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 30px;
+}
+
+.detail-header {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 40px;
+    margin-bottom: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.detail-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #f5576c);
+    animation: gradient-shift 3s ease infinite;
+}
+
+@keyframes gradient-shift {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(10px); }
+}
+
+.detail-header h1 {
+    color: #2d3748;
+    margin: 0 0 15px 0;
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.detail-header .breadcrumb {
+    margin: 0;
+    font-size: 1rem;
+    color: #718096;
+    font-weight: 500;
+}
+
+.detail-header .breadcrumb a {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.detail-header .breadcrumb a:hover {
+    color: #764ba2;
+}
+
+.content-grid {
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: 30px;
+}
+
+.main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.card-header {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+    padding: 20px 25px;
+    border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+}
+
+.card-header h3 {
+    margin: 0;
+    color: #2d3748;
+    font-size: 1.3rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.card-header h3 i {
+    color: #667eea;
+    font-size: 1.2rem;
+}
+
+.card-body {
+    padding: 25px;
+}
+
+.review-rating {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 25px;
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+    border-radius: 15px;
+    border: 1px solid rgba(102, 126, 234, 0.1);
+}
+
+.rating-stars {
+    font-size: 2.5rem;
+    color: #fbbf24;
+    text-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
+}
+
+.rating-value {
+    font-size: 2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.review-comment {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    padding: 25px;
+    border-radius: 15px;
+    border-left: 4px solid #667eea;
+    margin-bottom: 25px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+}
+
+.review-comment p {
+    margin: 0;
+    line-height: 1.7;
+    color: #4a5568;
+    font-size: 1.05rem;
+    font-weight: 500;
+}
+
+.review-images {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
+    margin-top: 25px;
+}
+
+.review-image {
+    position: relative;
+    border-radius: 15px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.8);
+}
+
+.review-image:hover {
+    transform: scale(1.05) translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+}
+
+.review-image img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.review-image:hover img {
+    transform: scale(1.1);
+}
+
+.image-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.9), rgba(118, 75, 162, 0.9));
+    color: white;
+    padding: 12px;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 600;
+    backdrop-filter: blur(10px);
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+}
+
+.review-image:hover .image-overlay {
+    transform: translateY(0);
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+    transition: all 0.3s ease;
+}
+
+.info-item:hover {
+    background: rgba(102, 126, 234, 0.05);
+    margin: 0 -10px;
+    padding: 15px 10px;
+    border-radius: 10px;
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-weight: 700;
+    color: #4a5568;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.info-value {
+    color: #2d3748;
+    font-weight: 600;
+    text-align: right;
+}
+
+.status-badge {
+    padding: 10px 18px;
+    border-radius: 25px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.status-approved {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.status-pending {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.status-rejected {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 25px;
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.95rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s ease, height 0.6s ease;
+}
+
+.btn:hover::before {
+    width: 100px;
+    height: 100px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+    background: linear-gradient(135deg, #764ba2, #667eea);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+}
+
+.btn-success:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 35px rgba(16, 185, 129, 0.4);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3);
+}
+
+.btn-danger:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 35px rgba(239, 68, 68, 0.4);
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.9);
+    color: #4a5568;
+    border: 2px solid rgba(226, 232, 240, 0.8);
+    backdrop-filter: blur(10px);
+}
+
+.btn-secondary:hover {
+    background: white;
+    border-color: #cbd5e0;
+    transform: translateY(-2px);
+}
+
+.order-items {
+    margin-top: 20px;
+}
+
+.order-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+    transition: all 0.3s ease;
+}
+
+.order-item:hover {
+    background: rgba(102, 126, 234, 0.05);
+    margin: 0 -10px;
+    padding: 15px 10px;
+    border-radius: 10px;
+}
+
+.order-item:last-child {
+    border-bottom: none;
+}
+
+.item-name {
+    font-weight: 600;
+    color: #2d3748;
+    font-size: 1.05rem;
+}
+
+.item-details {
+    text-align: right;
+    color: #667eea;
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.recommendation-box {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));
+    padding: 20px;
+    border-radius: 15px;
+    border-left: 4px solid #10b981;
+    margin-top: 20px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+}
+
+.recommendation-box i {
+    color: #10b981;
+    margin-right: 10px;
+    font-size: 1.2rem;
+}
+
+.recommendation-box {
+    color: #059669;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+    .review-detail-container {
+        padding: 20px;
+    }
+    
+    .content-grid {
+        grid-template-columns: 1fr;
+        gap: 25px;
+    }
+    
+    .detail-header {
+        padding: 30px 20px;
+    }
+    
+    .detail-header h1 {
+        font-size: 2rem;
+    }
+    
+    .card {
+        margin-bottom: 20px;
+    }
+    
+    .card-header {
+        padding: 15px 20px;
+    }
+    
+    .card-body {
+        padding: 20px;
+    }
+    
+    .review-rating {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+    }
+    
+    .review-images {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 15px;
+    }
+    
+    .review-image img {
+        height: 120px;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: center;
+        padding: 14px 20px;
+    }
+    
+    .info-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .info-value {
+        text-align: left;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="review-detail-container">
+    <!-- Header -->
+    <div class="detail-header">
+        <nav class="breadcrumb">
+            <a href="{% url 'dashboard:index' %}">Trang chủ</a> / 
+            <a href="{% url 'dashboard:reviews' %}">Quản lý Đánh giá</a> / 
+            Chi tiết #{{ review.id }}
+        </nav>
+        <h1><i class="fas fa-star"></i> Chi tiết Đánh giá #{{ review.id }}</h1>
+    </div>
+
+    <div class="content-grid">
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Review Content Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-comment"></i> Nội dung đánh giá</h3>
+                </div>
+                <div class="card-body">
+                    <div class="review-rating">
+                        <div class="rating-stars">
+                            {% for i in review.rating_stars %}⭐{% endfor %}
+                        </div>
+                        <div class="rating-value">{{ review.rating }}/5.0</div>
+                    </div>
+                    
+                    {% if review.comment %}
+                    <div class="review-comment">
+                        <p>{{ review.comment }}</p>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">Người dùng không để lại bình luận.</p>
+                    {% endif %}
+                    
+                    {% if review.images.exists %}
+                    <h4><i class="fas fa-camera"></i> Hình ảnh đánh giá</h4>
+                    <div class="review-images">
+                        {% for image in review.images.all %}
+                        <div class="review-image" onclick="viewImage('{{ image.image.url }}')">
+                            <img src="{{ image.image.url }}" alt="Review image {{ forloop.counter }}">
+                            <div class="image-overlay">Xem ảnh</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    {% if review.is_recommended %}
+                    <div class="recommendation-box">
+                        <i class="fas fa-thumbs-up"></i>
+                        Người dùng推荐 FastFood Universe cho bạn bè
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Order Information Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-receipt"></i> Thông tin đơn hàng</h3>
+                </div>
+                <div class="card-body">
+                    {% if review.order %}
+                    <div class="info-item">
+                        <span class="info-label">Mã đơn hàng:</span>
+                        <span class="info-value">
+                            <a href="{% url 'dashboard:orders_detail' review.order.id %}">#{{ review.order.id }}</a><br>
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Ngày đặt hàng:</span>
+                        <span class="info-value">{{ review.order.created_at|date:"d/m/Y H:i" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Tổng tiền:</span>
+                        <span class="info-value" style="color: #d62828; font-weight: 600;">
+                            {{ review.order.total_price|floatformat:0 }}đ
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Trạng thái đơn hàng:</span>
+                        <span class="info-value">
+                            <span class="status-badge status-{{ review.order.status }}">
+                                {% if review.order.status == 'delivered' %}Đã giao
+                                {% elif review.order.status == 'preparing' %}Đang chuẩn bị
+                                {% elif review.order.status == 'delivering' %}Đang giao
+                                {% else %}{{ review.order.get_status_display }}{% endif %}
+                            </span>
+                        </span>
+                    </div>
+                    
+                    <h4 style="margin-top: 20px; margin-bottom: 10px;"><i class="fas fa-utensils"></i> Các món đã đặt</h4>
+                    <div class="order-items">
+                        {% for item in review.order.items.all %}
+                        <div class="order-item">
+                            <span class="item-name">{{ item.quantity }}x {{ item.food.name }}</span>
+                            <span class="item-details">{{ item.total_price|floatformat:0 }}đ</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="info-item">
+                        <span class="info-label">Mã đơn hàng:</span>
+                        <span class="info-value">
+                            <span class="text-muted">#N/A</span>
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Ngày đặt hàng:</span>
+                        <span class="info-value" class="text-muted">Không xác định</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Tổng tiền:</span>
+                        <span class="info-value" class="text-muted">N/A</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Trạng thái đơn hàng:</span>
+                        <span class="info-value">
+                            <span class="status-badge status-pending">Không xác định</span>
+                        </span>
+                    </div>
+                    
+                    <h4 style="margin-top: 20px; margin-bottom: 10px;"><i class="fas fa-utensils"></i> Các món đã đặt</h4>
+                    <div class="order-items">
+                        <p class="text-muted">Không có thông tin đơn hàng</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <!-- Review Status Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-info-circle"></i> Trạng thái đánh giá</h3>
+                </div>
+                <div class="card-body">
+                    <div class="info-item">
+                        <span class="info-label">Trạng thái:</span>
+                        <span class="info-value">
+                            <span class="status-badge status-{{ review.status }}">
+                                {% if review.status == 'approved' %}Đã duyệt
+                                {% elif review.status == 'pending' %}Chờ duyệt
+                                {% else %}Từ chối{% endif %}
+                            </span>
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Ngày đánh giá:</span>
+                        <span class="info-value">{{ review.created_at|date:"d/m/Y H:i" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Cập nhật lần cuối:</span>
+                        <span class="info-value">{{ review.updated_at|date:"d/m/Y H:i" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-cog"></i> Thao tác</h3>
+                </div>
+                <div class="card-body">
+                    {% if review.status == 'pending' %}
+                    <div class="action-buttons">
+                        <button class="btn btn-success" onclick="approveReview({{ review.id }})">
+                            <i class="fas fa-check"></i> Duyệt
+                        </button>
+                        <button class="btn btn-danger" onclick="rejectReview({{ review.id }})">
+                            <i class="fas fa-times"></i> Từ chối
+                        </button>
+                    </div>
+                    {% elif review.status == 'approved' %}
+                    <div class="action-buttons">
+                        <button class="btn btn-danger" onclick="rejectReview({{ review.id }})">
+                            <i class="fas fa-times"></i> Từ chối
+                        </button>
+                    </div>
+                    {% else %}
+                    <div class="action-buttons">
+                        <button class="btn btn-success" onclick="approveReview({{ review.id }})">
+                            <i class="fas fa-check"></i> Duyệt lại
+                        </button>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="action-buttons">
+                        <a href="{% url 'dashboard:reviews' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Quay lại
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+function approveReview(reviewId) {
+    if (confirm('Bạn có chắc muốn duyệt đánh giá này?')) {
+        fetch(`/dashboard/reviews/${reviewId}/approve/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Có lỗi xảy ra: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra. Vui lòng thử lại!');
+        });
+    }
+}
+
+function rejectReview(reviewId) {
+    if (confirm('Bạn có chắc muốn từ chối đánh giá này?')) {
+        fetch(`/dashboard/reviews/${reviewId}/reject/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Có lỗi xảy ra: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra. Vui lòng thử lại!');
+        });
+    }
+}
+
+function viewImage(imageUrl) {
+    window.open(imageUrl, '_blank');
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

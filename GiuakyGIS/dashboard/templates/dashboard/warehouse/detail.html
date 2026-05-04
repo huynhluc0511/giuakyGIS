@@ -1,0 +1,59 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}Chi Tiết Kho - {{ warehouse.store.name }}{% endblock %}
+{% block content %}
+
+<div style="margin-bottom:1.5rem;">
+    <a href="{% url 'dashboard:warehouse_list' %}" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left"></i> Quay lại danh sách</a>
+</div>
+
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:1.5rem;">
+    <div class="card">
+        <div class="card-header">
+            <span><i class="fas fa-warehouse" style="color:#667eea;margin-right:8px;"></i>Chi Tiết Quản Lý Kho</span>
+        </div>
+        <div class="card-body">
+            <div style="margin-bottom:1.5rem;">
+                <label style="color:#8898aa;font-weight:700;font-size:0.72rem;text-transform:uppercase;">Cửa Hàng</label>
+                <div style="color:#32325d;font-weight:600;margin-top:0.5rem;font-size:1rem;">{{ warehouse.store.name }}</div>
+                <div style="color:#8898aa;font-size:0.85rem;margin-top:0.25rem;">{{ warehouse.store.address }}</div>
+            </div>
+            
+            <div style="margin-bottom:1.5rem;">
+                <label style="color:#8898aa;font-weight:700;font-size:0.72rem;text-transform:uppercase;">Thông Tin Kho</label>
+                <div style="background:#f8f9ff;border-radius:8px;padding:1rem;color:#32325d;line-height:1.6;margin-top:0.5rem;white-space:pre-wrap;">{{ warehouse.info }}</div>
+            </div>
+            
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;">
+                <div>
+                    <label style="color:#8898aa;font-weight:700;font-size:0.72rem;text-transform:uppercase;">Ngày Tạo</label>
+                    <div style="color:#32325d;font-weight:600;margin-top:0.5rem;">{{ warehouse.created_at|date:"d/m/Y H:i" }}</div>
+                </div>
+                <div>
+                    <label style="color:#8898aa;font-weight:700;font-size:0.72rem;text-transform:uppercase;">Cập Nhật Lần Cuối</label>
+                    <div style="color:#32325d;font-weight:600;margin-top:0.5rem;">{{ warehouse.updated_at|date:"d/m/Y H:i" }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <div class="card">
+            <div class="card-header">
+                <span><i class="fas fa-info-circle" style="color:#adb5bd;margin-right:8px;"></i>Thao Tác</span>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'dashboard:warehouse_edit' warehouse.pk %}" class="btn btn-primary" style="width:100%;margin-bottom:0.75rem;">
+                    <i class="fas fa-edit"></i> Chỉnh Sửa
+                </a>
+                <form method="post" action="{% url 'dashboard:warehouse_delete' warehouse.pk %}" onsubmit="return confirm('Xóa kho này?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger" style="width:100%;background:#f5365c;color:white;">
+                        <i class="fas fa-trash-can"></i> Xóa
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

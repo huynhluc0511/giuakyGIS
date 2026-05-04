@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Đánh giá của tôi - FastFood Universe{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">
+                <i class="fas fa-star"></i> Đánh giá của tôi
+            </h2>
+
+            <!-- Order Reviews Section -->
+            {% if order_reviews %}
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-shopping-bag"></i> Đánh giá đơn hàng
+                        <span class="badge bg-light text-dark ms-2">{{ order_reviews|length }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for review in order_reviews %}
+                    <div class="border-bottom pb-3 mb-3">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h6>
+                                    Đơn hàng #{{ review.order.id }}
+                                    <span class="badge 
+                                        {% if review.status == 'approved' %}bg-success
+                                        {% elif review.status == 'pending' %}bg-warning
+                                        {% else %}bg-danger{% endif %}">
+                                        {{ review.get_status_display }}
+                                    </span>
+                                </h6>
+                                <div class="mb-2">
+                                    <strong>Đánh giá tổng thể:</strong>
+                                    {% for i in "12345" %}
+                                    <i class="fas fa-star {% if i <= review.overall_rating %}text-warning{% else %}text-muted{% endif %}"></i>
+                                    {% endfor %}
+                                    ({{ review.overall_rating }}/5)
+                                </div>
+                                {% if review.content %}
+                                <p class="text-muted">{{ review.content|truncatewords:30 }}</p>
+                                {% endif %}
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar"></i> {{ review.created_at|date:"d/m/Y H:i" }}
+                                </small>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <a href="{% url 'home:edit_order_review' review.id %}" 
+                                   class="btn btn-sm btn-outline-primary mb-2">
+                                    <i class="fas fa-edit"></i> Chỉnh sửa
+                                </a>
+                                <br>
+                                <small class="text-muted">
+                                    {% if review.food_quality %}
+                                    <div><strong>Món ăn:</strong> {{ review.food_quality }}/5</div>
+                                    {% endif %}
+                                    {% if review.service_quality %}
+                                    <div><strong>Dịch vụ:</strong> {{ review.service_quality }}/5</div>
+                                    {% endif %}
+                                    {% if review.delivery_speed %}
+                                    <div><strong>Giao hàng:</strong> {{ review.delivery_speed }}/5</div>
+                                    {% endif %}
+                                    {% if review.packaging_quality %}
+                                    <div><strong>Đóng gói:</strong> {{ review.packaging_quality }}/5</div>
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Product Reviews Section -->
+            {% if product_reviews %}
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-utensils"></i> Đánh giá sản phẩm
+                        <span class="badge bg-light text-dark ms-2">{{ product_reviews|length }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for review in product_reviews %}
+                    <div class="border-bottom pb-3 mb-3">
+                        <div class="row">
+                            <div class="col-md-2">
+                                {% if review.order_item.product.image %}
+                                <img src="{{ review.order_item.product.image.url }}" 
+                                     alt="{{ review.order_item.product.name }}" 
+                                     class="img-fluid rounded" style="max-height: 80px; object-fit: cover;">
+                                {% else %}
+                                <div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                                     style="height: 80px;">
+                                    <i class="fas fa-image fa-2x text-muted"></i>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <h6>{{ review.order_item.product.name }}</h6>
+                                <div class="mb-2">
+                                    {% for i in "12345" %}
+                                    <i class="fas fa-star {% if i <= review.rating %}text-warning{% else %}text-muted{% endif %}"></i>
+                                    {% endfor %}
+                                    ({{ review.rating }}/5)
+                                </div>
+                                {% if review.content %}
+                                <p class="text-muted">{{ review.content|truncatewords:20 }}</p>
+                                {% endif %}
+                                {% if review.images.all %}
+                                <div class="mt-2">
+                                    {% for image in review.images.all|slice:":3" %}
+                                    <img src="{{ image.image.url }}" alt="Review image" 
+                                         class="rounded me-1" style="width: 40px; height: 40px; object-fit: cover;">
+                                    {% endfor %}
+                                    {% if review.images.all.count > 3 %}
+                                    <span class="text-muted">+{{ review.images.all.count|add:"-3" }} ảnh</span>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                                <small class="text-muted">
+                                    <i class="fas fa-shopping-bag"></i> Đơn #{{ review.order_item.order.id }} • 
+                                    <i class="fas fa-calendar"></i> {{ review.created_at|date:"d/m/Y H:i" }}
+                                </small>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <span class="badge 
+                                    {% if review.status == 'approved' %}bg-success
+                                    {% elif review.status == 'pending' %}bg-warning
+                                    {% else %}bg-danger{% endif %} mb-2">
+                                    {{ review.get_status_display }}
+                                </span>
+                                <br>
+                                <a href="{% url 'home:edit_product_review' review.id %}" 
+                                   class="btn btn-sm btn-outline-warning">
+                                    <i class="fas fa-edit"></i> Chỉnh sửa
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- No Reviews Message -->
+            {% if not order_reviews and not product_reviews %}
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle fa-3x mb-3"></i>
+                <h4>Bạn chưa có đánh giá nào</h4>
+                <p>Hãy đặt hàng và chia sẻ trải nghiệm của bạn với chúng tôi!</p>
+                <a href="{% url 'home' %}" class="btn btn-primary">
+                    <i class="fas fa-shopping-cart"></i> Đặt hàng ngay
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block css %}
+<style>
+.card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    border-radius: 15px 15px 0 0 !important;
+    border: none;
+}
+
+.border-bottom {
+    border-bottom: 1px solid #dee2e6 !important;
+}
+
+.border-bottom:last-child {
+    border-bottom: none !important;
+}
+
+.badge {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.75rem;
+}
+
+.text-warning {
+    color: #ffc107 !important;
+}
+
+.text-muted {
+    color: #6c757d !important;
+}
+
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.alert {
+    border: none;
+    border-radius: 15px;
+}
+
+.alert-info {
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+    color: #1976d2;
+}
+
+img {
+    border: 1px solid #dee2e6;
+}
+
+.rounded {
+    border-radius: 8px !important;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,298 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Đánh giá đơn hàng #{{ order.id }} - FastFood Universe{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-star"></i> 
+                        Đánh giá đơn hàng #{{ order.id }}
+                        {% if is_edit %}
+                        <small class="text-warning">(Chỉnh sửa)</small>
+                        {% endif %}
+                    </h4>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Order Info -->
+                    <div class="alert alert-info mb-4">
+                        <h6 class="mb-2">Thông tin đơn hàng:</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Mã đơn hàng:</strong> #{{ order.id }}<br>
+                                <strong>Ngày đặt:</strong> {{ order.created_at|date:"d/m/Y H:i" }}<br>
+                                <strong>Tổng tiền:</strong> {{ order.total_price|floatformat:0 }} VNĐ
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Người nhận:</strong> {{ order.full_name }}<br>
+                                <strong>SĐT:</strong> {{ order.phone }}<br>
+                                <strong>Địa chỉ:</strong> {{ order.address }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Order Items -->
+                    <div class="mb-4">
+                        <h6>Sản phẩm trong đơn hàng:</h6>
+                        <div class="row">
+                            {% for item in order.items.all %}
+                            <div class="col-md-6 mb-2">
+                                <div class="card bg-light">
+                                    <div class="card-body p-2">
+                                        <div class="d-flex align-items-center">
+                                            {% if item.product.image %}
+                                            <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" 
+                                                 class="rounded me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                            {% endif %}
+                                            <div>
+                                                <strong>{{ item.product.name }}</strong><br>
+                                                <small class="text-muted">
+                                                    {{ item.quantity }} x {{ item.price|floatformat:0 }} VNĐ
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <!-- Overall Rating -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-star text-warning"></i> Đánh giá tổng thể
+                                <span class="text-danger">*</span>
+                            </label>
+                            <div class="rating-stars" data-rating="{{ order_review.overall_rating }}">
+                                {% for i in "12345" %}
+                                <input type="radio" id="overall_{{ i }}" name="overall_rating" 
+                                       value="{{ i }}" {% if order_review.overall_rating == i|add:"0" %}checked{% endif %} required>
+                                <label for="overall_{{ i }}" class="star-label">
+                                    <i class="fas fa-star"></i>
+                                </label>
+                                {% endfor %}
+                            </div>
+                            <small class="text-muted">Vui lòng chọn đánh giá tổng thể cho đơn hàng</small>
+                        </div>
+
+                        <!-- Detailed Ratings -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-utensils text-success"></i> Chất lượng món ăn
+                                </label>
+                                <div class="rating-stars small" data-rating="{{ order_review.food_quality|default:5 }}">
+                                    {% for i in "12345" %}
+                                    <input type="radio" id="food_{{ i }}" name="food_quality" 
+                                           value="{{ i }}" {% if order_review.food_quality == i|add:"0" %}checked{% endif %}>
+                                    <label for="food_{{ i }}" class="star-label">
+                                        <i class="fas fa-star"></i>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-concierge-bell text-info"></i> Chất lượng dịch vụ
+                                </label>
+                                <div class="rating-stars small" data-rating="{{ order_review.service_quality|default:5 }}">
+                                    {% for i in "12345" %}
+                                    <input type="radio" id="service_{{ i }}" name="service_quality" 
+                                           value="{{ i }}" {% if order_review.service_quality == i|add:"0" %}checked{% endif %}>
+                                    <label for="service_{{ i }}" class="star-label">
+                                        <i class="fas fa-star"></i>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-6 mt-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-shipping-fast text-primary"></i> Tốc độ giao hàng
+                                </label>
+                                <div class="rating-stars small" data-rating="{{ order_review.delivery_speed|default:5 }}">
+                                    {% for i in "12345" %}
+                                    <input type="radio" id="delivery_{{ i }}" name="delivery_speed" 
+                                           value="{{ i }}" {% if order_review.delivery_speed == i|add:"0" %}checked{% endif %}>
+                                    <label for="delivery_{{ i }}" class="star-label">
+                                        <i class="fas fa-star"></i>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-6 mt-3">
+                                <label class="form-label fw-bold">
+                                    <i class="fas fa-box text-warning"></i> Chất lượng đóng gói
+                                </label>
+                                <div class="rating-stars small" data-rating="{{ order_review.packaging_quality|default:5 }}">
+                                    {% for i in "12345" %}
+                                    <input type="radio" id="packaging_{{ i }}" name="packaging_quality" 
+                                           value="{{ i }}" {% if order_review.packaging_quality == i|add:"0" %}checked{% endif %}>
+                                    <label for="packaging_{{ i }}" class="star-label">
+                                        <i class="fas fa-star"></i>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Review Content -->
+                        <div class="mb-4">
+                            <label for="content" class="form-label fw-bold">
+                                <i class="fas fa-comment"></i> Nội dung đánh giá
+                            </label>
+                            <textarea class="form-control" id="content" name="content" rows="4" 
+                                      placeholder="Chia sẻ trải nghiệm của bạn về đơn hàng này...">{{ order_review.content }}</textarea>
+                            <small class="text-muted">Nội dung đánh giá sẽ giúp chúng tôi cải thiện dịch vụ tốt hơn</small>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'home:my_orders' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Quay lại
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i> 
+                                {% if is_edit %}Cập nhật đánh giá{% else %}Gửi đánh giá{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block css %}
+<style>
+.card {
+    border: none;
+    border-radius: 15px;
+}
+
+.card-header {
+    border-radius: 15px 15px 0 0 !important;
+    border: none;
+}
+
+.rating-stars {
+    display: flex;
+    gap: 5px;
+}
+
+.rating-stars input[type="radio"] {
+    display: none;
+}
+
+.rating-stars .star-label {
+    font-size: 1.5rem;
+    color: #ddd;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.rating-stars.small .star-label {
+    font-size: 1.2rem;
+}
+
+.rating-stars input[type="radio"]:checked ~ .star-label,
+.rating-stars .star-label:hover,
+.rating-stars .star-label:hover ~ .star-label {
+    color: #ffc107;
+}
+
+.rating-stars .star-label:hover ~ .star-label {
+    color: #ddd;
+}
+
+.rating-stars input[type="radio"]:checked ~ .star-label {
+    color: #ffc107;
+}
+
+.form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.alert {
+    border: none;
+    border-radius: 10px;
+}
+
+.bg-light {
+    background-color: #f8f9fa !important;
+}
+
+.btn {
+    border-radius: 8px;
+    padding: 0.5rem 1.5rem;
+    font-weight: 500;
+}
+</style>
+{% endblock %}
+
+{% block js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle star rating interactions
+    const ratingGroups = document.querySelectorAll('.rating-stars');
+    
+    ratingGroups.forEach(group => {
+        const stars = group.querySelectorAll('.star-label');
+        const inputs = group.querySelectorAll('input[type="radio"]');
+        
+        stars.forEach((star, index) => {
+            star.addEventListener('click', function() {
+                // Check the corresponding radio
+                inputs[index].checked = true;
+                
+                // Update visual state
+                updateStarVisual(group, index + 1);
+            });
+            
+            star.addEventListener('mouseenter', function() {
+                updateStarVisual(group, index + 1);
+            });
+        });
+        
+        group.addEventListener('mouseleave', function() {
+            // Reset to checked state
+            const checkedInput = group.querySelector('input[type="radio"]:checked');
+            if (checkedInput) {
+                const checkedIndex = Array.from(inputs).indexOf(checkedInput);
+                updateStarVisual(group, checkedIndex + 1);
+            } else {
+                updateStarVisual(group, 0);
+            }
+        });
+        
+        // Initialize visual state
+        const checkedInput = group.querySelector('input[type="radio"]:checked');
+        if (checkedInput) {
+            const checkedIndex = Array.from(inputs).indexOf(checkedInput);
+            updateStarVisual(group, checkedIndex + 1);
+        }
+    });
+    
+    function updateStarVisual(group, rating) {
+        const stars = group.querySelectorAll('.star-label');
+        stars.forEach((star, index) => {
+            if (index < rating) {
+                star.style.color = '#ffc107';
+            } else {
+                star.style.color = '#ddd';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

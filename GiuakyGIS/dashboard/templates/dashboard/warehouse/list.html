@@ -1,0 +1,210 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}Quản Lý Kho{% endblock %}
+{% block content %}
+
+<div style="margin-bottom:1.5rem;">
+    <h1 style="font-size:2rem;font-weight:700;color:#32325d;margin-bottom:1rem;">Quản lý kho</h1>
+    
+    <!-- Cảnh báo tồn kho thấp -->
+    {% if low_stock_items %}
+    <div style="background:#ffc107;border-radius:8px;padding:1.25rem;margin-bottom:1.5rem;border-left:4px solid #ff9800;">
+        <div style="display:flex;align-items:flex-start;gap:1rem;">
+            <i class="fas fa-exclamation-triangle" style="font-size:1.5rem;color:#ff6f00;flex-shrink:0;margin-top:0.2rem;"></i>
+            <div>
+                <div style="font-weight:700;color:#333;font-size:1rem;margin-bottom:0.5rem;">Cảnh báo tồn kho!</div>
+                <ul style="color:#333;margin-left:1.5rem;line-height:1.8;">
+                    {% for item in low_stock_items %}
+                    <li>{{ item.product.name }} - Tồn: {{ item.quantity }} {{ item.unit }} (Sắp hết hàng)</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Nút thêm phiếu nhập/xuất (cho phép nhiều sản phẩm) -->
+<div style="margin-bottom:1.5rem;display:flex;gap:0.75rem;justify-content:space-between;align-items:center;">
+    <div style="font-size:0.9rem;color:#666;padding:0.5rem 1rem;background:#f0f5ff;border-radius:6px;border-left:4px solid #667eea;">
+        💡 <strong>Ghi chú:</strong> Bạn có thể thêm nhiều sản phẩm cùng lúc trong một phiếu
+    </div>
+    <div style="display:flex;gap:0.75rem;">
+        <a href="{% url 'dashboard:warehouse_batch_create' %}" class="btn btn-success" style="background:#28a745;color:white;">
+            <i class="fas fa-plus"></i> Tạo Phiếu Nhập/Xuất Kho
+        </a>
+    </div>
+</div>
+
+<!-- Bảng giao dịch gần nhất -->
+<div class="card">
+    <div class="card-header">
+        <span><i class="fas fa-history" style="color:#667eea;margin-right:8px;"></i>Giao dịch kho gần nhất</span>
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Ngày</th>
+                    <th>Loại</th>
+                    <th>Sản phẩm</th>
+                    <th>Số lượng</th>
+                    <th>Đơn giá</th>
+                    <th>Nhà cung cấp</th>
+                    <th>Ghi chú</th>
+                    <th style="text-align:center;">Thao Tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for transaction in transaction_page_obj %}
+                <tr>
+                    <td style="font-weight:600;color:#32325d;">{{ transaction.date|date:"d/m/Y" }}</td>
+                    <td>
+                        {% if transaction.batch_type == 'Nhập kho' %}
+                            <span style="background:#d1e7dd;color:#0a3622;padding:0.25rem 0.75rem;border-radius:20px;font-size:0.8rem;font-weight:700;"><i class="fas fa-arrow-down"></i> Nhập kho</span>
+                        {% else %}
+                            <span style="background:#ffc107;color:#333;padding:0.25rem 0.75rem;border-radius:20px;font-size:0.8rem;font-weight:700;"><i class="fas fa-arrow-up"></i> Xuất kho</span>
+                        {% endif %}
+                    </td>
+                    <td style="color:#32325d;font-weight:500;">
+                        {% if transaction.type == 'batch' %}
+                            <strong style="background:#667eea;color:white;padding:0.25rem 0.5rem;border-radius:4px;font-size:0.75rem;">PHIẾU</strong> {{ transaction.product }}
+                        {% else %}
+                            {{ transaction.product }}
+                        {% endif %}
+                    </td>
+                    <td style="color:#667eea;font-weight:700;">{{ transaction.quantity }}</td>
+                    <td style="color:#8898aa;">
+                        {% if transaction.type == 'batch' %}
+                            —
+                        {% else %}
+                            {{ transaction.unit_price|floatformat:0 }} VNĐ
+                        {% endif %}
+                    </td>
+                    <td style="color:#8898aa;font-size:0.9rem;">{{ transaction.supplier }}</td>
+                    <td style="color:#8898aa;font-size:0.85rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ transaction.note }}">{{ transaction.note|truncatewords:5 }}</td>
+                    <td style="text-align:center;">
+                        {% if transaction.type == 'batch' %}
+                            <a href="{% url 'dashboard:warehouse_batch_detail' transaction.id %}" style="color:#667eea;cursor:pointer;margin-right:0.5rem;"><i class="fas fa-eye"></i></a>
+                            <form method="post" action="{% url 'dashboard:warehouse_batch_delete' transaction.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" style="background:none;border:none;color:#f5365c;cursor:pointer;font-size:1rem;" onclick="return confirm('Xóa phiếu này?');"><i class="fas fa-trash"></i></button>
+                            </form>
+                        {% else %}
+                            <form method="post" action="{% url 'dashboard:warehouse_transaction_delete' transaction.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" style="background:none;border:none;color:#f5365c;cursor:pointer;font-size:1rem;" onclick="return confirm('Xóa giao dịch này?');"><i class="fas fa-trash"></i></button>
+                            </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" style="text-align:center;padding:2rem;color:#adb5bd;"><i class="fas fa-inbox"></i> Chưa có giao dịch nào</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <!-- Phân trang giao dịch -->
+    {% if transaction_paginator.count > 6 %}
+    <div style="display:flex;align-items:center;justify-content:center;gap:0.75rem;padding:1.5rem;border-top:1px solid #e3e6f0;margin-top:1rem;">
+        {% if transaction_page_obj.has_previous %}
+            <a href="?trans_page=1" style="padding:0.5rem 1rem;border:1px solid #e3e6f0;border-radius:4px;color:#667eea;text-decoration:none;font-weight:600;transition:all 0.3s ease;">« Trước</a>
+        {% else %}
+            <span style="padding:0.5rem 1rem;border:1px solid #e3e6f0;border-radius:4px;color:#adb5bd;font-weight:600;">« Trước</span>
+        {% endif %}
+
+        {% for num in transaction_paginator.page_range %}
+            {% if transaction_page_obj.number == num %}
+                <span style="padding:0.5rem 0.75rem;border:1px solid #667eea;border-radius:4px;background:#667eea;color:white;font-weight:700;min-width:2.5rem;text-align:center;">{{ num }}</span>
+            {% else %}
+                <a href="?trans_page={{ num }}" style="padding:0.5rem 0.75rem;border:1px solid #e3e6f0;border-radius:4px;color:#667eea;text-decoration:none;font-weight:600;min-width:2.5rem;text-align:center;transition:all 0.3s ease;">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+
+        {% if transaction_page_obj.has_next %}
+            <a href="?trans_page={{ transaction_page_obj.next_page_number }}" style="padding:0.5rem 1rem;border:1px solid #e3e6f0;border-radius:4px;color:#667eea;text-decoration:none;font-weight:600;transition:all 0.3s ease;">Tiếp »</a>
+        {% else %}
+            <span style="padding:0.5rem 1rem;border:1px solid #e3e6f0;border-radius:4px;color:#adb5bd;font-weight:600;">Tiếp »</span>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Bảng sản phẩm trong kho -->
+<div class="card" style="margin-top:1.5rem;">
+    <div class="card-header">
+        <span><i class="fas fa-boxes" style="color:#667eea;margin-right:8px;"></i>Sản Phẩm Trong Kho</span>
+        <a href="{% url 'dashboard:warehouse_item_create' %}" class="btn btn-primary btn-sm" style="width:auto;"><i class="fas fa-plus"></i> Thêm Sản Phẩm</a>
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Sản Phẩm</th>
+                    <th>Số Lượng</th>
+                    <th>Tồn Kho Tối Thiểu</th>
+                    <th>Giá Nhập</th>
+                    <th>Trạng Thái</th>
+                    <th style="text-align:center;">Thao Tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in page_obj %}
+                <tr>
+                    <td style="font-weight:600;color:#32325d;">{{ item.product.name }}</td>
+                    <td style="font-weight:700;color:#667eea;">{{ item.quantity }} {{ item.unit }}</td>
+                    <td style="color:#8898aa;">{{ item.min_quantity }} {{ item.unit }}</td>
+                    <td style="color:#8898aa;">{{ item.unit_price|floatformat:0 }} VNĐ</td>
+                    <td>
+                        {% if item.quantity <= item.min_quantity %}
+                            <span style="background:#f8d7da;color:#842029;padding:0.25rem 0.75rem;border-radius:20px;font-size:0.8rem;font-weight:700;"><i class="fas fa-exclamation-circle"></i> Sắp hết</span>
+                        {% elif item.quantity == 0 %}
+                            <span style="background:#f8d7da;color:#842029;padding:0.25rem 0.75rem;border-radius:20px;font-size:0.8rem;font-weight:700;"><i class="fas fa-times-circle"></i> Hết hàng</span>
+                        {% else %}
+                            <span style="background:#d1e7dd;color:#0a3622;padding:0.25rem 0.75rem;border-radius:20px;font-size:0.8rem;font-weight:700;"><i class="fas fa-check-circle"></i> Còn hàng</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align:center;">
+                        <a href="{% url 'dashboard:warehouse_item_edit' item.pk %}" style="color:#667eea;cursor:pointer;margin-right:0.5rem;"><i class="fas fa-edit"></i></a>
+                        <form method="post" action="{% url 'dashboard:warehouse_item_delete' item.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" style="background:none;border:none;color:#f5365c;cursor:pointer;" onclick="return confirm('Xóa sản phẩm này?');"><i class="fas fa-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align:center;padding:2rem;color:#adb5bd;"><i class="fas fa-boxes"></i> Chưa có sản phẩm trong kho</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <!-- Phân trang -->
+    {% if paginator.count > 6 %}
+    <div style="display:flex;align-items:center;justify-content:center;gap:0.75rem;padding:1.5rem;border-top:1px solid #e3e6f0;margin-top:1rem;">
+        {% if page_obj.has_previous %}
+            <a href="?page=1" style="padding:0.5rem 1rem;border:1px solid #e3e6f0;border-radius:4px;color:#667eea;text-decoration:none;font-weight:600;transition:all 0.3s ease;">« Trước</a>
+        {% else %}
+            <span style="padding:0.5rem 1rem;border:1px solid #e3e6f0;border-radius:4px;color:#adb5bd;font-weight:600;">« Trước</span>
+        {% endif %}
+
+        {% for num in paginator.page_range %}
+            {% if page_obj.number == num %}
+                <span style="padding:0.5rem 0.75rem;border:1px solid #667eea;border-radius:4px;background:#667eea;color:white;font-weight:700;min-width:2.5rem;text-align:center;">{{ num }}</span>
+            {% else %}
+                <a href="?page={{ num }}" style="padding:0.5rem 0.75rem;border:1px solid #e3e6f0;border-radius:4px;color:#667eea;text-decoration:none;font-weight:600;min-width:2.5rem;text-align:center;transition:all 0.3s ease;">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}" style="padding:0.5rem 1rem;border:1px solid #e3e6f0;border-radius:4px;color:#667eea;text-decoration:none;font-weight:600;transition:all 0.3s ease;">Tiếp »</a>
+        {% else %}
+            <span style="padding:0.5rem 1rem;border:1px solid #e3e6f0;border-radius:4px;color:#adb5bd;font-weight:600;">Tiếp »</span>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

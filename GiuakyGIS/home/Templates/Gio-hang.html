@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giỏ Hàng - FastFood Universe</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    {% load static %}
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background-color: #f8f9fa; color: #333; line-height: 1.6; overflow-x: hidden; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+        
+        header { background: #d62828; color: white; padding: 35px 0; text-align: center; margin-bottom: 40px; border-radius: 0 0 20px 20px; box-shadow: 0 8px 20px rgba(214, 40, 40, 0.2); }
+        header h1 { font-size: 2.2rem; font-weight: 700; }
+        
+        .cart-wrapper { display: grid; grid-template-columns: 1.5fr 1fr; gap: 30px; }
+        @media (max-width: 850px) { .cart-wrapper { grid-template-columns: 1fr; } }
+
+        /* Left Side: Items */
+        .cart-items { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); min-height: 400px; border: 1px solid #eee; }
+        .cart-item { display: flex; align-items: center; gap: 20px; padding: 20px; border-bottom: 1px solid #eee; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); border-radius: 15px; }
+        .cart-item:hover { background-color: #fffdf5; transform: translateX(10px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-color: transparent; }
+        
+        .item-img { font-size: 2.5rem; background: #fef2f2; padding: 5px; border-radius: 15px; width: 90px; height: 90px; display: flex; align-items: center; justify-content: center; transition: 0.3s; overflow: hidden; }
+        .item-img img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
+        .cart-item:hover .item-img { transform: scale(1.1) rotate(-5deg); background: #ffe3e3; }
+        
+        .item-info { flex: 1; }
+        .item-info h3 { font-size: 1.1rem; color: #222; margin-bottom: 5px; font-weight: 700; }
+        .item-price-unit { color: #888; font-size: 0.85rem; }
+        
+        .quantity-controls { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+        .btn-qty { width: 30px; height: 30px; border-radius: 8px; border: 1px solid #ddd; background: white; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-qty:hover { background: #ffb703; border-color: #ffb703; color: white; transform: scale(1.1); }
+        
+        .item-total-col { text-align: right; min-width: 100px; }
+        .item-total-col strong { color: #d62828; font-size: 1.1rem; }
+
+        .btn-delete { color: #d62828; background: #fff1f1; border: none; cursor: pointer; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.3s; margin-left: 10px; }
+        .btn-delete:hover { background: #d62828; color: white; transform: rotate(15deg) scale(1.1); box-shadow: 0 4px 10px rgba(214, 40, 40, 0.2); }
+
+        /* Right Side: Summary */
+        .cart-summary { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); height: fit-content; position: sticky; top: 20px; border: 1px solid #eee; }
+        .summary-section { margin-bottom: 25px; }
+        .summary-section h4 { margin-bottom: 15px; border-left: 4px solid #ffb703; padding-left: 12px; color: #444; font-size: 1.1rem; font-weight: 700; }
+        
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 12px; font-family: inherit; margin-bottom: 15px; background: #fafafa; outline: none; transition: 0.3s; }
+        input:focus, select:focus, textarea:focus { border-color: #ffb703; background: white; box-shadow: 0 0 0 4px rgba(255, 183, 3, 0.15); transform: translateY(-2px); }
+        
+        .price-row { display: flex; justify-content: space-between; margin-bottom: 10px; color: #666; font-size: 0.95rem; }
+        .total-row { display: flex; justify-content: space-between; font-weight: 700; font-size: 1.5rem; color: #d62828; border-top: 2px dashed #eee; padding-top: 20px; margin-top: 15px; }
+        
+        .btn-order { background: #2a9d8f; color: white; border: none; padding: 18px; border-radius: 50px; width: 100%; font-weight: 700; font-size: 1.2rem; cursor: pointer; transition: 0.4s; box-shadow: 0 6px 20px rgba(42, 157, 143, 0.2); }
+        .btn-order:hover { background: #1e7a6e; transform: translateY(-5px); box-shadow: 0 10px 25px rgba(42, 157, 143, 0.4); }
+
+        .empty-cart { text-align: center; padding: 80px 20px; }
+        .empty-cart i { font-size: 5rem; color: #e9ecef; margin-bottom: 20px; transition: 0.5s; }
+        .empty-cart:hover i { transform: scale(1.1) rotate(-10deg); color: #ffb703; }
+        
+        footer { margin-top: 40px; padding: 20px; text-align: center; border-top: 1px solid #ddd; }
+        .btn-back-home {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.2);
+    color: white !important; /* Đảm bảo chữ luôn trắng */
+    padding: 8px 18px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: 0.3s;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    
+    /* THÊM 2 DÒNG NÀY */
+    z-index: 999; 
+    display: inline-block;
+}
+
+.btn-back-home:hover {
+    background: white;
+    color: #d62828 !important;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="container" style="position: relative; z-index: 1;">
+        <a href="{% url 'home' %}" class="btn-back-home">
+            <i class="fa-solid fa-house"></i> Trang chủ
+        </a>
+        <h1 class="header-animate"><i class="fa-solid fa-cart-shopping"></i> GIỎ HÀNG CỦA BẠN</h1>
+    </div>
+</header>
+
+<main class="container">
+    <div class="cart-wrapper">
+        <section class="cart-items" id="cart-list" data-aos="fade-right" data-aos-delay="100"></section>
+
+        <aside class="cart-summary" data-aos="fade-left" data-aos-delay="200">
+            <div class="summary-section">
+                <h4>1. Thông tin người nhận</h4>
+                {% if user_profile %}
+                <div style="background: #e8f5e9; padding: 12px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #4caf50;">
+                    <small style="color: #2e7d32; font-weight: 600;"><i class="fas fa-user-check"></i> Đã điền từ thông tin tài khoản</small>
+                </div>
+                {% endif %}
+                <input type="text" id="cus-name" placeholder="Họ và tên khách hàng" 
+                       value="{{ user_profile.full_name|default:'' }}">
+                <input type="tel" id="cus-phone" placeholder="Số điện thoại liên lạc" 
+                       value="{{ user_profile.phone|default:'' }}">
+                <textarea id="cus-address" rows="3" placeholder="Địa chỉ giao hàng chi tiết (Số nhà, tên đường, phường/xã...)">{{ user_profile.address|default:'' }}</textarea>
+            </div>
+
+            <div class="summary-section">
+                <h4>2. Đơn vị vận chuyển</h4>
+                <select id="shipping-method" onchange="calculateTotal()">
+                    <option value="15000">Giao hàng tiêu chuẩn (15.000đ)</option>
+                    <option value="35000">Giao hỏa tốc - GrabExpress (35.000đ)</option>
+                    <option value="0">Tự đến cửa hàng lấy (Miễn phí)</option>
+                </select>
+            </div>
+
+            <div class="summary-section">
+                <div class="price-row">
+                    <span>Tạm tính món ăn:</span>
+                    <span id="temp-price">0đ</span>
+                </div>
+                <div class="price-row">
+                    <span>Phí vận chuyển:</span>
+                    <span id="ship-price">15.000đ</span>
+                </div>
+                <div class="total-row">
+                    <span>TỔNG CỘNG:</span>
+                    <span id="final-total" class="total-animate">0đ</span>
+                </div>
+            </div>
+
+            <button class="btn-order" id="btn-submit-order" onclick="submitOrder()">
+                <i class="fa-solid fa-paper-plane"></i> XÁC NHẬN ĐẶT HÀNG
+            </button>
+            <p style="text-align: center; font-size: 0.8rem; color: #aaa; margin-top: 15px;">
+                Thanh toán tiền mặt khi nhận hàng (COD)
+            </p>
+        </aside>
+    </div>
+</main>
+
+<footer>
+    <div class="container">
+        <p>Phát triển với bởi:</p>
+        <p><strong>Dương Đan Huy</strong> (1250080068) & <strong>Huỳnh Tấn Lực</strong> (1250080110)</p>
+        <span class="footer-brand">FASTFOOD UNIVERSE</span>
+    </div>
+</footer>
+
+<script src="{% static 'js/cart.js' %}"></script>
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+
+<script>
+    // 1. Khởi tạo hiệu ứng AOS
+    AOS.init({
+        duration: 800,
+        once: true,
+        offset: 50
+    });
+
+    // 2. Hiệu ứng Anime.js cho Tiêu đề Header
+    anime({
+        targets: '.header-animate',
+        translateY: [-50, 0],
+        opacity: [0, 1],
+        easing: 'easeOutElastic(1, .8)',
+        duration: 1500,
+        delay: 200
+    });
+
+    // --- LOGIC GIỎ HÀNG CHÍNH ---
+    let cart = JSON.parse(localStorage.getItem('cart_data')) || [];
+
+    function renderCart() {
+        const cartList = document.getElementById('cart-list');
+        
+        if (cart.length === 0) {
+            cartList.innerHTML = `
+                <div class="empty-cart">
+                    <i class="fa-solid fa-basket-shopping"></i>
+                    <h2 style="color: #bbb;">Giỏ hàng của bạn đang trống</h2>
+                    <p style="color: #999; margin-bottom: 25px;">Hãy quay lại Menu để chọn những món ăn ngon nhất.</p>
+                    <a href="{% url 'home' %}" style="background: #d62828; color: white; padding: 12px 25px; border-radius: 50px; text-decoration: none; font-weight: 600; display: inline-block; transition: 0.3s; box-shadow: 0 4px 10px rgba(214,40,40,0.2);" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        <i class="fa-solid fa-arrow-left"></i> TIẾP TỤC MUA SẮM
+                    </a>
+                </div>`;
+            calculateTotal();
+            return;
+        }
+
+        let html = cart.map((item, index) => {
+            // Kiểm tra xem img là URL hay là Emoji để render cho chính xác
+            let imgContent = (item.img && (item.img.startsWith('http') || item.img.includes('.'))) 
+                ? `<img src="${item.img}" alt="${item.name}">` 
+                : item.img;
+
+            return `
+            <div class="cart-item" style="animation: slideIn 0.5s ease forwards ${index * 0.1}s; opacity: 0;">
+                <div class="item-img">${imgContent}</div>
+                <div class="item-info">
+                    <h3>${item.name}</h3>
+                    <p class="item-price-unit">Đơn giá: ${item.price.toLocaleString()}đ</p>
+                    <div class="quantity-controls">
+                        <button class="btn-qty" onclick="changeQty('${item.id}', -1)">-</button>
+                        <span style="font-weight: 600; width: 20px; text-align: center;">${item.qty}</span>
+                        <button class="btn-qty" onclick="changeQty('${item.id}', 1)">+</button>
+                    </div>
+                </div>
+                <div class="item-total-col">
+                    <strong>${(item.price * item.qty).toLocaleString()}đ</strong>
+                </div>
+                <button class="btn-delete" onclick="removeItem('${item.id}')" title="Xóa món">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            </div>
+            `;
+        }).join('');
+
+        // Thêm nút xóa tất cả
+        html += `
+            <div style="margin-top: 20px; text-align: right;">
+                <button onclick="clearAll()" style="background: none; border: none; color: #999; cursor: pointer; font-size: 0.95rem; text-decoration: underline; transition: 0.3s;" onmouseover="this.style.color='#d62828'" onmouseout="this.style.color='#999'">
+                    Xóa tất cả sản phẩm
+                </button>
+            </div>`;
+            
+        cartList.innerHTML = html;
+        calculateTotal();
+    }
+
+    function changeQty(id, delta) {
+        const item = cart.find(i => i.id == id);
+        if (item) {
+            item.qty += delta;
+            if (item.qty < 1) item.qty = 1;
+            updateLocalStorage();
+        }
+    }
+
+    function removeItem(id) {
+        if(confirm("Bạn muốn xóa món này khỏi giỏ hàng?")) {
+            cart = cart.filter(i => i.id != id);
+            updateLocalStorage();
+        }
+    }
+
+    function clearAll() {
+        if(confirm("Bạn có chắc chắn muốn làm trống giỏ hàng?")) {
+            cart = [];
+            updateLocalStorage();
+        }
+    }
+
+    function updateLocalStorage() {
+        localStorage.setItem('cart_data', JSON.stringify(cart));
+        renderCart();
+    }
+
+    function calculateTotal() {
+        const temp = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        const ship = parseInt(document.getElementById('shipping-method').value) || 0;
+        
+        document.getElementById('temp-price').innerText = temp.toLocaleString() + 'đ';
+        document.getElementById('ship-price').innerText = ship.toLocaleString() + 'đ';
+        
+        const finalTotalEl = document.getElementById('final-total');
+        finalTotalEl.innerText = (temp + ship).toLocaleString() + 'đ';
+        
+        // Hiệu ứng giật nhẹ khi tổng tiền thay đổi
+        if (temp > 0) {
+            anime({
+                targets: finalTotalEl,
+                scale: [1.2, 1],
+                color: ['#ffb703', '#d62828'],
+                duration: 500,
+                easing: 'easeOutQuad'
+            });
+        }
+    }
+
+    async function submitOrder() {
+        const name = document.getElementById('cus-name').value.trim();
+        const phone = document.getElementById('cus-phone').value.trim();
+        const address = document.getElementById('cus-address').value.trim();
+        
+        if (cart.length === 0) return alert("Giỏ hàng của bạn đang trống!");
+        if (!name || !phone || !address) return alert("Vui lòng nhập đầy đủ thông tin giao hàng!");
+
+        // Cập nhật giao diện nút bấm thành đang tải
+        const btn = document.getElementById('btn-submit-order');
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang xử lý...';
+        btn.disabled = true;
+        btn.style.background = "#6c757d";
+        
+        // Chuẩn bị dữ liệu đơn hàng
+        const ship = parseInt(document.getElementById('shipping-method').value) || 0;
+        const temp = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        const total = temp + ship;
+        
+        const orderData = {
+            name: name,
+            phone: phone,
+            address: address,
+            total: total,
+            items: cart.map(item => ({
+                id: item.id,
+                name: item.name,
+                qty: item.qty,
+                price: item.price
+            }))
+        };
+        
+        // Get CSRF token more reliably
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        
+        const csrfToken = getCookie('csrftoken') || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        console.log('DEBUG: Using CSRF token:', csrfToken ? 'found' : 'missing');
+        
+        try {
+            const response = await fetch("{% url 'api_create_order' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify(orderData)
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const result = await response.json();
+            console.log('API response:', result);
+            
+            if (result.success) {
+                localStorage.setItem('current_order', JSON.stringify({
+                    customerName: name,
+                    customerAddress: address,
+                    customerPhone: phone,
+                    totalAmount: total.toLocaleString() + 'đ',
+                    orderDate: new Date().toLocaleString(),
+                    orderId: result.order_id
+                }));
+                localStorage.removeItem('cart_data');
+                FastFoodCart.showNotification('✅ Đơn hàng đã được tạo thành công!');
+                window.location.href = result.redirect_url;
+            } else {
+                FastFoodCart.showNotification(`❌ Lỗi: ${result.error || 'Không rõ'}`, 5000);
+                throw new Error(result.error);
+            }
+        } catch (error) {
+            console.error('Submit error:', error);
+            FastFoodCart.showNotification(`❌ Lỗi kết nối: ${error.message}. Kiểm tra Console F12.`, 6000);
+        } finally {
+            btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> XÁC NHẬN ĐẶT HÀNG';
+            btn.disabled = false;
+            btn.style.background = "#2a9d8f";
+        }
+    }
+
+    // CSS Keyframes cho hiệu ứng khi các món ăn được render
+    const style = document.createElement('style');
+    style.innerHTML = `
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    `;
+    document.head.appendChild(style);
+
+    // Khởi tạo trang
+    renderCart();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
+</body>
+</html>

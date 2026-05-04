@@ -1,0 +1,165 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h3 mb-0">
+            <i class="fas fa-trash me-2"></i>
+            {{ page_title }}
+        </h2>
+        <div>
+            <a href="{% url 'dashboard:customer_profile_detail' profile.pk %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Quay lại
+            </a>
+        </div>
+    </div>
+
+    <!-- Warning Card -->
+    <div class="card border-danger">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-exclamation-triangle me-2"></i>Cảnh báo: Hành động không thể hoàn tác
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <p class="mb-3">Bạn đang chuẩn bị <strong>xóa vĩnh viễn</strong> tài khoản và tất cả dữ liệu liên quan của người dùng:</p>
+                    
+                    <div class="alert alert-info">
+                        <div class="d-flex align-items-center">
+                            {% if profile.avatar %}
+                                <img src="{{ profile.avatar.url }}" alt="{{ profile.display_name }}" class="rounded-circle me-3" width="60" height="60" style="object-fit: cover;">
+                            {% else %}
+                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                            {% endif %}
+                            <div>
+                                <h6 class="mb-1">{{ profile.display_name }}</h6>
+                                <small class="text-muted">@{{ profile.user.username }}</small><br>
+                                <small class="text-muted">{{ profile.user.email }}</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h6 class="text-danger mb-3">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Dữ liệu sẽ bị xóa:
+                    </h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-user-times text-danger me-2"></i>
+                            Thông tin cá nhân và profile
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-image text-danger me-2"></i>
+                            Ảnh đại diện (nếu có)
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-share-alt text-danger me-2"></i>
+                            Thông tin mạng xã hội
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-shopping-cart text-danger me-2"></i>
+                            Lịch sử đơn hàng (nếu có)
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-history text-danger me-2"></i>
+                            Tất cả hoạt động liên quan
+                        </li>
+                    </ul>
+
+                    <div class="alert alert-warning">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Lưu ý:</strong> Hành động này không thể hoàn tác. Tất cả dữ liệu sẽ bị mất vĩnh viễn.
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <i class="fas fa-trash-alt fa-3x text-danger mb-3"></i>
+                            <h6 class="text-danger">Xác nhận xóa</h6>
+                            <p class="small">Nhập tên người dùng để xác nhận:</p>
+                            <input type="text" class="form-control mb-3" id="confirmName" placeholder="{{ profile.display_name }}">
+                            <button type="button" class="btn btn-danger w-100" id="deleteBtn" disabled>
+                                <i class="fas fa-trash"></i> Xóa tài khoản
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="card mt-4">
+        <div class="card-body">
+            <div class="d-flex gap-2">
+                <form method="POST" id="deleteForm" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger" disabled id="confirmDeleteBtn">
+                        <i class="fas fa-trash"></i> Xóa vĩnh viễn
+                    </button>
+                </form>
+                <a href="{% url 'dashboard:customer_profile_detail' profile.pk %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Quay lại chi tiết
+                </a>
+                <a href="{% url 'dashboard:customer_profile_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-list"></i> Danh sách người dùng
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmNameInput = document.getElementById('confirmName');
+    const deleteBtn = document.getElementById('deleteBtn');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    const deleteForm = document.getElementById('deleteForm');
+    const profileName = '{{ profile.display_name }}';
+
+    function validateDelete() {
+        if (confirmNameInput.value.trim() === profileName) {
+            deleteBtn.disabled = false;
+            deleteBtn.classList.remove('btn-secondary');
+            deleteBtn.classList.add('btn-danger');
+            confirmDeleteBtn.disabled = false;
+        } else {
+            deleteBtn.disabled = true;
+            deleteBtn.classList.remove('btn-danger');
+            deleteBtn.classList.add('btn-secondary');
+            confirmDeleteBtn.disabled = true;
+        }
+    }
+
+    confirmNameInput.addEventListener('input', validateDelete);
+
+    deleteBtn.addEventListener('click', function() {
+        if (confirmNameInput.value.trim() === profileName) {
+            if (confirm(`Bạn có chắc chắn muốn xóa tài khoản "${profileName}" vĩnh viễn?`)) {
+                deleteForm.submit();
+            }
+        }
+    });
+
+    // Add confirmation to the form submission
+    deleteForm.addEventListener('submit', function(e) {
+        if (confirmNameInput.value.trim() !== profileName) {
+            e.preventDefault();
+            alert('Vui lòng nhập đúng tên người dùng để xác nhận xóa.');
+            return false;
+        }
+        
+        if (!confirm(`Bạn có chắc chắn muốn xóa tài khoản "${profileName}" vĩnh viễn?`)) {
+            e.preventDefault();
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %}

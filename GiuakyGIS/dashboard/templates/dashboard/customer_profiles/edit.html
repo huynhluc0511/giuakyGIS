@@ -1,0 +1,293 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h3 mb-0">
+            <i class="fas fa-edit me-2"></i>
+            {{ page_title }}
+        </h2>
+        <div>
+            <a href="{% url 'dashboard:customer_profile_detail' profile.pk %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Quay lại
+            </a>
+        </div>
+    </div>
+
+    <!-- Edit Form -->
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <!-- Basic Information -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5 class="border-bottom pb-2 mb-3">
+                            <i class="fas fa-user me-2"></i>Thông tin cơ bản
+                        </h5>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ user_form.first_name.id_for_label }}" class="form-label">Tên</label>
+                        {{ user_form.first_name }}
+                        {% if user_form.first_name.errors %}
+                            <div class="text-danger small">{{ user_form.first_name.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ user_form.last_name.id_for_label }}" class="form-label">Họ</label>
+                        {{ user_form.last_name }}
+                        {% if user_form.last_name.errors %}
+                            <div class="text-danger small">{{ user_form.last_name.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ user_form.email.id_for_label }}" class="form-label">
+                            Email <span class="text-danger">*</span>
+                        </label>
+                        {{ user_form.email }}
+                        {% if user_form.email.errors %}
+                            <div class="text-danger small">{{ user_form.email.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ profile_form.phone.id_for_label }}" class="form-label">Số điện thoại</label>
+                        {{ profile_form.phone }}
+                        {% if profile_form.phone.errors %}
+                            <div class="text-danger small">{{ profile_form.phone.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ profile_form.birth_date.id_for_label }}" class="form-label">Ngày sinh</label>
+                        {{ profile_form.birth_date }}
+                        {% if profile_form.birth_date.errors %}
+                            <div class="text-danger small">{{ profile_form.birth_date.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ profile_form.gender.id_for_label }}" class="form-label">Giới tính</label>
+                        {{ profile_form.gender }}
+                        {% if profile_form.gender.errors %}
+                            <div class="text-danger small">{{ profile_form.gender.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-12 mb-3">
+                        <label for="{{ profile_form.address.id_for_label }}" class="form-label">Địa chỉ</label>
+                        {{ profile_form.address }}
+                        {% if profile_form.address.errors %}
+                            <div class="text-danger small">{{ profile_form.address.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Avatar -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5 class="border-bottom pb-2 mb-3">
+                            <i class="fas fa-camera me-2"></i>Ảnh đại diện
+                        </h5>
+                    </div>
+                    
+                    <div class="col-12">
+                        <div class="d-flex align-items-center">
+                            <div class="me-4">
+                                {% if profile.avatar %}
+                                    <img src="{{ profile.avatar.url }}" alt="Avatar hiện tại" class="rounded-circle" width="100" height="100" style="object-fit: cover;">
+                                {% else %}
+                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 100px; height: 100px; font-size: 2.5rem;">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1">
+                                <label for="{{ profile_form.avatar.id_for_label }}" class="form-label">Chọn ảnh mới</label>
+                                {{ profile_form.avatar }}
+                                {% if profile_form.avatar.errors %}
+                                    <div class="text-danger small">{{ profile_form.avatar.errors.0 }}</div>
+                                {% endif %}
+                                <small class="text-muted">Chọn ảnh định dạng JPG, PNG. Tối đa 5MB.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Social Networks -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5 class="border-bottom pb-2 mb-3">
+                            <i class="fas fa-share-alt me-2"></i>Mạng xã hội
+                        </h5>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ profile_form.website.id_for_label }}" class="form-label">Website cá nhân</label>
+                        {{ profile_form.website }}
+                        {% if profile_form.website.errors %}
+                            <div class="text-danger small">{{ profile_form.website.errors.0 }}</div>
+                        {% endif %}
+                        <small class="text-muted">Ví dụ: https://website.com</small>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ profile_form.facebook.id_for_label }}" class="form-label">Facebook</label>
+                        {{ profile_form.facebook }}
+                        {% if profile_form.facebook.errors %}
+                            <div class="text-danger small">{{ profile_form.facebook.errors.0 }}</div>
+                        {% endif %}
+                        <small class="text-muted">Ví dụ: https://facebook.com/username</small>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ profile_form.instagram.id_for_label }}" class="form-label">Instagram</label>
+                        {{ profile_form.instagram }}
+                        {% if profile_form.instagram.errors %}
+                            <div class="text-danger small">{{ profile_form.instagram.errors.0 }}</div>
+                        {% endif %}
+                        <small class="text-muted">Ví dụ: https://instagram.com/username</small>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ profile_form.twitter.id_for_label }}" class="form-label">Twitter</label>
+                        {{ profile_form.twitter }}
+                        {% if profile_form.twitter.errors %}
+                            <div class="text-danger small">{{ profile_form.twitter.errors.0 }}</div>
+                        {% endif %}
+                        <small class="text-muted">Ví dụ: https://twitter.com/username</small>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ profile_form.linkedin.id_for_label }}" class="form-label">LinkedIn</label>
+                        {{ profile_form.linkedin }}
+                        {% if profile_form.linkedin.errors %}
+                            <div class="text-danger small">{{ profile_form.linkedin.errors.0 }}</div>
+                        {% endif %}
+                        <small class="text-muted">Ví dụ: https://linkedin.com/in/username</small>
+                    </div>
+                </div>
+
+                <!-- Bio -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5 class="border-bottom pb-2 mb-3">
+                            <i class="fas fa-info-circle me-2"></i>Tiểu sử
+                        </h5>
+                    </div>
+                    
+                    <div class="col-12 mb-3">
+                        <label for="{{ profile_form.bio.id_for_label }}" class="form-label">Giới thiệu bản thân</label>
+                        {{ profile_form.bio }}
+                        {% if profile_form.bio.errors %}
+                            <div class="text-danger small">{{ profile_form.bio.errors.0 }}</div>
+                        {% endif %}
+                        <small class="text-muted">Viết một vài dòng về bản thân bạn (tối đa 500 ký tự)</small>
+                    </div>
+                </div>
+
+                <!-- Account Status -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5 class="border-bottom pb-2 mb-3">
+                            <i class="fas fa-cog me-2"></i>Trạng thái tài khoản
+                        </h5>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="is_active" id="is_active" {% if profile.user.is_active %}checked{% endif %}>
+                            <label class="form-check-label" for="is_active">
+                                Tài khoản đang hoạt động
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="is_staff" id="is_staff" {% if profile.user.is_staff %}checked{% endif %}>
+                            <label class="form-check-label" for="is_staff">
+                                Quyền quản trị viên
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="is_verified" id="is_verified" {% if profile.is_verified %}checked{% endif %}>
+                            <label class="form-check-label" for="is_verified">
+                                Tài khoản đã xác thực
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Lưu thay đổi
+                            </button>
+                            <a href="{% url 'dashboard:customer_profile_detail' profile.pk %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Hủy
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Add custom styling for form fields
+document.addEventListener('DOMContentLoaded', function() {
+    // Add Bootstrap classes to form fields
+    const inputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"], input[type="date"], input[type="url"], textarea, select');
+    inputs.forEach(input => {
+        input.classList.add('form-control');
+    });
+    
+    // Add file input styling
+    const fileInput = document.querySelector('input[type="file"]');
+    if (fileInput) {
+        fileInput.classList.add('form-control');
+    }
+    
+    // Avatar preview
+    const avatarInput = document.getElementById('{{ profile_form.avatar.id_for_label }}');
+    if (avatarInput) {
+        avatarInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const avatarImg = document.querySelector('.rounded-circle');
+                    if (avatarImg && avatarImg.tagName === 'IMG') {
+                        avatarImg.src = e.target.result;
+                    } else {
+                        // Replace default avatar with image
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.className = 'rounded-circle';
+                        img.width = 100;
+                        img.height = 100;
+                        img.style.objectFit = 'cover';
+                        const container = avatarImg.parentNode;
+                        container.replaceChild(img, avatarImg);
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

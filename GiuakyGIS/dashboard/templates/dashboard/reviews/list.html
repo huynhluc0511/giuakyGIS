@@ -1,0 +1,759 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Quản lý Đánh giá - FastFood Universe{% endblock %}
+
+{% block css %}
+<style>
+/* MODERN REVIEWS DASHBOARD - Enhanced Design */
+.reviews-modern {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* 🎨 Hero Header - Gradient + Shine */
+.reviews-hero {
+    background: linear-gradient(135deg, #ff6b6b 0%, #d62828 50%, #b21e1e 100%);
+    background-size: 400% 400%;
+    animation: gradientShift 8s ease infinite;
+    border-radius: 25px;
+    padding: 30px;
+    margin-bottom: 30px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(214, 40, 40, 0.3);
+}
+
+@keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+.reviews-hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(180deg); }
+}
+
+.reviews-hero-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.reviews-hero h1 {
+    color: white;
+    margin: 0;
+    font-size: 2.5rem;
+    font-weight: 800;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.hero-stats {
+    display: flex;
+    gap: 25px;
+}
+
+/* 📊 Stat Cards */
+.stat-glow {
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 20px;
+    padding: 20px 25px;
+    text-align: center;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stat-glow:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+}
+
+.stat-number {
+    font-size: 2.2rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, #d62828, #ff6b6b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: block;
+}
+
+.stat-label {
+    color: #666;
+    font-weight: 600;
+    margin-top: 5px;
+    font-size: 0.95rem;
+}
+
+/* 🔍 Modern Filters */
+.filters-modern {
+    background: rgba(255,255,255,0.9);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 25px;
+    margin-bottom: 30px;
+    border: 1px solid rgba(255,255,255,0.3);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    align-items: end;
+}
+
+.filter-modern {
+    position: relative;
+}
+
+.filter-modern label {
+    position: absolute;
+    top: -10px;
+    left: 15px;
+    background: linear-gradient(135deg, #d62828, #ff6b6b);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(214, 40, 40, 0.4);
+}
+
+.filter-modern input,
+.filter-modern select {
+    width: 100%;
+    padding: 15px 20px;
+    border: 2px solid #e8e8e8;
+    border-radius: 15px;
+    font-size: 1rem;
+    background: rgba(255,255,255,0.8);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+.filter-modern input:focus,
+.filter-modern select:focus {
+    outline: none;
+    border-color: #d62828;
+    box-shadow: 0 0 0 4px rgba(214, 40, 40, 0.1);
+    transform: translateY(-2px);
+}
+
+.btn-modern {
+    background: linear-gradient(135deg, #d62828, #ff6b6b);
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 15px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 25px rgba(214, 40, 40, 0.4);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-modern:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 35px rgba(214, 40, 40, 0.6);
+}
+
+.btn-modern:active {
+    transform: translateY(-1px);
+}
+
+/* 🎯 Review Cards Grid */
+.reviews-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+.review-card {
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 25px;
+    padding: 30px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+    border: 1px solid rgba(255,255,255,0.3);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.review-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, #d62828, #ffb703, #ff6b6b);
+}
+
+.review-card:hover {
+    transform: translateY(-12px) scale(1.02);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.2);
+}
+
+/* ID Badge */
+.review-id {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    display: inline-block;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+/* Order Link */
+.order-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #10b981, #34d399);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+}
+
+.order-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.6);
+    color: white;
+}
+
+.order-na {
+    background: #e5e7eb;
+    color: #6b7280;
+    padding: 8px 16px;
+    border-radius: 25px;
+    font-weight: 600;
+}
+
+/* ⭐ Star Rating */
+.rating-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 25px 0;
+}
+
+.stars-glow {
+    display: flex;
+    gap: 3px;
+}
+
+.star {
+    font-size: 1.6rem;
+    color: #fbbf24;
+    filter: drop-shadow(0 0 8px #fbbf24);
+    animation: starTwinkle 2s ease-in-out infinite;
+}
+
+.star:nth-child(2) { animation-delay: 0.2s; }
+.star:nth-child(3) { animation-delay: 0.4s; }
+.star:nth-child(4) { animation-delay: 0.6s; }
+.star:nth-child(5) { animation-delay: 0.8s; }
+
+@keyframes starTwinkle {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.1); }
+}
+
+.rating-text {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+    font-size: 1.3rem;
+}
+
+/* Review Content */
+.review-content {
+    background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+    border-radius: 18px;
+    padding: 20px;
+    margin: 20px 0;
+    border-left: 5px solid #d62828;
+    font-style: italic;
+    line-height: 1.7;
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
+}
+
+/* 🖼️ Images */
+.images-preview {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 20px 0;
+}
+
+.image-thumb {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 12px;
+    cursor: pointer;
+    border: 3px solid rgba(255,255,255,0.8);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+}
+
+.image-thumb:hover {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+
+/* 🏷️ Status Badge */
+.status-badge {
+    padding: 10px 20px;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.status-approved {
+    background: linear-gradient(135deg, #10b981, #34d399);
+    color: white;
+    animation: pulse-green 2s infinite;
+}
+
+@keyframes pulse-green {
+    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.status-pending {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    color: white;
+    animation: pulse-yellow 2s infinite;
+}
+
+@keyframes pulse-yellow {
+    0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+}
+
+.status-rejected {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+}
+
+/* ⚡ Action Buttons */
+.actions-modern {
+    display: flex;
+    gap: 12px;
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.btn-action-modern {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-view-modern {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.btn-view-modern:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(59, 130, 246, 0.6);
+}
+
+.btn-approve-modern {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.btn-approve-modern:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(16, 185, 129, 0.6);
+}
+
+.btn-reject-modern {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+}
+
+.btn-reject-modern:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(239, 68, 68, 0.6);
+}
+
+/* 📱 Mobile Responsive */
+@media (max-width: 768px) {
+    .reviews-modern { padding: 15px; }
+    
+    .reviews-hero h1 { font-size: 2rem; }
+    .reviews-hero-content { flex-direction: column; text-align: center; }
+    
+    .hero-stats { justify-content: center; flex-wrap: wrap; }
+    
+    .filters-grid { grid-template-columns: 1fr; gap: 15px; }
+    
+    .reviews-grid { 
+        grid-template-columns: 1fr; 
+        gap: 20px;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+    
+    .review-card { padding: 25px 20px; }
+    
+    .actions-modern { flex-direction: column; }
+}
+
+/* Empty State */
+.empty-modern {
+    text-align: center;
+    padding: 80px 30px;
+    color: #6b7280;
+}
+
+.empty-icon {
+    font-size: 6rem;
+    background: linear-gradient(135deg, #d1d5db, #9ca3af);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 25px;
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-15px); }
+    60% { transform: translateY(-8px); }
+}
+
+/* Pagination Modern */
+.pagination-modern {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 50px;
+    flex-wrap: wrap;
+}
+
+.page-btn {
+    padding: 12px 20px;
+    border: 2px solid #e5e7eb;
+    background: white;
+    border-radius: 15px;
+    color: #374151;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.page-btn:hover:not(.current) {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+    transform: translateY(-2px);
+}
+
+.page-btn.current {
+    background: linear-gradient(135deg, #d62828, #ff6b6b);
+    color: white;
+    border-color: #d62828;
+    box-shadow: 0 8px 25px rgba(214, 40, 40, 0.4);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="reviews-modern">
+    <!-- 🎨 Hero Header -->
+    <div class="reviews-hero">
+        <div class="reviews-hero-content">
+            <div>
+                <h1><i class="fas fa-star"></i> Quản lý Đánh giá</h1>
+                <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 1.2rem;">
+                    Theo dõi và quản lý phản hồi người dùng
+                </p>
+            </div>
+            <div class="hero-stats">
+                <div class="stat-glow">
+                    <span class="stat-number">{{ total_reviews|default:0 }}</span>
+                    <span class="stat-label">Tổng đánh giá</span>
+                </div>
+                <div class="stat-glow">
+                    <span class="stat-number">{{ average_rating|floatformat:1|default:'0.0' }}</span>
+                    <span class="stat-label">Điểm TB</span>
+                </div>
+                <div class="stat-glow">
+                    <span class="stat-number">{{ pending_count|default:0 }}</span>
+                    <span class="stat-label">Chờ duyệt</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔍 Enhanced Filters -->
+    <div class="filters-modern">
+        <form method="get" class="filters-grid">
+            <div class="filter-modern">
+                <label>Đánh giá</label>
+                <select name="rating">
+                    <option value="">Tất cả</option>
+                    <option value="5" {% if request.GET.rating == '5' %}selected{% endif %}>5⭐</option>
+                    <option value="4" {% if request.GET.rating == '4' %}selected{% endif %}>4⭐</option>
+                    <option value="3" {% if request.GET.rating == '3' %}selected{% endif %}>3⭐</option>
+                    <option value="2" {% if request.GET.rating == '2' %}selected{% endif %}>2⭐</option>
+                    <option value="1" {% if request.GET.rating == '1' %}selected{% endif %}>1⭐</option>
+                </select>
+            </div>
+            <div class="filter-modern">
+                <label>Trạng thái</label>
+                <select name="status">
+                    <option value="">Tất cả</option>
+                    <option value="approved" {% if request.GET.status == 'approved' %}selected{% endif %}>Đã duyệt</option>
+                    <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Chờ duyệt</option>
+                    <option value="rejected" {% if request.GET.status == 'rejected' %}selected{% endif %}>Từ chối</option>
+                </select>
+            </div>
+            <div class="filter-modern">
+                <label>Từ ngày</label>
+                <input type="date" name="date_from" value="{{ request.GET.date_from }}">
+            </div>
+            <div class="filter-modern">
+                <label>Đến ngày</label>
+                <input type="date" name="date_to" value="{{ request.GET.date_to }}">
+            </div>
+            <div class="filter-modern">
+                <label>Tìm kiếm</label>
+                <input type="text" name="search" placeholder="Nội dung bình luận..." value="{{ request.GET.search }}>
+            </div>
+            <button type="submit" class="btn-modern">
+                <i class="fas fa-search"></i> Lọc ngay
+            </button>
+        </form>
+    </div>
+
+    <!-- 🎯 Reviews Cards Grid -->
+    {% if reviews %}
+    <div class="reviews-grid">
+        {% for review in reviews %}
+        <div class="review-card">
+            <!-- ID Badge -->
+            <div class="review-id">#{{ review.id }}</div>
+            
+            <!-- Order Link -->
+            <div style="margin-bottom: 20px;">
+                {% if review.order and review.order.id %}
+                    <a href="{% url 'dashboard:orders_detail' review.order.id %}" class="order-link">
+                        <i class="fas fa-receipt"></i> Đơn hàng #{{ review.order.id }}
+                    </a>
+                {% else %}
+                    <span class="order-na">
+                        <i class="fas fa-minus"></i> Đơn hàng N/A
+                    </span>
+                {% endif %}
+            </div>
+
+            <!-- ⭐ Star Rating -->
+            <div class="rating-container">
+                <div class="stars-glow">
+                    {% for i in review.rating_stars %}
+                        <span class="star">⭐</span>
+                    {% endfor %}
+                </div>
+                <span class="rating-text">({{ review.rating }}/5)</span>
+            </div>
+
+            <!-- Review Content -->
+            <div class="review-content">
+                "{{ review.comment|default:'Không có bình luận' }}"
+            </div>
+
+            <!-- 🖼️ Images -->
+            {% if review.images.exists %}
+            <div class="images-preview">
+                {% for image in review.images.all|slice:":4" %}
+                    <img src="{{ image.image.url }}" alt="Review image" class="image-thumb" onclick="viewImage('{{ image.image.url }}')" title="Click to enlarge">
+                {% endfor %}
+                {% if review.images.count > 4 %}
+                    <div class="image-thumb" style="background: #e5e7eb; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #6b7280;">+{{ review.images.count|add:"-4" }}</div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Status + Actions -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 25px;">
+                <span class="status-badge status-{{ review.status }}">
+                    {% if review.status == 'approved' %}✅ Đã duyệt
+                    {% elif review.status == 'pending' %}⏳ Chờ duyệt
+                    {% else %}❌ Từ chối{% endif %}
+                </span>
+                
+                <div class="actions-modern">
+                    <a href="{% url 'dashboard:review_detail' review.id %}" class="btn-action-modern btn-view-modern">
+                        <i class="fas fa-eye"></i> Chi tiết
+                    </a>
+                    {% if review.status == 'pending' %}
+                        <button class="btn-action-modern btn-approve-modern" onclick="approveReview({{ review.id }})">
+                            <i class="fas fa-check-circle"></i> Duyệt
+                        </button>
+                        <button class="btn-action-modern btn-reject-modern" onclick="rejectReview({{ review.id }})">
+                            <i class="fas fa-times-circle"></i> Từ chối
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- 📄 Modern Pagination -->
+    {% if is_paginated %}
+    <div class="pagination-modern">
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}{{ request.GET.urlencode }}" class="page-btn">« Trước</a>
+        {% endif %}
+        
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <span class="page-btn current">{{ num }}</span>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <a href="?page={{ num }}{{ request.GET.urlencode }}" class="page-btn">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+        
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{{ request.GET.urlencode }}" class="page-btn">Tiếp »</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-modern">
+        <div class="empty-icon">
+            <i class="fas fa-star"></i>
+        </div>
+        <h2>Chưa có đánh giá nào</h2>
+        <p>Người dùng sẽ sớm để lại những phản hồi tuyệt vời!</p>
+        <div style="margin-top: 30px;">
+            <button class="btn-modern" onclick="location.reload()">
+                <i class="fas fa-sync-alt"></i> Làm mới
+            </button>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block js %}
+<!-- Keep all existing functionality -->
+<script>
+function approveReview(reviewId) {
+    if (confirm('✅ Duyệt đánh giá này?')) {
+        fetch(`/dashboard/reviews/${reviewId}/approve/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('❌ Lỗi: ' + (data.error || 'Unknown error'));
+            }
+        });
+    }
+}
+
+function rejectReview(reviewId) {
+    if (confirm('❌ Từ chối đánh giá này?')) {
+        fetch(`/dashboard/reviews/${reviewId}/reject/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('❌ Lỗi: ' + (data.error || 'Unknown error'));
+            }
+        });
+    }
+}
+
+function viewImage(imageUrl) {
+    window.open(imageUrl, '_blank', 'noopener,noreferrer');
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

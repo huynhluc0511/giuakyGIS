@@ -1,0 +1,400 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Đơn hàng của tôi - FastFood Universe{% endblock %}
+
+{% block css %}
+<style>
+.my-orders-wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px 15px;
+}
+
+.page-title {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #2d3748;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.page-title i {
+    color: #667eea;
+}
+
+/* Order Card */
+.order-card {
+    background: white;
+    border-radius: 18px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.07);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+    border: 1px solid #f0f0f0;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.order-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 24px;
+    border-bottom: 1px solid #f5f5f5;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.order-id {
+    font-family: monospace;
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: #667eea;
+}
+.order-date {
+    font-size: 0.85rem;
+    color: #8898aa;
+}
+.order-status-pill {
+    padding: 6px 18px;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+.status-pending { background: #fff3cd; color: #856404; }
+.status-processing { background: #cce5ff; color: #004085; }
+.status-shipped { background: #e8daef; color: #6c3483; }
+.status-delivered { background: #d4edda; color: #155724; }
+.status-cancelled { background: #f8d7da; color: #721c24; }
+
+/* Items */
+.order-items {
+    padding: 20px 24px;
+}
+.order-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f8f8f8;
+}
+.order-item:last-child {
+    border-bottom: none;
+}
+.item-img {
+    width: 55px;
+    height: 55px;
+    border-radius: 12px;
+    object-fit: cover;
+    border: 2px solid #f0f0f0;
+    flex-shrink: 0;
+}
+.item-img-placeholder {
+    width: 55px;
+    height: 55px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f0f2f5, #e0e3e8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #adb5bd;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+.item-detail {
+    flex: 1;
+    min-width: 0;
+}
+.item-name {
+    font-weight: 700;
+    color: #2d3748;
+    font-size: 0.95rem;
+}
+.item-cat {
+    font-size: 0.75rem;
+    color: #8898aa;
+}
+.item-qty-price {
+    text-align: right;
+    white-space: nowrap;
+}
+.item-qty {
+    font-size: 0.8rem;
+    color: #8898aa;
+}
+.item-price {
+    font-weight: 700;
+    color: #667eea;
+    font-size: 0.95rem;
+}
+
+/* Footer */
+.order-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    background: #fafbfc;
+    border-top: 1px solid #f0f0f0;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.order-total {
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: #2d3748;
+}
+.order-total span {
+    color: #667eea;
+}
+.order-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* Buttons */
+.btn-review {
+    background: linear-gradient(135deg, #ff6b6b, #ffd93d);
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 25px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+}
+.btn-review:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(255, 107, 107, 0.4);
+    color: white;
+}
+.btn-item-review {
+    background: white;
+    border: 2px solid #ffd93d;
+    color: #856404;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.78rem;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s ease;
+}
+.btn-item-review:hover {
+    background: #fff3cd;
+    color: #856404;
+}
+.btn-reviewed {
+    background: #d4edda;
+    color: #155724;
+    border: none;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.78rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.btn-tracking {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 25px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+.btn-tracking:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(102, 126, 234, 0.4);
+    color: white;
+}
+
+/* Empty */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 18px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.07);
+}
+.empty-state i {
+    font-size: 3rem;
+    color: #d0d0d0;
+    margin-bottom: 1rem;
+    display: block;
+}
+.empty-state h4 {
+    color: #8898aa;
+    margin-bottom: 0.5rem;
+}
+.empty-state p {
+    color: #adb5bd;
+    margin-bottom: 1.5rem;
+}
+.btn-order-now {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 25px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 18px rgba(102, 126, 234, 0.3);
+}
+.btn-order-now:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    color: white;
+}
+
+/* Item review row */
+.item-review-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 6px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="my-orders-wrap">
+    <div class="page-title">
+        <i class="fas fa-shopping-bag"></i> Đơn hàng của tôi
+    </div>
+    
+    {% if orders %}
+        {% for order in orders %}
+        <div class="order-card">
+            <!-- Header -->
+            <div class="order-header">
+                <div>
+                    <span class="order-id">#{{ order.id }}</span>
+                    <span class="order-date" style="margin-left:12px;">
+                        <i class="fas fa-clock"></i> {{ order.created_at|date:"d/m/Y H:i" }}
+                    </span>
+                </div>
+                <span class="order-status-pill
+                    {% if order.status == 'Pending' %}status-pending
+                    {% elif order.status == 'Processing' %}status-processing
+                    {% elif order.status == 'Shipped' %}status-shipped
+                    {% elif order.status == 'Delivered' %}status-delivered
+                    {% elif order.status == 'Cancelled' %}status-cancelled
+                    {% endif %}">
+                    {{ order.get_status_display }}
+                </span>
+            </div>
+
+            <!-- Items -->
+            <div class="order-items">
+                {% for item in order.items.all %}
+                <div class="order-item">
+                    {% if item.product.image %}
+                    <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="item-img">
+                    {% else %}
+                    <div class="item-img-placeholder"><i class="fas fa-utensils"></i></div>
+                    {% endif %}
+                    <div class="item-detail">
+                        <div class="item-name">{{ item.product.name }}</div>
+                        <div class="item-cat">
+                            {% if item.product.category %}{{ item.product.category.name }}{% endif %}
+                        </div>
+                        {% if order.status == 'Delivered' %}
+                        <div class="item-review-row">
+                            {% if item.can_review_item %}
+                            <a href="{% url 'create_product_review' item.id %}" class="btn-item-review">
+                                <i class="fas fa-star"></i> Đánh giá
+                            </a>
+                            {% else %}
+                            <span class="btn-reviewed"><i class="fas fa-check"></i> Đã đánh giá</span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="item-qty-price">
+                        <div class="item-qty">{{ item.quantity }}x {{ item.price|floatformat:0 }}đ</div>
+                        <div class="item-price">{{ item.total_price|floatformat:0 }}đ</div>
+                    </div>
+                </div>
+                {% empty %}
+                <div style="text-align:center;padding:1.5rem;color:#adb5bd;">
+                    <i class="fas fa-box-open"></i> Chưa có món ăn
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Footer -->
+            <div class="order-footer">
+                <div class="order-total">
+                    Tổng cộng: <span>{{ order.total_price|floatformat:0 }}đ</span>
+                </div>
+                <div class="order-actions">
+                    {% if order.status == 'Shipped' %}
+                    <a href="{% url 'shipper_workspace' %}" class="btn-tracking">
+                        <i class="fas fa-map-marker-alt"></i> Theo dõi
+                    </a>
+                    {% endif %}
+                    {% if order.status == 'Delivered' %}
+                        {% if order.can_review_order %}
+                        <a href="{% url 'rate_order' order.id %}" class="btn-review">
+                            🍕 Đánh giá đơn hàng
+                        </a>
+                        {% else %}
+                        <span class="btn-reviewed" style="padding:8px 18px;font-size:0.85rem;">
+                            <i class="fas fa-check-circle"></i> Đã đánh giá ⭐
+                        </span>
+                        {% endif %}
+                    {% elif order.status == 'Pending' %}
+                    <span style="color:#856404;font-size:0.85rem;"><i class="fas fa-hourglass-half"></i> Chờ xác nhận</span>
+                    {% elif order.status == 'Processing' %}
+                    <span style="color:#004085;font-size:0.85rem;"><i class="fas fa-fire"></i> Đang chế biến</span>
+                    {% elif order.status == 'Cancelled' %}
+                    <span style="color:#721c24;font-size:0.85rem;"><i class="fas fa-ban"></i> Đã hủy</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-shopping-bag"></i>
+            <h4>Bạn chưa có đơn hàng nào</h4>
+            <p>Hãy đặt hàng ngay để trải nghiệm dịch vụ của chúng tôi!</p>
+            <a href="{% url 'home' %}" class="btn-order-now">
+                <i class="fas fa-shopping-cart"></i> Đặt hàng ngay
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

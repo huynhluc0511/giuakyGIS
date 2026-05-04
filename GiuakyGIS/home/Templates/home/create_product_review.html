@@ -1,0 +1,308 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Đánh giá {{ order_item.product.name }} - FastFood Universe{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="fas fa-utensils"></i> 
+                        Đánh giá sản phẩm: {{ order_item.product.name }}
+                        {% if is_edit %}
+                        <small class="text-danger">(Chỉnh sửa)</small>
+                        {% endif %}
+                    </h4>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Product Info -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            {% if order_item.product.image %}
+                            <img src="{{ order_item.product.image.url }}" alt="{{ order_item.product.name }}" 
+                                 class="img-fluid rounded" style="max-height: 200px; object-fit: cover;">
+                            {% else %}
+                            <div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                                 style="height: 200px;">
+                                <i class="fas fa-image fa-3x text-muted"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-8">
+                            <h5>{{ order_item.product.name }}</h5>
+                            <p class="text-muted">{{ order_item.product.description|truncatewords:20 }}</p>
+                            <div class="row">
+                                <div class="col-6">
+                                    <strong>Giá:</strong> {{ order_item.price|floatformat:0 }} VNĐ
+                                </div>
+                                <div class="col-6">
+                                    <strong>Số lượng:</strong> {{ order_item.quantity }}
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-shopping-bag"></i> Đơn hàng #{{ order_item.order.id }}
+                                    <br>
+                                    <i class="fas fa-calendar"></i> {{ order_item.order.created_at|date:"d/m/Y H:i" }}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <!-- Product Rating -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-star text-warning"></i> Đánh giá sản phẩm
+                                <span class="text-danger">*</span>
+                            </label>
+                            <div class="rating-stars" data-rating="{{ review.rating }}">
+                                {% for i in "12345" %}
+                                <input type="radio" id="rating_{{ i }}" name="rating" 
+                                       value="{{ i }}" {% if review.rating == i|add:"0" %}checked{% endif %} required>
+                                <label for="rating_{{ i }}" class="star-label">
+                                    <i class="fas fa-star"></i>
+                                </label>
+                                {% endfor %}
+                            </div>
+                            <div class="mt-2">
+                                <small class="text-muted" id="rating-text">
+                                    {% if review.rating == 5 %}Tuyệt vời!{% endif %}
+                                    {% if review.rating == 4 %}Rất tốt{% endif %}
+                                    {% if review.rating == 3 %}Tốt{% endif %}
+                                    {% if review.rating == 2 %}Tạm được{% endif %}
+                                    {% if review.rating == 1 %}Kém{% endif %}
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Review Content -->
+                        <div class="mb-4">
+                            <label for="content" class="form-label fw-bold">
+                                <i class="fas fa-comment"></i> Nội dung đánh giá
+                            </label>
+                            <textarea class="form-control" id="content" name="content" rows="4" 
+                                      placeholder="Chia sẻ cảm nhận của bạn về sản phẩm này...">{{ review.content }}</textarea>
+                            <small class="text-muted">Hãy chia sẻ trải nghiệm của bạn để giúp khách hàng khác đưa ra lựa chọn tốt hơn</small>
+                        </div>
+
+                        <!-- Review Images -->
+                        <div class="mb-4">
+                            <label for="images" class="form-label fw-bold">
+                                <i class="fas fa-camera"></i> Hình ảnh (tùy chọn)
+                            </label>
+                            <input type="file" class="form-control" id="images" name="images" multiple 
+                                   accept="image/*">
+                            <small class="text-muted">Bạn có thể tải lên tối đa 5 hình ảnh (JPG, PNG)</small>
+                            
+                            <!-- Existing Images -->
+                            {% if review.images.all %}
+                            <div class="mt-3">
+                                <h6>Hình ảnh hiện tại:</h6>
+                                <div class="row">
+                                    {% for image in review.images.all %}
+                                    <div class="col-md-3 mb-2">
+                                        <img src="{{ image.image.url }}" alt="Review image" 
+                                             class="img-fluid rounded" style="height: 100px; object-fit: cover;">
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                <small class="text-warning">
+                                    <i class="fas fa-info-circle"></i> Tải lên hình ảnh mới sẽ thay thế hình ảnh hiện tại
+                                </small>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'home:my_orders' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Quay lại
+                            </a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-paper-plane"></i> 
+                                {% if is_edit %}Cập nhật đánh giá{% else %}Gửi đánh giá{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block css %}
+<style>
+.card {
+    border: none;
+    border-radius: 15px;
+}
+
+.card-header {
+    border-radius: 15px 15px 0 0 !important;
+    border: none;
+}
+
+.rating-stars {
+    display: flex;
+    gap: 5px;
+}
+
+.rating-stars input[type="radio"] {
+    display: none;
+}
+
+.rating-stars .star-label {
+    font-size: 2rem;
+    color: #ddd;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.rating-stars .star-label:hover {
+    transform: scale(1.1);
+}
+
+.rating-stars input[type="radio"]:checked ~ .star-label,
+.rating-stars .star-label:hover,
+.rating-stars .star-label:hover ~ .star-label {
+    color: #ffc107;
+}
+
+.rating-stars .star-label:hover ~ .star-label {
+    color: #ddd;
+}
+
+.rating-stars input[type="radio"]:checked ~ .star-label {
+    color: #ffc107;
+}
+
+.form-control:focus {
+    border-color: #ffc107;
+    box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+}
+
+.btn-warning {
+    background-color: #ffc107;
+    border-color: #ffc107;
+    color: #000;
+}
+
+.btn-warning:hover {
+    background-color: #e0a800;
+    border-color: #e0a800;
+    color: #000;
+}
+
+.img-fluid {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+}
+
+.text-warning {
+    color: #ffc107 !important;
+}
+</style>
+{% endblock %}
+
+{% block js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ratingTexts = {
+        1: 'Kém',
+        2: 'Tạm được',
+        3: 'Tốt',
+        4: 'Rất tốt',
+        5: 'Tuyệt vời!'
+    };
+    
+    // Handle star rating interactions
+    const ratingGroup = document.querySelector('.rating-stars');
+    const stars = ratingGroup.querySelectorAll('.star-label');
+    const inputs = ratingGroup.querySelectorAll('input[type="radio"]');
+    const ratingText = document.getElementById('rating-text');
+    
+    stars.forEach((star, index) => {
+        star.addEventListener('click', function() {
+            // Check the corresponding radio
+            inputs[index].checked = true;
+            
+            // Update visual state
+            updateStarVisual(index + 1);
+            
+            // Update rating text
+            ratingText.textContent = ratingTexts[index + 1];
+        });
+        
+        star.addEventListener('mouseenter', function() {
+            updateStarVisual(index + 1);
+            ratingText.textContent = ratingTexts[index + 1];
+        });
+    });
+    
+    ratingGroup.addEventListener('mouseleave', function() {
+        // Reset to checked state
+        const checkedInput = ratingGroup.querySelector('input[type="radio"]:checked');
+        if (checkedInput) {
+            const checkedIndex = Array.from(inputs).indexOf(checkedInput);
+            updateStarVisual(checkedIndex + 1);
+            ratingText.textContent = ratingTexts[checkedIndex + 1];
+        } else {
+            updateStarVisual(0);
+            ratingText.textContent = '';
+        }
+    });
+    
+    // Initialize visual state
+    const checkedInput = ratingGroup.querySelector('input[type="radio"]:checked');
+    if (checkedInput) {
+        const checkedIndex = Array.from(inputs).indexOf(checkedInput);
+        updateStarVisual(checkedIndex + 1);
+    }
+    
+    function updateStarVisual(rating) {
+        stars.forEach((star, index) => {
+            if (index < rating) {
+                star.style.color = '#ffc107';
+            } else {
+                star.style.color = '#ddd';
+            }
+        });
+    }
+    
+    // Handle file input validation
+    const fileInput = document.getElementById('images');
+    fileInput.addEventListener('change', function(e) {
+        const files = e.target.files;
+        if (files.length > 5) {
+            alert('Bạn chỉ có thể tải lên tối đa 5 hình ảnh!');
+            e.target.value = '';
+            return;
+        }
+        
+        // Check file types
+        for (let file of files) {
+            if (!file.type.match('image.*')) {
+                alert('Chỉ chấp nhận file hình ảnh (JPG, PNG)!');
+                e.target.value = '';
+                return;
+            }
+            
+            // Check file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Kích thước file không được vượt quá 5MB!');
+                e.target.value = '';
+                return;
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

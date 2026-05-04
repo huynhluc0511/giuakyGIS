@@ -1,0 +1,94 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">{{ page_title }}</h1>
+            <p class="text-sm text-gray-600 mt-1">✅ Quản lý phiếu nhập/xuất kho - có thể thêm nhiều sản phẩm cùng lúc</p>
+        </div>
+        <a href="{% url 'dashboard:warehouse_batch_create' %}" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-medium">
+            ➕ Tạo Phiếu Mới
+        </a>
+    </div>
+
+    <!-- Filter -->
+    <div class="mb-6 p-4 bg-gray-50 rounded-lg border-l-4 border-indigo-400">
+        <form method="get" class="flex gap-4 items-end">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Loại Phiếu</label>
+                <select name="batch_type" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                    <option value="">Tất cả</option>
+                    <option value="import" {% if request.GET.batch_type == 'import' %}selected{% endif %}>📥 Nhập Hàng</option>
+                    <option value="export" {% if request.GET.batch_type == 'export' %}selected{% endif %}>📤 Xuất Hàng</option>
+                </select>
+            </div>
+            <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">Lọc</button>
+        </form>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <table class="w-full">
+            <thead class="bg-gray-50 border-b">
+                <tr>
+                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Số Phiếu</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Loại</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Kho Hàng</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Nhà Cung Cấp</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Tổng Tiền</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Ngày Tạo</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Hành Động</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                {% for batch in page_obj %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 text-sm font-medium text-indigo-600"><strong>{{ batch.batch_number }}</strong></td>
+                    <td class="px-6 py-4 text-sm">
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold {% if batch.batch_type == 'import' %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                            {{ batch.get_batch_type_display }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-700">{{ batch.warehouse.store.name }}</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">{{ batch.supplier|default:"N/A" }}</td>
+                    <td class="px-6 py-4 text-sm font-semibold text-gray-900">{{ batch.total_amount|floatformat:0 }} ₫</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">{{ batch.created_at|date:"d/m/Y H:i" }}</td>
+                    <td class="px-6 py-4 text-sm space-x-2">
+                        <a href="{% url 'dashboard:warehouse_batch_detail' batch.id %}" class="text-blue-600 hover:underline">Chi Tiết</a>
+                        <a href="{% url 'dashboard:warehouse_batch_print' batch.id %}" class="text-green-600 hover:underline">In</a>
+                        <a href="{% url 'dashboard:warehouse_batch_export_excel' batch.id %}" class="text-purple-600 hover:underline">Excel</a>
+                        <form method="post" action="{% url 'dashboard:warehouse_batch_delete' batch.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" onclick="return confirm('Chắc chắn xóa?')" class="text-red-600 hover:underline">Xóa</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="px-6 py-10 text-center text-gray-500">Không có phiếu nào</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if paginator.num_pages > 1 %}
+    <div class="mt-6 flex justify-center gap-2">
+        {% if page_obj.has_previous %}
+            <a href="?page=1" class="px-4 py-2 border rounded-lg hover:bg-gray-50">Trang đầu</a>
+            <a href="?page={{ page_obj.previous_page_number }}" class="px-4 py-2 border rounded-lg hover:bg-gray-50">Trước</a>
+        {% endif %}
+        
+        <span class="px-4 py-2">Trang {{ page_obj.number }} / {{ paginator.num_pages }}</span>
+        
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}" class="px-4 py-2 border rounded-lg hover:bg-gray-50">Sau</a>
+            <a href="?page={{ paginator.num_pages }}" class="px-4 py-2 border rounded-lg hover:bg-gray-50">Trang cuối</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

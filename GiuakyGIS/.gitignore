@@ -1,0 +1,25 @@
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Django local settings/db
+db.sqlite3
+.env
+.venv/
+env/
+venv/
+
+# VS Code
+.vscode/
+
+# Test/temp scripts
+check_users*.py
+create_*.py
+fix_*.py
+update_*.py
+test_*.py
+verify.py
+403_test.html
+TODO.md
